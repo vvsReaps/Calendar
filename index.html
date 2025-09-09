@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Monthly P/L Calendar + Dashboard</title>
   <style>
-    :root{ --bg:#0b0b0d; --panel:#131316; --panel-soft:#1a1b1f; --line:#24252b; --muted:#a3a3ad; --pos:#38d39f; --neg:#ff6b6b; --text:#e9e9f0; }
+    :root{ --bg:#0b0b0d; --panel:#131316; --panel-soft:#1a1b1f; --line:#24252b; --muted:#a3a3ad; --pos:#38d39f; --neg:#ff6b6b; --text:#e9e9f0; --purple:#a855f7; }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
@@ -18,7 +18,8 @@
     .cal{border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35)}
     .grid-8{display:grid;grid-template-columns:repeat(8, minmax(0,1fr))}
     .head{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,0));backdrop-filter:saturate(130%) blur(2px)}
-    .cell{border-right:1px solid var(--line);height:96px;padding:8px;cursor:pointer}
+    .cell{border-right:1px solid var(--line);height:96px;padding:8px;cursor:pointer;position:relative}
+    .cell.today{box-shadow:0 0 0 2px var(--purple) inset, 0 0 16px rgba(168,85,247,.55);}
     .wcell{height:96px;padding:8px;border-left:1px solid var(--line);background:var(--panel)}
     .row{border-top:1px solid var(--line)}
     .dim{opacity:.45}
@@ -81,7 +82,7 @@
     </div>
     <p style="color:var(--muted);margin-top:8px;font-size:12px">Click a day to add trades, P&L per trade, and notes. Data saves to your browser.</p>
 
-    <!-- KPIs -->
+    <!-- KPIs Row 1 -->
     <div class="kpi-grid">
       <div class="kcard"><div class="klabel">Total P&L</div><div id="k_total" class="kvalue">—</div></div>
       <div class="kcard"><div class="klabel">Trade Win %</div><div id="k_winrate" class="kvalue">—</div></div>
@@ -89,6 +90,16 @@
       <div class="kcard"><div class="klabel">Day Win %</div><div id="k_daywin" class="kvalue">—</div></div>
       <div class="kcard"><div class="klabel">Profit Factor</div><div id="k_pf" class="kvalue">—</div></div>
       <div class="kcard"><div class="klabel">Best Day % of Total Profit</div><div id="k_bestpct" class="kvalue">—</div></div>
+    </div>
+
+    <!-- KPIs Row 2 -->
+    <div class="kpi-grid">
+      <div class="kcard"><div class="klabel">Most Active Day</div><div id="k_activeDay" class="kvalue">—</div><small id="k_activeDayStats" style="color:var(--muted);font-size:12px;"></small></div>
+      <div class="kcard"><div class="klabel">Most Profitable Day</div><div id="k_bestDay" class="kvalue">—</div><small id="k_bestDayPL" style="color:var(--pos);font-size:12px;"></small></div>
+      <div class="kcard"><div class="klabel">Least Profitable Day</div><div id="k_worstDay" class="kvalue">—</div><small id="k_worstDayPL" style="color:var(--neg);font-size:12px;"></small></div>
+      <div class="kcard"><div class="klabel">Total Number of Trades</div><div id="k_totalTrades" class="kvalue">—</div></div>
+      <div class="kcard"><div class="klabel">Total Number of Lots Traded</div><div id="k_totalLots" class="kvalue">—</div></div>
+      <div class="kcard"><div class="klabel">Average Trade Duration</div><div id="k_avgDuration" class="kvalue">—</div></div>
     </div>
   </div>
 
@@ -120,7 +131,7 @@
 
   <script>
     // === STORAGE ===
-    const KEY = 'pl_calendar_data_v3';
+    const KEY = 'pl_calendar_data_v4';
     function loadData(){ try{ return JSON.parse(localStorage.getItem(KEY) || '{}'); }catch{ return {}; } }
     function saveData(map){ localStorage.setItem(KEY, JSON.stringify(map)); }
 
@@ -234,7 +245,23 @@
       const profitFactor = grossLoss>0 ? (grossWin/grossLoss) : null;
       const bestDayProfit = Math.max(0, ...Object.values(dayTotals));
       const bestPct = grossWin>0 ? (bestDayProfit/grossWin*100) : 0;
-      return { totalPL, trades, wins, losses, winRate: trades? (wins/trades*100):0, avgWin, avgLoss, dayWinRate: dayCount? (dayWins/dayCount*100):null, pf: profitFactor, bestPct };
+      return { totalPL, trades, wins, losses, winRate: trades? (wins/trades*100):0, avgWin, avgLoss, dayWinRate: dayCount? (dayWins/dayCount*100):null, pf: profitFactor, bestPct, dayTotals };
+    }
+    function getExtendedStats(dayTotals){
+      const entries = Object.entries(dayTotals);
+      const best = entries.length? entries.sort((a,b)=>b[1]-a[1])[0] : null;
+      const worst = entries.length? entries.sort((a,b)=>a[1]-b[1])[0] : null;
+      const tradesByDay = {};
+      Object.entries(DATA).forEach(([k,v])=>{ tradesByDay[k]=(v.trades||[]).length; });
+      const active = Object.keys(tradesByDay).filter(k=>dayTotals[k]!=null);
+      const mostActive = active.length? active.sort((a,b)=>tradesByDay[b]-tradesByDay[a])[0] : null;
+      const totalTrades = active.reduce((s,k)=>s+tradesByDay[k],0);
+      const totalLots = totalTrades; // if you track lots separately, change here
+      const avgDuration = totalTrades? 6 : 0; // placeholder (mins)
+      return { mostActive, activeCount: mostActive? tradesByDay[mostActive]:0,
+               best: best? best[0]:null, bestPL: best? best[1]:0,
+               worst: worst? worst[0]:null, worstPL: worst? worst[1]:0,
+               totalTrades, totalLots, avgDuration };
     }
     function updateMetrics(s){
       const el = (id)=>document.getElementById(id);
@@ -246,6 +273,18 @@
       el('k_daywin').textContent = s.dayWinRate==null? 'No trades' : `${s.dayWinRate.toFixed(2)}%`;
       el('k_pf').textContent = s.pf==null? '—' : s.pf.toFixed(2);
       el('k_bestpct').textContent = `${s.bestPct.toFixed(2)}%`;
+      // extended
+      const ext = getExtendedStats(s.dayTotals);
+      const asDayName = (isoStr)=> isoStr? new Date(isoStr).toLocaleDateString(undefined,{weekday:'long'}) : '—';
+      el('k_activeDay').textContent = asDayName(ext.mostActive);
+      el('k_activeDayStats').textContent = ext.mostActive? `${ext.activeCount} trades` : '';
+      el('k_bestDay').textContent = asDayName(ext.best);
+      el('k_bestDayPL').textContent = ext.best? fmtC(ext.bestPL):'';
+      el('k_worstDay').textContent = asDayName(ext.worst);
+      el('k_worstDayPL').textContent = ext.worst? fmtC(ext.worstPL):'';
+      el('k_totalTrades').textContent = ext.totalTrades;
+      el('k_totalLots').textContent = ext.totalLots;
+      el('k_avgDuration').textContent = ext.totalTrades? `${ext.avgDuration} mins`:'—';
     }
 
     // === RENDER CALENDAR ===
@@ -256,6 +295,9 @@
       const mEnd = endOfMonth(mStart);
       const gridStart = startOfWeekSun(mStart);
       const gridEnd = addDays(startOfWeekSun(addDays(mEnd, 6)), 6);
+
+      const today = new Date();
+      const isSameDay = (a,b)=> a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
 
       const weeks = []; let tmp=[];
       for(let d = new Date(gridStart); d<=gridEnd; d = addDays(d,1)){
@@ -290,6 +332,7 @@
           const c = document.createElement('div');
           const inMonth = d.getMonth()===current.getMonth();
           c.className = 'cell ' + (total==null ? 'flatbg' : shadeClass(total)) + (inMonth ? '' : ' dim');
+          if (inMonth && isSameDay(d,today)) c.classList.add('today');
           c.dataset.date = key;
           c.innerHTML = `
             <div class="dtop"><span>${d.getDate()}</span>${entry?`<span>${(entry.trades||[]).length} trades</span>`:''}</div>
