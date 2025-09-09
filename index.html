@@ -271,7 +271,12 @@
       el('k_pf').textContent = s.pf==null? '—' : s.pf.toFixed(2);
       el('k_bestpct').textContent = `${s.bestPct.toFixed(2)}%`;
       const ext = getExtendedStats(s.dayTotals);
-      const asDate = (isoStr)=> isoStr? new Date(isoStr).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric',weekday:'long'}) : '—';
+      const asDate = (isoStr)=> {
+      if(!isoStr) return '—';
+      const [Y,M,D] = isoStr.split('-').map(Number);
+      const d = new Date(Y, M-1, D); // local-time date to avoid UTC shifting
+      return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric',weekday:'long'});
+    };
       el('k_activeDay').textContent = asDate(ext.mostActive);
       el('k_activeDayStats').textContent = ext.mostActive? `${ext.activeCount} trades` : '';
       el('k_bestDay').textContent = asDate(ext.best);
