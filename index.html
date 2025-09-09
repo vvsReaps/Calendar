@@ -59,11 +59,13 @@
 <body>
   <div class="wrap">
     <div class="header">
-      <div class="title">Monthly P/L: <span id="monthSum" class="sum" style="color:var(--pos)">$0.00</span></div>
+      <div class="title">My Trades:</div>
       <div class="controls">
         <button class="btn" id="prevBtn">◀</button>
         <div id="monthLabel"></div>
         <button class="btn" id="nextBtn">▶</button>
+        <button class="btn" id="importBtn">Import</button>
+        <button class="btn" id="exportBtn">Export</button>
       </div>
     </div>
 
@@ -98,8 +100,6 @@
       <div class="kcard"><div class="klabel">Most Profitable Day</div><div id="k_bestDay" class="kvalue">—</div><small id="k_bestDayPL" style="color:var(--pos);font-size:12px;"></small></div>
       <div class="kcard"><div class="klabel">Least Profitable Day</div><div id="k_worstDay" class="kvalue">—</div><small id="k_worstDayPL" style="color:var(--neg);font-size:12px;"></small></div>
       <div class="kcard"><div class="klabel">Total Number of Trades</div><div id="k_totalTrades" class="kvalue">—</div></div>
-      <div class="kcard"><div class="klabel">Total Number of Lots Traded</div><div id="k_totalLots" class="kvalue">—</div></div>
-      <div class="kcard"><div class="klabel">Average Trade Duration</div><div id="k_avgDuration" class="kvalue">—</div></div>
     </div>
   </div>
 
@@ -149,7 +149,6 @@
 
     // === UI REFS ===
     const monthLabel = document.getElementById('monthLabel');
-    const monthSum = document.getElementById('monthSum');
     const rowsEl = document.getElementById('rows');
 
     document.getElementById('prevBtn').addEventListener('click',()=>{ current = new Date(current.getFullYear(), current.getMonth()-1, 1); render(); });
@@ -249,19 +248,17 @@
     }
     function getExtendedStats(dayTotals){
       const entries = Object.entries(dayTotals);
-      const best = entries.length? entries.sort((a,b)=>b[1]-a[1])[0] : null;
-      const worst = entries.length? entries.sort((a,b)=>a[1]-b[1])[0] : null;
+      const best = entries.length? entries.slice().sort((a,b)=>b[1]-a[1])[0] : null;
+      const worst = entries.length? entries.slice().sort((a,b)=>a[1]-b[1])[0] : null;
       const tradesByDay = {};
       Object.entries(DATA).forEach(([k,v])=>{ tradesByDay[k]=(v.trades||[]).length; });
       const active = Object.keys(tradesByDay).filter(k=>dayTotals[k]!=null);
-      const mostActive = active.length? active.sort((a,b)=>tradesByDay[b]-tradesByDay[a])[0] : null;
+      const mostActive = active.length? active.slice().sort((a,b)=>tradesByDay[b]-tradesByDay[a])[0] : null;
       const totalTrades = active.reduce((s,k)=>s+tradesByDay[k],0);
-      const totalLots = totalTrades; // if you track lots separately, change here
-      const avgDuration = totalTrades? 6 : 0; // placeholder (mins)
       return { mostActive, activeCount: mostActive? tradesByDay[mostActive]:0,
                best: best? best[0]:null, bestPL: best? best[1]:0,
                worst: worst? worst[0]:null, worstPL: worst? worst[1]:0,
-               totalTrades, totalLots, avgDuration };
+               totalTrades };
     }
     function updateMetrics(s){
       const el = (id)=>document.getElementById(id);
@@ -273,18 +270,15 @@
       el('k_daywin').textContent = s.dayWinRate==null? 'No trades' : `${s.dayWinRate.toFixed(2)}%`;
       el('k_pf').textContent = s.pf==null? '—' : s.pf.toFixed(2);
       el('k_bestpct').textContent = `${s.bestPct.toFixed(2)}%`;
-      // extended
       const ext = getExtendedStats(s.dayTotals);
-      const asDayName = (isoStr)=> isoStr? new Date(isoStr).toLocaleDateString(undefined,{weekday:'long'}) : '—';
-      el('k_activeDay').textContent = asDayName(ext.mostActive);
+      const asDate = (isoStr)=> isoStr? new Date(isoStr).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric',weekday:'long'}) : '—';
+      el('k_activeDay').textContent = asDate(ext.mostActive);
       el('k_activeDayStats').textContent = ext.mostActive? `${ext.activeCount} trades` : '';
-      el('k_bestDay').textContent = asDayName(ext.best);
+      el('k_bestDay').textContent = asDate(ext.best);
       el('k_bestDayPL').textContent = ext.best? fmtC(ext.bestPL):'';
-      el('k_worstDay').textContent = asDayName(ext.worst);
+      el('k_worstDay').textContent = asDate(ext.worst);
       el('k_worstDayPL').textContent = ext.worst? fmtC(ext.worstPL):'';
       el('k_totalTrades').textContent = ext.totalTrades;
-      el('k_totalLots').textContent = ext.totalLots;
-      el('k_avgDuration').textContent = ext.totalTrades? `${ext.avgDuration} mins`:'—';
     }
 
     // === RENDER CALENDAR ===
@@ -304,18 +298,7 @@
         tmp.push(new Date(d)); if(tmp.length===7){ weeks.push(tmp); tmp=[]; }
       }
 
-      // month total
-      let monthTotal = 0;
-      Object.entries(DATA).forEach(([k,v])=>{
-        const [Y,M,D]=k.split('-').map(Number);
-        const dt=new Date(Y,M-1,D);
-        if(dt.getFullYear()===current.getFullYear() && dt.getMonth()===current.getMonth()){
-          const sum=(v.trades||[]).reduce((a,b)=>a+b,0);
-          monthTotal += sum;
-        }
-      });
-      monthSum.textContent = fmt.format(monthTotal);
-      monthSum.style.color = monthTotal >= 0 ? 'var(--pos)' : 'var(--neg)';
+      // Recompute KPIs
       updateMetrics(getMonthStats());
 
       rowsEl.innerHTML = '';
@@ -352,6 +335,44 @@
     }
 
     render();
+
+    // ===== Import / Export =====
+    document.getElementById('exportBtn').addEventListener('click', ()=>{
+      const payload = { schema: 'pl-calendar-v1', exportedAt: new Date().toISOString(), data: DATA };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pl-calendar-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('importBtn').addEventListener('click', async () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const json = JSON.parse(text);
+          const incoming = json.data || json; // support raw map or wrapped
+          if (!incoming || typeof incoming !== 'object') throw new Error('Invalid file');
+          if (!confirm('Replace current calendar data with the imported file?')) return;
+          DATA = incoming;
+          saveData(DATA);
+          render();
+          alert('Import complete.');
+        } catch (e) {
+          alert('Import failed: ' + e.message);
+        }
+      };
+      input.click();
+    });
   </script>
 </body>
 </html>
