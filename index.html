@@ -57,6 +57,7 @@
   </style>
 </head>
 <body>
+  <!-- HEADER -->
   <div class="wrap">
     <div class="header">
       <div class="title">My Trades:</div>
@@ -69,6 +70,7 @@
       </div>
     </div>
 
+    <!-- CALENDAR -->
     <div class="cal">
       <div class="grid-8 head">
         <div class="dhead">Su</div><div class="dhead">Mo</div><div class="dhead">Tu</div><div class="dhead">We</div><div class="dhead">Th</div><div class="dhead">Fr</div><div class="dhead">Sa</div>
@@ -77,6 +79,7 @@
       <div id="rows"></div>
     </div>
 
+    <!-- LEGEND -->
     <div class="legend">
       <div class="dot flatbg"></div><span>Default / No data</span>
       <div class="dot g3"></div><span>Positive day</span>
@@ -84,7 +87,7 @@
     </div>
     <p style="color:var(--muted);margin-top:8px;font-size:12px">Click a day to add trades, P&L per trade, and notes. Data saves to your browser.</p>
 
-    <!-- KPIs Row 1 -->
+    <!-- KPI GRID -->
     <div class="kpi-grid">
       <div class="kcard"><div class="klabel">Total P&L</div><div id="k_total" class="kvalue">—</div></div>
       <div class="kcard"><div class="klabel">Trade Win %</div><div id="k_winrate" class="kvalue">—</div></div>
@@ -94,7 +97,6 @@
       <div class="kcard"><div class="klabel">Best Day % of Total Profit</div><div id="k_bestpct" class="kvalue">—</div></div>
     </div>
 
-    <!-- KPIs Row 2 -->
     <div class="kpi-grid">
       <div class="kcard"><div class="klabel">Most Active Day</div><div id="k_activeDay" class="kvalue">—</div><small id="k_activeDayStats" style="color:var(--muted);font-size:12px;"></small></div>
       <div class="kcard"><div class="klabel">Most Profitable Day</div><div id="k_bestDay" class="kvalue">—</div><small id="k_bestDayPL" style="color:var(--pos);font-size:12px;"></small></div>
@@ -103,7 +105,7 @@
     </div>
   </div>
 
-  <!-- Modal -->
+  <!-- MODAL -->
   <div class="overlay" id="overlay" role="dialog" aria-modal="true">
     <div class="modal">
       <div class="modal-h">
@@ -144,7 +146,7 @@
     function shadeClass(total){ if(total==null||total===0) return 'flatbg'; const abs=Math.min(Math.abs(total),1000); const step=Math.max(1, Math.ceil((abs/1000)*5)); return total>0?`g${step}`:`r${step}`; }
 
     // === STATE ===
-    let DATA = loadData(); // { 'YYYY-MM-DD': {trades:[num,...], notes:''} }
+    let DATA = loadData();
     let current = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
     // === UI REFS ===
@@ -247,7 +249,7 @@
       return { totalPL, trades, wins, losses, winRate: trades? (wins/trades*100):0, avgWin, avgLoss, dayWinRate: dayCount? (dayWins/dayCount*100):null, pf: profitFactor, bestPct, dayTotals };
     }
     function getExtendedStats(dayTotals){
-      const entries = Object.entries(dayTotals);
+      const entries = Object.entries(dayTotals).filter(([_,v])=>v!=null);
       const best = entries.length? entries.slice().sort((a,b)=>b[1]-a[1])[0] : null;
       const worst = entries.length? entries.slice().sort((a,b)=>a[1]-b[1])[0] : null;
       const tradesByDay = {};
@@ -272,11 +274,11 @@
       el('k_bestpct').textContent = `${s.bestPct.toFixed(2)}%`;
       const ext = getExtendedStats(s.dayTotals);
       const asDate = (isoStr)=> {
-      if(!isoStr) return '—';
-      const [Y,M,D] = isoStr.split('-').map(Number);
-      const d = new Date(Y, M-1, D); // local-time date to avoid UTC shifting
-      return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric',weekday:'long'});
-    };
+        if(!isoStr) return '—';
+        const [Y,M,D] = isoStr.split('-').map(Number);
+        const d = new Date(Y, M-1, D);
+        return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric',weekday:'long'});
+      };
       el('k_activeDay').textContent = asDate(ext.mostActive);
       el('k_activeDayStats').textContent = ext.mostActive? `${ext.activeCount} trades` : '';
       el('k_bestDay').textContent = asDate(ext.best);
@@ -289,7 +291,6 @@
     // === RENDER CALENDAR ===
     function render(){
       monthLabel.textContent = current.toLocaleString(undefined,{month:'long',year:'numeric'});
-
       const mStart = new Date(current.getFullYear(), current.getMonth(), 1);
       const mEnd = endOfMonth(mStart);
       const gridStart = startOfWeekSun(mStart);
@@ -302,8 +303,6 @@
       for(let d = new Date(gridStart); d<=gridEnd; d = addDays(d,1)){
         tmp.push(new Date(d)); if(tmp.length===7){ weeks.push(tmp); tmp=[]; }
       }
-
-      // Recompute KPIs
       updateMetrics(getMonthStats());
 
       rowsEl.innerHTML = '';
@@ -338,10 +337,9 @@
         rowsEl.appendChild(row);
       });
     }
-
     render();
 
-    // ===== Import / Export =====
+    // ===== IMPORT/EXPORT =====
     document.getElementById('exportBtn').addEventListener('click', ()=>{
       const payload = { schema: 'pl-calendar-v1', exportedAt: new Date().toISOString(), data: DATA };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -365,7 +363,7 @@
         try {
           const text = await file.text();
           const json = JSON.parse(text);
-          const incoming = json.data || json; // support raw map or wrapped
+          const incoming = json.data || json;
           if (!incoming || typeof incoming !== 'object') throw new Error('Invalid file');
           if (!confirm('Replace current calendar data with the imported file?')) return;
           DATA = incoming;
