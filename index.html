@@ -1,137 +1,34 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calendar | Reaps</title>
-  <style>
-    :root{
-      --bg:#0b0b0d; --panel:#131316; --panel-soft:#1a1b1f; --line:#24252b; --muted:#a3a3ad;
-      --pos:#38d39f; --neg:#ff6b6b; --text:#e9e9f0;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
-    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-    .title{font-weight:700;font-size:22px}
-    .title .sum{color:var(--pos)}
-    .controls{display:flex;gap:8px;align-items:center;color:var(--muted)}
-    .btn{background:var(--panel-soft);border:1px solid var(--line);color:var(--text);padding:6px 10px;border-radius:10px;cursor:pointer}
-    .btn:hover{filter:brightness(1.1)}
-    .cal{border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-    .grid-8{display:grid;grid-template-columns:repeat(8, minmax(0,1fr))}
-    .head{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,0));backdrop-filter:saturate(130%) blur(2px)}
-    .cell{border-right:1px solid var(--line);height:96px;padding:8px;cursor:pointer;}
-    .wcell{height:96px;padding:8px;border-left:1px solid var(--line);background:var(--panel)}
-    .row{border-top:1px solid var(--line)}
-    .dim{opacity:.45}
-    .dhead{padding:8px;color:var(--muted);font-weight:600}
-    .dtop{display:flex;align-items:flex-start;justify-content:space-between;color:var(--muted);font-size:11px}
-    .pnl{margin-top:6px;font-weight:700}
-    .pnl.pos{color:#a5f3c7}
-    .pnl.neg{color:#ffb2b2}
-    .legend{display:flex;gap:10px;align-items:center;color:var(--muted);margin-top:10px}
-    .dot{width:12px;height:12px;border-radius:3px}
-    .flatbg{background:#212227}
-    .g1{background:rgba(16,185,129,.18)} .g2{background:rgba(16,185,129,.28)} .g3{background:rgba(16,185,129,.38)} .g4{background:rgba(16,185,129,.48)} .g5{background:rgba(16,185,129,.6)}
-    .r1{background:rgba(244,63,94,.18)} .r2{background:rgba(244,63,94,.28)} .r3{background:rgba(244,63,94,.38)} .r4{background:rgba(244,63,94,.48)} .r5{background:rgba(244,63,94,.6)}
-    @media (max-width: 720px){ .cell,.wcell{height:82px} body{font-size:13px} }
-    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
-    .modal{width:min(720px,100%);background:#121216;border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
-    .modal-h{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
-    .modal-h h3{margin:0;font-size:16px}
-    .modal-b{padding:16px;display:grid;gap:12px}
-    .modal-f{display:flex;justify-content:flex-end;gap:8px;padding:14px 16px;border-top:1px solid var(--line)}
-    .inp, .ta{width:100%;background:#0e0f12;border:1px solid #2a2b31;color:var(--text);border-radius:10px;padding:8px}
-    .row-flex{display:flex;gap:8px;align-items:center}
-    .trade-row{display:flex;gap:8px;margin-bottom:8px}
-    .small{font-size:12px;color:var(--muted)}
-    .danger{background:#2a1114;border-color:#5a1b22}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="header">
-      <div class="title">Monthly P/L: <span id="monthSum" class="sum">$0.00</span></div>
-      <div class="controls">
-        <button class="btn" id="prevBtn">◀</button>
-        <div id="monthLabel"></div>
-        <button class="btn" id="nextBtn">▶</button>
-      </div>
-    </div>
-    <div class="cal">
-      <div class="grid-8 head">
-        <div class="dhead">Su</div>
-        <div class="dhead">Mo</div>
-        <div class="dhead">Tu</div>
-        <div class="dhead">We</div>
-        <div class="dhead">Th</div>
-        <div class="dhead">Fr</div>
-        <div class="dhead">Sa</div>
-        <div class="dhead" style="text-align:right">Week</div>
-      </div>
-      <div id="rows"></div>
-    </div>
-    <div class="legend">
-      <div class="dot flatbg"></div><span>Default / No data</span>
-      <div class="dot g3"></div><span>Positive day</span>
-      <div class="dot r3"></div><span>Negative day</span>
-    </div>
-    <p style="color:var(--muted);margin-top:8px;font-size:12px">Click a day to add trades, P&L per trade, and notes, then hit save! @vvsReaps</p>
-  </div>
-  <div class="overlay" id="overlay">
-    <div class="modal">
-      <div class="modal-h">
-        <h3 id="modalTitle">Edit Day</h3>
-        <button class="btn" id="closeBtn">✕</button>
-      </div>
-      <div class="modal-b">
-        <div class="small">Enter each trade's P&L. We'll total them for the day.</div>
-        <div id="tradeList"></div>
-        <div class="row-flex">
-          <button class="btn" id="addTrade">+ Add trade</button>
-          <div class="small">Trades: <span id="tradeCount">0</span> | Day Total: <span id="dayTotal">$0.00</span></div>
-        </div>
-        <div>
-          <label class="small" for="notes">Notes</label>
-          <textarea id="notes" class="ta" rows="4" placeholder="What happened today?"></textarea>
-        </div>
-      </div>
-      <div class="modal-f">
-        <button class="btn danger" id="deleteDay">Delete Day</button>
-        <button class="btn" id="saveDay">Save</button>
-      </div>
-    </div>
-  </div>
-  <script>
-    const KEY = 'pl_calendar_data_v2';
-    function loadData(){ try{ return JSON.parse(localStorage.getItem(KEY) || '{}'); }catch{ return {}; } }
-    function saveData(map){ localStorage.setItem(KEY, JSON.stringify(map)); }
-    const fmt = new Intl.NumberFormat(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
-    function iso(d){ return d.toISOString().slice(0,10); }
-    function startOfWeekSun(d){ const x=new Date(d); x.setDate(x.getDate()-x.getDay()); x.setHours(0,0,0,0); return x; }
-    function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
-    function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
-    function shadeClass(total){ if(total==null) return 'flatbg'; if(total===0) return 'flatbg'; const abs=Math.min(Math.abs(total),1000);const step=Math.max(1,Math.ceil((abs/1000)*5));return total>0?`g${step}`:`r${step}`; }
-    let DATA=loadData(); let current=new Date(new Date().getFullYear(),new Date().getMonth(),1);
-    const monthLabel=document.getElementById('monthLabel'); const monthSum=document.getElementById('monthSum'); const rowsEl=document.getElementById('rows');
-    document.getElementById('prevBtn').addEventListener('click',()=>{current=new Date(current.getFullYear(),current.getMonth()-1,1);render();});
-    document.getElementById('nextBtn').addEventListener('click',()=>{current=new Date(current.getFullYear(),current.getMonth()+1,1);render();});
-    const overlay=document.getElementById('overlay'); const modalTitle=document.getElementById('modalTitle'); const tradeList=document.getElementById('tradeList');
-    const tradeCount=document.getElementById('tradeCount'); const dayTotalEl=document.getElementById('dayTotal'); const notesEl=document.getElementById('notes');
-    const closeBtn=document.getElementById('closeBtn'); const addBtn=document.getElementById('addTrade'); const saveBtn=document.getElementById('saveDay'); const deleteBtn=document.getElementById('deleteDay');
-    let editingDate=null;
-    closeBtn.addEventListener('click',closeModal);overlay.addEventListener('click',(e)=>{if(e.target===overlay)closeModal();});addBtn.addEventListener('click',()=>addTradeInput(''));
-    saveBtn.addEventListener('click',saveModal);deleteBtn.addEventListener('click',()=>{if(editingDate){delete DATA[editingDate];saveData(DATA);closeModal();render();}});
-    function openModal(dateStr){editingDate=dateStr;modalTitle.textContent=`Edit ${dateStr}`;tradeList.innerHTML='';const day=DATA[dateStr]||{trades:[],notes:''};notesEl.value=day.notes||'';if(day.trades.length===0)addTradeInput('');else day.trades.forEach(v=>addTradeInput(v));recalc();overlay.style.display='flex';}
-    function closeModal(){overlay.style.display='none';editingDate=null;}
-    function addTradeInput(value){const row=document.createElement('div');row.className='trade-row';row.innerHTML=`<input type="number" step="0.01" class="inp" placeholder="P&L" value="${value}" /><button class="btn">🗑</button>`;const input=row.querySelector('input');const del=row.querySelector('button');input.addEventListener('input',recalc);del.addEventListener('click',()=>{row.remove();recalc();});tradeList.appendChild(row);recalc();}
-    function gatherTrades(){return Array.from(tradeList.querySelectorAll('input')).map(i=>Number(i.value)).filter(v=>!Number.isNaN(v));}
-    function recalc(){const vals=gatherTrades();const total=vals.reduce((a,b)=>a+b,0);tradeCount.textContent=vals.length;dayTotalEl.textContent=fmt.format(total);}
-    function saveModal(){const vals=gatherTrades();DATA[editingDate]={trades:vals,notes:notesEl.value};saveData(DATA);closeModal();render();}
-    function render(){monthLabel.textContent=current.toLocaleString(undefined,{month:'long',year:'numeric'});const mStart=new Date(current.getFullYear(),current.getMonth(),1);const mEnd=endOfMonth(mStart);const gridStart=startOfWeekSun(mStart);const gridEnd=addDays(startOfWeekSun(addDays(mEnd,6)),6);const weeks=[];let tmp=[];for(let d=new Date(gridStart);d<=gridEnd;d=addDays(d,1)){tmp.push(new Date(d));if(tmp.length===7){weeks.push(tmp);tmp=[];}}let monthTotal=0;Object.entries(DATA).forEach(([k,v])=>{const [Y,M,D]=k.split('-').map(Number);const dt=new Date(Y,M-1,D);if(dt.getFullYear()===current.getFullYear()&&dt.getMonth()===current.getMonth()){monthTotal+=(v.trades||[]).reduce((a,b)=>a+b,0);}});monthSum.textContent=fmt.format(monthTotal);monthSum.style.color=monthTotal>=0?'var(--pos)':'var(--neg)';rowsEl.innerHTML='';weeks.forEach(week=>{const row=document.createElement('div');row.className='grid-8 row';let wsum=0;week.forEach(d=>{const key=iso(d);const entry=DATA[key];const total=entry?(entry.trades||[]).reduce((a,b)=>a+b,0):null;if(total!=null)wsum+=total;const c=document.createElement('div');const inMonth=d.getMonth()===current.getMonth();c.className='cell '+(total==null?'flatbg':shadeClass(total))+(inMonth?'':' dim');c.dataset.date=key;c.innerHTML=`<div class="dtop"><span>${d.getDate()}</span>${entry?`<span>${(entry.trades||[]).length} trades</span>`:''}</div><div class="pnl ${total>=0?'pos':'neg'}">${total!=null?(total<0?'-':'')+fmt.format(Math.abs(total)):''}</div>`;c.addEventListener('click',()=>openModal(key));row.appendChild(c);});const w=document.createElement('div');w.className='wcell';w.innerHTML=`<div class="dtop"><span>Week</span></div><div class="pnl ${wsum>=0?'pos':'neg'}" style="text-align:right">${fmt.format(wsum)}</div>`;row.appendChild(w);rowsEl.appendChild(row);});}
-    render();
-  </script>
-</body>
-</html>
+function getExtendedStats() {
+  const tradesByDay = {};
+  const lotsByDay = {};
+  const dayPL = {};
+
+  Object.entries(DATA).forEach(([k, v]) => {
+    const [Y, M, D] = k.split('-').map(Number);
+    const dt = new Date(Y, M-1, D);
+    if (dt.getFullYear() !== current.getFullYear() || dt.getMonth() !== current.getMonth()) return;
+
+    const arr = (v.trades || []).filter(x => !Number.isNaN(x));
+    if (arr.length === 0) return;
+
+    const daySum = arr.reduce((a,b)=>a+b,0);
+    dayPL[k] = daySum;
+    tradesByDay[k] = arr.length;
+    lotsByDay[k] = arr.length; // If you want “lots” separate, change this calc
+  });
+
+  const mostActive = Object.keys(tradesByDay).sort((a,b)=>tradesByDay[b]-tradesByDay[a])[0];
+  const best = Object.keys(dayPL).sort((a,b)=>dayPL[b]-dayPL[a])[0];
+  const worst = Object.keys(dayPL).sort((a,b)=>dayPL[a]-dayPL[b])[0];
+
+  const totalTrades = Object.values(tradesByDay).reduce((a,b)=>a+b,0);
+  const totalLots = Object.values(lotsByDay).reduce((a,b)=>a+b,0);
+  const avgDuration = totalTrades ? 6 : 0; // Replace with real calc if you track durations
+
+  return {
+    mostActive, activeCount: tradesByDay[mostActive] || 0,
+    best, bestPL: dayPL[best] || 0,
+    worst, worstPL: dayPL[worst] || 0,
+    totalTrades, totalLots, avgDuration
+  };
+}
