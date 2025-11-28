@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Monthly P/L Calendar + Dashboard</title>
   <style>
-    :root{ --bg:#0b0b0d; --panel:#131316; --panel-soft:#1a1b1f; --line:#24252b; --muted:#a3a3ad; --pos:#38d39f; --neg:#ff6b6b; --text:#e9e9f0; --purple:#a855f7; }
+    :root{
+      --bg:#0b0b0d; --panel:#131316; --panel-soft:#1a1b1f; --line:#24252b;
+      --muted:#a3a3ad; --pos:#38d39f; --neg:#ff6b6b; --text:#e9e9f0; --purple:#a855f7;
+    }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
@@ -31,31 +34,66 @@
     .legend{display:flex;gap:10px;align-items:center;color:var(--muted);margin-top:10px}
     .dot{width:12px;height:12px;border-radius:3px}
     .flatbg{background:#212227}
+
+    /* Heat buckets (we’ll map into g1..g5 / r1..r5 by monthly percentiles) */
     .g1{background:rgba(16,185,129,.18)} .g2{background:rgba(16,185,129,.28)} .g3{background:rgba(16,185,129,.38)} .g4{background:rgba(16,185,129,.48)} .g5{background:rgba(16,185,129,.6)}
     .r1{background:rgba(244,63,94,.18)} .r2{background:rgba(244,63,94,.28)} .r3{background:rgba(244,63,94,.38)} .r4{background:rgba(244,63,94,.48)} .r5{background:rgba(244,63,94,.6)}
+
     @media (max-width: 720px){ .cell,.wcell{height:82px} body{font-size:13px} }
 
     /* Modal */
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
-    .modal{width:min(720px,100%);background:#121216;border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+    .modal{width:min(760px,100%);background:#121216;border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
     .modal-h{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
     .modal-h h3{margin:0;font-size:16px}
     .modal-b{padding:16px;display:grid;gap:12px}
     .modal-f{display:flex;justify-content:flex-end;gap:8px;padding:14px 16px;border-top:1px solid var(--line)}
-    .inp, .ta{width:100%;background:#0e0f12;border:1px solid #2a2b31;color:var(--text);border-radius:10px;padding:8px}
-    .row-flex{display:flex;gap:8px;align-items:center}
-    .trade-row{display:flex;gap:8px;margin-bottom:8px}
+    .inp, .ta, select.inp{width:100%;background:#0e0f12;border:1px solid #2a2b31;color:var(--text);border-radius:10px;padding:8px}
+    .row-flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .small{font-size:12px;color:var(--muted)}
     .danger{background:#2a1114;border-color:#5a1b22}
+
+    /* Trade rows (with metadata) */
+    .trade-head{
+      display:grid;
+      grid-template-columns:1.1fr .85fr .85fr 1.2fr 46px;
+      gap:8px;margin-top:4px
+    }
+    .trade-head div{font-size:11px;color:var(--muted);padding:0 2px}
+    .trade-row{
+      display:grid;
+      grid-template-columns:1.1fr .85fr .85fr 1.2fr 46px;
+      gap:8px;margin-bottom:8px
+    }
+
+    @media (max-width: 720px){
+      .trade-head{display:none}
+      .trade-row{
+        grid-template-columns:1fr 1fr;
+        grid-template-areas:
+          "pnl pnl"
+          "sym dir"
+          "setup setup"
+          "del del";
+      }
+      .trade-row .pnlInp{grid-area:pnl}
+      .trade-row .symSel{grid-area:sym}
+      .trade-row .dirSel{grid-area:dir}
+      .trade-row .setupInp{grid-area:setup}
+      .trade-row .delBtn{grid-area:del}
+    }
 
     /* KPI cards */
     .kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:18px}
     @media (max-width:860px){.kpi-grid{grid-template-columns:1fr}}
-    .kcard{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,0) 40%),var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+    .kcard{
+      background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,0) 40%),var(--panel);
+      border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25)
+    }
     .klabel{color:var(--muted);font-size:12px;margin-bottom:8px}
     .kvalue{font-weight:800;font-size:22px}
 
-    /* NEW: visual bars & rings */
+    /* Bars & rings */
     .meter{height:8px;background:#23242a;border-radius:999px;overflow:hidden;margin-top:10px;border:1px solid #2b2c32}
     .meter .fill{height:100%;width:0%}
     .fill.pos{background:linear-gradient(90deg,#16a34a,#22c55e)}
@@ -66,8 +104,7 @@
     .ring{
       --val:0; --size:56px;
       width:var(--size);height:var(--size);border-radius:50%;
-      background:
-        conic-gradient(#22c55e calc(var(--val)*1%), #26272d 0);
+      background: conic-gradient(#22c55e calc(var(--val)*1%), #26272d 0);
       display:grid;place-items:center;position:relative;border:1px solid #2a2b31;
     }
     .ring::before{
@@ -75,10 +112,24 @@
     }
     .ring span{position:relative;font-weight:800;font-size:12px}
     .sub{color:var(--muted);font-size:12px;margin-top:6px}
+
+    /* Equity mini-chart (graph only) */
+    .equity{
+      height:84px;
+      margin-top:10px;
+      border:1px solid #2b2c32;
+      border-radius:12px;
+      background:#0e0f12;
+      padding:8px;
+      overflow:hidden;
+    }
+    .equity svg{width:100%;height:100%;display:block}
+    .equity polyline{stroke:var(--pos);stroke-width:2;opacity:.95}
+    .equity[data-sign="neg"] polyline{stroke:var(--neg)}
+    .equity .zero{stroke:#3a3b42;stroke-width:1;opacity:.7}
   </style>
 </head>
 <body>
-  <!-- HEADER -->
   <div class="wrap">
     <div class="header">
       <div class="title">My Trades:</div>
@@ -106,12 +157,14 @@
       <div class="dot g3"></div><span>Positive day</span>
       <div class="dot r3"></div><span>Negative day</span>
     </div>
-    <p style="color:var(--muted);margin-top:8px;font-size:12px">Click a day to add trades, P&L per trade, and notes. Data saves to your browser.</p>
+    <p style="color:var(--muted);margin-top:8px;font-size:12px">
+      Click a day to add trades (with optional metadata). Colors scale by this month's percentiles (greens = ~90th, reds = ~10th).
+    </p>
 
     <!-- KPI GRID -->
     <div class="kpi-grid">
       <div class="kcard">
-        <div class="klabel">Total P&L</div>
+        <div class="klabel">Total P&amp;L</div>
         <div id="k_total" class="kvalue">—</div>
         <div class="meter"><div id="bar_total" class="fill pos" style="width:0%"></div></div>
         <div class="sub">vs. best day gross profits</div>
@@ -158,6 +211,13 @@
         <div id="k_bestpct" class="kvalue">—</div>
         <div class="meter"><div id="bar_bestpct" class="fill pos" style="width:0%"></div></div>
       </div>
+
+      <!-- NEW: Equity curve (graph only) -->
+      <div class="kcard">
+        <div class="klabel">Equity Curve</div>
+        <div id="equityChart" class="equity" data-sign="pos"></div>
+        <div class="sub">Month equity curve</div>
+      </div>
     </div>
 
     <div class="kpi-grid">
@@ -176,12 +236,25 @@
         <button class="btn" id="closeBtn">✕</button>
       </div>
       <div class="modal-b">
-        <div class="small">Enter each trade's P&L (positive or negative). We'll total them for the day.</div>
+        <div class="small">P&amp;L counts for stats. Symbol/Direction/Setup are optional for review.</div>
+
+        <div class="trade-head" aria-hidden="true">
+          <div>P&amp;L</div>
+          <div>Symbol</div>
+          <div>Dir</div>
+          <div>Setup</div>
+          <div></div>
+        </div>
+
         <div id="tradeList"></div>
+
         <div class="row-flex">
           <button class="btn" id="addTrade">+ Add trade</button>
           <div class="small">Trades: <span id="tradeCount">0</span> | Day Total: <span id="dayTotal">$0.00</span></div>
         </div>
+
+        <datalist id="setupDatalist"></datalist>
+
         <div>
           <label class="small" for="notes">Notes</label>
           <textarea id="notes" class="ta" rows="4" placeholder="What happened today? Strategy, mistakes, news, etc."></textarea>
@@ -196,21 +269,134 @@
 
   <script>
     // === STORAGE ===
-    const KEY = 'pl_calendar_data_v4';
+    const KEY = 'pl_calendar_data_v4'; // keep same key so old data loads
+
     function loadData(){ try{ return JSON.parse(localStorage.getItem(KEY) || '{}'); }catch{ return {}; } }
     function saveData(map){ localStorage.setItem(KEY, JSON.stringify(map)); }
 
+    // === FUTURES SYMBOLS ===
+    const SYMBOLS = ['', 'NQ', 'YM', 'ES', 'GC', 'MGC'];
+    const DIRS = ['', 'Long', 'Short'];
+
     // === HELPERS ===
     const fmt = new Intl.NumberFormat(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
-    function iso(d){ const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+    function iso(d){
+      const y=d.getFullYear();
+      const m=String(d.getMonth()+1).padStart(2,'0');
+      const day=String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${day}`;
+    }
     function startOfWeekSun(d){ const x=new Date(d); x.setDate(x.getDate()-x.getDay()); x.setHours(0,0,0,0); return x; }
     function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
     function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
-    function shadeClass(total){ if(total==null||total===0) return 'flatbg'; const abs=Math.min(Math.abs(total),1000); const step=Math.max(1, Math.ceil((abs/1000)*5)); return total>0?`g${step}`:`r${step}`; }
+
+    function percentile(arr, p){
+      if(!arr || arr.length===0) return null;
+      const a = arr.slice().sort((x,y)=>x-y);
+      if(a.length===1) return a[0];
+      const idx = (a.length - 1) * p;
+      const lo = Math.floor(idx);
+      const hi = Math.ceil(idx);
+      const frac = idx - lo;
+      return a[lo] * (1 - frac) + a[hi] * frac;
+    }
+
+    // === DATA MIGRATION (numbers -> trade objects) ===
+    function normalizeTrade(t){
+      if(typeof t === 'number') return { pnl: t, sym:'', dir:'', setup:'' };
+      if(t && typeof t === 'object'){
+        return {
+          pnl: Number(t.pnl),
+          sym: String(t.sym || ''),
+          dir: String(t.dir || ''),
+          setup: String(t.setup || '')
+        };
+      }
+      return { pnl: NaN, sym:'', dir:'', setup:'' };
+    }
+
+    function normalizeDay(day){
+      const out = { trades: [], notes: '' };
+      if(!day || typeof day !== 'object') return out;
+      out.notes = (typeof day.notes === 'string') ? day.notes : '';
+      const arr = Array.isArray(day.trades) ? day.trades : [];
+      out.trades = arr.map(normalizeTrade).filter(t => Number.isFinite(t.pnl));
+      return out;
+    }
+
+    function migrateAllData(map){
+      const out = {};
+      let changed = false;
+
+      for(const [k, v] of Object.entries(map || {})){
+        const day = normalizeDay(v);
+        out[k] = day;
+
+        const hadNumbers = v && typeof v === 'object' && Array.isArray(v.trades) && v.trades.some(x => typeof x === 'number');
+        const weirdShape = (!v || typeof v !== 'object' || !Array.isArray(v.trades) || typeof v.notes !== 'string');
+        if(hadNumbers || weirdShape) changed = true;
+      }
+      return { out, changed };
+    }
 
     // === STATE ===
     let DATA = loadData();
+    {
+      const { out, changed } = migrateAllData(DATA);
+      DATA = out;
+      if(changed) saveData(DATA);
+    }
     let current = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+    // === Percentile-based shade scaling ===
+    // Spec: darkest green ~ 90th percentile day, darkest red ~ 10th percentile day
+    let SHADE = { posDenom: 1000, negDenom: 1000 };
+
+    function computeShadeScale(dayTotals){
+      const vals = Object.values(dayTotals || {});
+      if(vals.length === 0) return { posDenom: 1000, negDenom: 1000 };
+
+      const p90_all = percentile(vals, 0.90);
+      const p10_all = percentile(vals, 0.10);
+
+      // Greens denom: prefer p90 if positive, else fallback to p90 of positives
+      const posVals = vals.filter(v => v > 0);
+      const p90_pos = percentile(posVals, 0.90);
+
+      const posDenom = (p90_all != null && p90_all > 0) ? p90_all : (p90_pos != null ? p90_pos : 1000);
+
+      // Reds denom: prefer abs(p10) if p10 is negative, else fallback to 90th of loss magnitudes
+      const negVals = vals.filter(v => v < 0);
+      const negAbs = negVals.map(v => Math.abs(v));
+      const p90_negAbs = percentile(negAbs, 0.90);
+
+      const negDenom = (p10_all != null && p10_all < 0) ? Math.abs(p10_all) : (p90_negAbs != null ? p90_negAbs : 1000);
+
+      return { posDenom: Math.max(1, posDenom), negDenom: Math.max(1, negDenom) };
+    }
+
+    function shadeClass(total){
+      if(total == null || total === 0) return 'flatbg';
+
+      const abs = Math.abs(total);
+      const denom = total > 0 ? SHADE.posDenom : SHADE.negDenom;
+
+      const ratio = Math.min(1, abs / denom);
+      const step = Math.max(1, Math.min(5, Math.ceil(ratio * 5)));
+
+      return total > 0 ? `g${step}` : `r${step}`;
+    }
+
+    function setupSuggestions(){
+      const set = new Set();
+      for(const day of Object.values(DATA)){
+        for(const t of (day?.trades || [])){
+          const s = (t.setup || '').trim();
+          if(s) set.add(s);
+        }
+      }
+      return Array.from(set).sort((a,b)=>a.localeCompare(b));
+    }
 
     // === UI REFS ===
     const monthLabel = document.getElementById('monthLabel');
@@ -230,165 +416,292 @@
     const addBtn = document.getElementById('addTrade');
     const saveBtn = document.getElementById('saveDay');
     const deleteBtn = document.getElementById('deleteDay');
+    const setupDL = document.getElementById('setupDatalist');
 
     let editingDate = null;
 
     closeBtn.addEventListener('click', closeModal);
     overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeModal(); });
-    addBtn.addEventListener('click', ()=> addTradeInput(''));
+    addBtn.addEventListener('click', ()=> addTradeRow({ pnl:'', sym:'', dir:'', setup:'' }));
     saveBtn.addEventListener('click', saveModal);
-    deleteBtn.addEventListener('click', ()=>{ if(editingDate){ delete DATA[editingDate]; saveData(DATA); closeModal(); render(); } });
+    deleteBtn.addEventListener('click', ()=>{
+      if(editingDate){
+        delete DATA[editingDate];
+        saveData(DATA);
+        closeModal();
+        render();
+      }
+    });
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
+    }
 
     function openModal(dateStr){
       editingDate = dateStr;
       modalTitle.textContent = `Edit ${dateStr}`;
       tradeList.innerHTML = '';
+
+      // refresh setup suggestions
+      const suggestions = setupSuggestions();
+      setupDL.innerHTML = suggestions.map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
+
       const day = DATA[dateStr] || { trades: [], notes: '' };
       notesEl.value = day.notes || '';
-      if(day.trades.length === 0) addTradeInput(''); else day.trades.forEach(v=>addTradeInput(v));
+
+      if((day.trades || []).length === 0) addTradeRow({ pnl:'', sym:'', dir:'', setup:'' });
+      else day.trades.forEach(t => addTradeRow(normalizeTrade(t)));
+
       recalc();
       overlay.style.display = 'flex';
       setTimeout(()=>{ const first = tradeList.querySelector('input'); if(first) first.focus(); }, 0);
     }
+
     function closeModal(){ overlay.style.display = 'none'; editingDate = null; }
 
-    function addTradeInput(value){
+    function addTradeRow(trade){
       const row = document.createElement('div');
       row.className = 'trade-row';
+
+      const pnlVal = (trade && Number.isFinite(Number(trade.pnl))) ? String(Number(trade.pnl)) : (trade?.pnl ?? '');
+      const symVal = (trade?.sym || '');
+      const dirVal = (trade?.dir || '');
+      const setupVal = (trade?.setup || '');
+
       row.innerHTML = `
-        <input type="number" step="0.01" class="inp" placeholder="P&L" value="${value}" />
-        <button class="btn" title="Remove">🗑</button>
+        <input type="number" step="0.01" class="inp pnlInp" placeholder="P&L" value="${escapeHtml(pnlVal)}" />
+        <select class="inp symSel">${SYMBOLS.map(s => `<option value="${s}" ${s===symVal?'selected':''}>${s || '—'}</option>`).join('')}</select>
+        <select class="inp dirSel">${DIRS.map(d => `<option value="${d}" ${d===dirVal?'selected':''}>${d || '—'}</option>`).join('')}</select>
+        <input type="text" class="inp setupInp" placeholder="Setup (tag)" list="setupDatalist" value="${escapeHtml(setupVal)}" />
+        <button class="btn delBtn" title="Remove">🗑</button>
       `;
-      const input = row.querySelector('input');
-      const del = row.querySelector('button');
-      input.addEventListener('input', recalc);
-      del.addEventListener('click', ()=>{ row.remove(); recalc(); });
+
+      const pnlInp = row.querySelector('.pnlInp');
+      const delBtn = row.querySelector('.delBtn');
+
+      pnlInp.addEventListener('input', recalc);
+      row.querySelector('.symSel').addEventListener('change', recalc);
+      row.querySelector('.dirSel').addEventListener('change', recalc);
+      row.querySelector('.setupInp').addEventListener('input', recalc);
+
+      delBtn.addEventListener('click', ()=>{ row.remove(); recalc(); });
+
       tradeList.appendChild(row);
       recalc();
     }
 
     function gatherTrades(){
-      return Array.from(tradeList.querySelectorAll('input'))
-        .map(i=>Number(i.value))
-        .filter(v=>!Number.isNaN(v));
+      const rows = Array.from(tradeList.querySelectorAll('.trade-row'));
+      const trades = [];
+
+      for(const r of rows){
+        const raw = (r.querySelector('.pnlInp').value || '').trim();
+        if(raw === '') continue;
+
+        const pnl = Number(raw);
+        if(!Number.isFinite(pnl)) continue;
+
+        const sym = (r.querySelector('.symSel').value || '').trim();
+        const dir = (r.querySelector('.dirSel').value || '').trim();
+        const setup = (r.querySelector('.setupInp').value || '').trim();
+
+        trades.push({ pnl, sym, dir, setup });
+      }
+      return trades;
     }
 
     function recalc(){
-      const vals = gatherTrades();
-      const total = vals.reduce((a,b)=>a+b,0);
-      tradeCount.textContent = vals.length;
+      const trades = gatherTrades();
+      const total = trades.reduce((a,t)=>a + (t.pnl || 0), 0);
+      tradeCount.textContent = trades.length;
       dayTotalEl.textContent = fmt.format(total);
     }
 
     function saveModal(){
-      const vals = gatherTrades();
-      DATA[editingDate] = { trades: vals, notes: notesEl.value };
+      const trades = gatherTrades();
+      DATA[editingDate] = { trades, notes: notesEl.value || '' };
       saveData(DATA);
       closeModal();
       render();
     }
 
-    // ===== DASHBOARD STATS =====
+    // ===== STATS + EQUITY =====
     function getMonthStats(){
       let totalPL=0, trades=0, wins=0, losses=0, grossWin=0, grossLoss=0;
       const dayTotals = {};
+
+      // day totals from trades (current month only)
       Object.entries(DATA).forEach(([k,v])=>{
         const [Y,M,D]=k.split('-').map(Number);
         const dt=new Date(Y,M-1,D);
         if(dt.getFullYear()!==current.getFullYear() || dt.getMonth()!==current.getMonth()) return;
-        const arr=(v.trades||[]).filter(x=>!Number.isNaN(x));
-        if(arr.length===0) return;
-        const daySum = arr.reduce((a,b)=>a+b,0);
-        dayTotals[k]=daySum; totalPL += daySum;
-        arr.forEach(x=>{ if(x>0){ wins++; grossWin+=x; } else if(x<0){ losses++; grossLoss+=-x; } trades++; });
+
+        const t = (v?.trades || []).map(normalizeTrade).filter(x => Number.isFinite(x.pnl));
+        if(t.length === 0) return;
+
+        const daySum = t.reduce((a,b)=>a + b.pnl, 0);
+        dayTotals[k] = daySum;
+        totalPL += daySum;
+
+        t.forEach(tr=>{
+          if(tr.pnl > 0){ wins++; grossWin += tr.pnl; }
+          else if(tr.pnl < 0){ losses++; grossLoss += Math.abs(tr.pnl); }
+          trades++;
+        });
       });
+
       const dayCount = Object.keys(dayTotals).length;
       const dayWins = Object.values(dayTotals).filter(v=>v>0).length;
-      const avgWin = wins? grossWin/wins : 0;
-      const avgLoss = losses? grossLoss/losses : 0;
-      const profitFactor = grossLoss>0 ? (grossWin/grossLoss) : null;
+
+      const avgWin = wins ? grossWin / wins : 0;
+      const avgLoss = losses ? grossLoss / losses : 0;
+      const profitFactor = grossLoss > 0 ? (grossWin / grossLoss) : null;
+
       const bestDayProfit = Math.max(0, ...Object.values(dayTotals));
-      const bestPct = grossWin>0 ? (bestDayProfit/grossWin*100) : 0;
-      return { totalPL, trades, wins, losses, winRate: trades? (wins/trades*100):0, avgWin, avgLoss, dayWinRate: dayCount? (dayWins/dayCount*100):null, pf: profitFactor, bestPct, bestDayProfit, grossWin, dayTotals };
+      const bestPct = grossWin > 0 ? (bestDayProfit / grossWin * 100) : 0;
+
+      // Equity points across every calendar day in the month (smooth stair-step)
+      const daysInMonth = endOfMonth(new Date(current.getFullYear(), current.getMonth(), 1)).getDate();
+      const equityPoints = [];
+      let cum = 0;
+      for(let d=1; d<=daysInMonth; d++){
+        const key = iso(new Date(current.getFullYear(), current.getMonth(), d));
+        cum += (dayTotals[key] ?? 0);
+        equityPoints.push(cum);
+      }
+
+      return {
+        totalPL, trades, wins, losses,
+        winRate: trades ? (wins / trades * 100) : 0,
+        avgWin, avgLoss,
+        dayWinRate: dayCount ? (dayWins / dayCount * 100) : null,
+        pf: profitFactor,
+        bestPct, bestDayProfit, grossWin,
+        dayTotals,
+        equityPoints
+      };
     }
+
     function getExtendedStats(dayTotals){
       const entries = Object.entries(dayTotals).filter(([_,v])=>v!=null);
-      const best = entries.length? entries.slice().sort((a,b)=>b[1]-a[1])[0] : null;
-      const worst = entries.length? entries.slice().sort((a,b)=>a[1]-b[1])[0] : null;
+      const best = entries.length ? entries.slice().sort((a,b)=>b[1]-a[1])[0] : null;
+      const worst = entries.length ? entries.slice().sort((a,b)=>a[1]-b[1])[0] : null;
+
       const tradesByDay = {};
-      Object.entries(DATA).forEach(([k,v])=>{ tradesByDay[k]=(v.trades||[]).length; });
-      const active = Object.keys(tradesByDay).filter(k=>dayTotals[k]!=null);
-      const mostActive = active.length? active.slice().sort((a,b)=>tradesByDay[b]-tradesByDay[a])[0] : null;
-      const totalTrades = active.reduce((s,k)=>s+tradesByDay[k],0);
-      return { mostActive, activeCount: mostActive? tradesByDay[mostActive]:0,
-               best: best? best[0]:null, bestPL: best? best[1]:0,
-               worst: worst? worst[0]:null, worstPL: worst? worst[1]:0,
-               totalTrades };
+      Object.entries(DATA).forEach(([k,v])=>{
+        const t = (v?.trades || []).map(normalizeTrade).filter(x => Number.isFinite(x.pnl));
+        tradesByDay[k] = t.length;
+      });
+
+      const active = Object.keys(tradesByDay).filter(k => dayTotals[k] != null);
+      const mostActive = active.length ? active.slice().sort((a,b)=>tradesByDay[b]-tradesByDay[a])[0] : null;
+      const totalTrades = active.reduce((s,k)=>s + (tradesByDay[k] || 0), 0);
+
+      return {
+        mostActive, activeCount: mostActive ? tradesByDay[mostActive] : 0,
+        best: best ? best[0] : null, bestPL: best ? best[1] : 0,
+        worst: worst ? worst[0] : null, worstPL: worst ? worst[1] : 0,
+        totalTrades
+      };
     }
+
+    function renderEquityChart(points, totalPL){
+      const el = document.getElementById('equityChart');
+      if(!el) return;
+
+      if(!points || points.length < 2){
+        el.innerHTML = '';
+        el.dataset.sign = 'pos';
+        return;
+      }
+
+      el.dataset.sign = (totalPL < 0) ? 'neg' : 'pos';
+
+      const w = 320, h = 64, pad = 6;
+      const min = Math.min(...points, 0);
+      const max = Math.max(...points, 0);
+      const rng = (max - min) || 1;
+
+      const toX = (i)=> pad + (w - 2*pad) * (i / (points.length - 1));
+      const toY = (v)=> pad + (h - 2*pad) * (1 - (v - min) / rng);
+
+      const pts = points.map((v,i)=>`${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ');
+      const y0 = toY(0).toFixed(1);
+
+      el.innerHTML = `
+        <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="Equity curve">
+          <line x1="${pad}" y1="${y0}" x2="${w-pad}" y2="${y0}" class="zero"></line>
+          <polyline points="${pts}" fill="none" vector-effect="non-scaling-stroke"></polyline>
+        </svg>
+      `;
+    }
+
     function updateMetrics(s){
       const el = (id)=>document.getElementById(id);
       const fmtC = (n)=> new Intl.NumberFormat(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2}).format(n);
 
-      // Text values (existing)
       el('k_total').textContent = fmtC(s.totalPL);
-      el('k_total').style.color = s.totalPL>=0? 'var(--pos)' : 'var(--neg)';
-      el('k_winrate').textContent = s.trades? `${s.winRate.toFixed(2)}%` : 'No trades';
-      el('k_avg').innerHTML = s.trades? `<span style="color:var(--pos)">${fmtC(s.avgWin)}</span> / <span style="color:var(--neg)">-${fmtC(s.avgLoss)}</span>` : '—';
-      el('k_daywin').textContent = s.dayWinRate==null? 'No trades' : `${s.dayWinRate.toFixed(2)}%`;
-      el('k_pf').textContent = s.pf==null? '—' : s.pf.toFixed(2);
+      el('k_total').style.color = s.totalPL>=0 ? 'var(--pos)' : 'var(--neg)';
+      el('k_winrate').textContent = s.trades ? `${s.winRate.toFixed(2)}%` : 'No trades';
+      el('k_avg').innerHTML = s.trades ? `<span style="color:var(--pos)">${fmtC(s.avgWin)}</span> / <span style="color:var(--neg)">-${fmtC(s.avgLoss)}</span>` : '—';
+      el('k_daywin').textContent = s.dayWinRate==null ? 'No trades' : `${s.dayWinRate.toFixed(2)}%`;
+      el('k_pf').textContent = s.pf==null ? '—' : s.pf.toFixed(2);
       el('k_bestpct').textContent = `${s.bestPct.toFixed(2)}%`;
 
       const ext = getExtendedStats(s.dayTotals);
-      const asDate = (isoStr)=> {
+      const asDate = (isoStr)=>{
         if(!isoStr) return '—';
         const [Y,M,D] = isoStr.split('-').map(Number);
         const d = new Date(Y, M-1, D);
         return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric',weekday:'long'});
       };
+
       el('k_activeDay').textContent = asDate(ext.mostActive);
-      el('k_activeDayStats').textContent = ext.mostActive? `${ext.activeCount} trades` : '';
+      el('k_activeDayStats').textContent = ext.mostActive ? `${ext.activeCount} trades` : '';
       el('k_bestDay').textContent = asDate(ext.best);
-      el('k_bestDayPL').textContent = ext.best? fmtC(ext.bestPL):'';
+      el('k_bestDayPL').textContent = ext.best ? fmtC(ext.bestPL) : '';
       el('k_worstDay').textContent = asDate(ext.worst);
-      el('k_worstDayPL').textContent = ext.worst? fmtC(ext.worstPL):'';
+      el('k_worstDayPL').textContent = ext.worst ? fmtC(ext.worstPL) : '';
       el('k_totalTrades').textContent = ext.totalTrades;
 
-      // NEW: visual bars & rings
-      const winPct = s.trades? Math.max(0, Math.min(100, s.winRate)) : 0;
-      const dayPct = s.dayWinRate==null? 0 : Math.max(0, Math.min(100, s.dayWinRate));
+      // Visuals
+      const winPct = s.trades ? Math.max(0, Math.min(100, s.winRate)) : 0;
+      const dayPct = s.dayWinRate==null ? 0 : Math.max(0, Math.min(100, s.dayWinRate));
       const bestPct = Math.max(0, Math.min(100, s.bestPct));
-      const pfClamped = Math.min(Math.max(s.pf||0, 0), 4); // clamp 0–4 for bar
+      const pfClamped = Math.min(Math.max(s.pf||0, 0), 4);
 
-      // rings
-      const winRing = document.getElementById('winRing');
-      const winRingLbl = document.getElementById('winRingLbl');
-      winRing.style.setProperty('--val', winPct);
-      winRingLbl.textContent = s.trades? `${Math.round(winPct)}%` : '—';
+      document.getElementById('winRing').style.setProperty('--val', winPct);
+      document.getElementById('winRingLbl').textContent = s.trades ? `${Math.round(winPct)}%` : '—';
 
-      const dayRing = document.getElementById('dayRing');
-      const dayRingLbl = document.getElementById('dayRingLbl');
-      dayRing.style.setProperty('--val', dayPct);
-      dayRingLbl.textContent = (s.dayWinRate==null)? '—' : `${Math.round(dayPct)}%`;
+      document.getElementById('dayRing').style.setProperty('--val', dayPct);
+      document.getElementById('dayRingLbl').textContent = (s.dayWinRate==null) ? '—' : `${Math.round(dayPct)}%`;
 
-      // meters
       document.getElementById('bar_bestpct').style.width = `${bestPct}%`;
       document.getElementById('bar_pf').style.width = `${(pfClamped/4)*100}%`;
 
-      const maxAvg = Math.max(s.avgWin || 0, s.avgLoss || 0, 1); // avoid /0
+      const maxAvg = Math.max(s.avgWin || 0, s.avgLoss || 0, 1);
       document.getElementById('bar_avgWin').style.width = `${(s.avgWin/maxAvg)*100}%`;
       document.getElementById('bar_avgLoss').style.width = `${(s.avgLoss/maxAvg)*100}%`;
 
-      // total bar relative to best-day gross wins (nice feel)
       const denom = s.bestDayProfit>0 ? s.bestDayProfit : (Math.abs(s.totalPL)||1);
       const totalPct = Math.min(100, Math.abs(s.totalPL)/denom*100);
       const totalBar = document.getElementById('bar_total');
       totalBar.style.width = `${totalPct}%`;
       totalBar.className = 'fill ' + (s.totalPL>=0?'pos':'neg');
+
+      // Equity chart (graph only)
+      renderEquityChart(s.equityPoints || [], s.totalPL);
     }
 
     // === RENDER CALENDAR ===
     function render(){
       monthLabel.textContent = current.toLocaleString(undefined,{month:'long',year:'numeric'});
+
       const mStart = new Date(current.getFullYear(), current.getMonth(), 1);
       const mEnd = endOfMonth(mStart);
       const gridStart = startOfWeekSun(mStart);
@@ -399,9 +712,13 @@
 
       const weeks = []; let tmp=[];
       for(let d = new Date(gridStart); d<=gridEnd; d = addDays(d,1)){
-        tmp.push(new Date(d)); if(tmp.length===7){ weeks.push(tmp); tmp=[]; }
+        tmp.push(new Date(d));
+        if(tmp.length===7){ weeks.push(tmp); tmp=[]; }
       }
-      updateMetrics(getMonthStats());
+
+      const stats = getMonthStats();
+      SHADE = computeShadeScale(stats.dayTotals);
+      updateMetrics(stats);
 
       rowsEl.innerHTML = '';
       weeks.forEach((week)=>{
@@ -409,21 +726,27 @@
         row.className = 'grid-8 row';
 
         let wsum = 0;
-        let wtrades = 0; // NEW: weekly total trades
+        let wtrades = 0;
+
         week.forEach(d=>{
           const key = iso(d);
           const entry = DATA[key];
-          const total = entry ? (entry.trades||[]).reduce((a,b)=>a+b,0) : null;
+
+          const trades = (entry?.trades || []).map(normalizeTrade).filter(t => Number.isFinite(t.pnl));
+          const total = trades.length ? trades.reduce((a,t)=>a + t.pnl, 0) : null;
+
           if(total!=null) wsum += total;
-          if(entry) wtrades += (entry.trades||[]).length;
+          wtrades += trades.length;
 
           const c = document.createElement('div');
           const inMonth = d.getMonth()===current.getMonth();
+
           c.className = 'cell ' + (total==null ? 'flatbg' : shadeClass(total)) + (inMonth ? '' : ' dim');
           if (inMonth && isSameDay(d,today)) c.classList.add('today');
+
           c.dataset.date = key;
           c.innerHTML = `
-            <div class="dtop"><span>${d.getDate()}</span>${entry?`<span>${(entry.trades||[]).length} trades</span>`:''}</div>
+            <div class="dtop"><span>${d.getDate()}</span>${trades.length?`<span>${trades.length} trades</span>`:''}</div>
             <div class="pnl ${total>=0?'pos':'neg'}">${total!=null? (total<0?'-':'')+fmt.format(Math.abs(total)) : ''}</div>
           `;
           c.addEventListener('click', ()=> openModal(key));
@@ -432,17 +755,20 @@
 
         const w = document.createElement('div');
         w.className = 'wcell';
-        w.innerHTML = `<div class="dtop"><span>Week</span><span>${wtrades} trades</span></div>
-                       <div class="pnl ${wsum>=0?'pos':'neg'}" style="text-align:right">${fmt.format(wsum)}</div>`;
+        w.innerHTML = `
+          <div class="dtop"><span>Week</span><span>${wtrades} trades</span></div>
+          <div class="pnl ${wsum>=0?'pos':'neg'}" style="text-align:right">${fmt.format(wsum)}</div>
+        `;
         row.appendChild(w);
         rowsEl.appendChild(row);
       });
     }
+
     render();
 
-    // ===== IMPORT/EXPORT =====
+    // ===== EXPORT =====
     document.getElementById('exportBtn').addEventListener('click', ()=>{
-      const payload = { schema: 'pl-calendar-v1', exportedAt: new Date().toISOString(), data: DATA };
+      const payload = { schema: 'pl-calendar-v2', exportedAt: new Date().toISOString(), data: DATA };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -454,6 +780,7 @@
       URL.revokeObjectURL(url);
     });
 
+    // ===== IMPORT =====
     document.getElementById('importBtn').addEventListener('click', async () => {
       const input = document.createElement('input');
       input.type = 'file';
@@ -461,13 +788,18 @@
       input.onchange = async () => {
         const file = input.files?.[0];
         if (!file) return;
+
         try {
           const text = await file.text();
           const json = JSON.parse(text);
           const incoming = json.data || json;
           if (!incoming || typeof incoming !== 'object') throw new Error('Invalid file');
+
           if (!confirm('Replace current calendar data with the imported file?')) return;
-          DATA = incoming;
+
+          const { out } = migrateAllData(incoming);
+          DATA = out;
+
           saveData(DATA);
           render();
           alert('Import complete.');
