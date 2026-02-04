@@ -127,6 +127,42 @@
     .equity polyline{stroke:var(--pos);stroke-width:2;opacity:.95}
     .equity[data-sign="neg"] polyline{stroke:var(--neg)}
     .equity .zero{stroke:#3a3b42;stroke-width:1;opacity:.7}
+
+    /* Breakdown list */
+    .break-group{margin-top:6px}
+    .break-row{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:baseline;
+      padding:6px 0;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+    .break-row:first-child{border-top:none}
+    .break-name{
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      max-width:55%;
+    }
+    .break-meta{color:var(--muted);font-size:12px;white-space:nowrap}
+    .break-notes{
+      margin-top:10px;
+      border-top:1px solid rgba(255,255,255,.08);
+      padding-top:10px;
+      max-height:none;
+      overflow:visible;
+    }
+    .note-item{
+      padding:8px 10px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      background:#0e0f12;
+      margin-bottom:8px;
+    }
+    .note-item .note-date{color:var(--muted);font-size:12px;margin-bottom:6px}
+    .note-item .note-text{white-space:pre-wrap}
   </style>
 </head>
 <body>
@@ -158,7 +194,7 @@
       <div class="dot r3"></div><span>Negative day</span>
     </div>
     <p style="color:var(--muted);margin-top:8px;font-size:12px">
-      Click a day to add trades (with optional metadata). Colors scale by this month's percentiles (greens = ~90th, reds = ~10th).
+      Click a day to add trades. Dashboard and break down card below. @SeanDayTrades
     </p>
 
     <!-- KPI GRID -->
@@ -212,7 +248,7 @@
         <div class="meter"><div id="bar_bestpct" class="fill pos" style="width:0%"></div></div>
       </div>
 
-      <!-- NEW: Equity curve (graph only) -->
+      <!-- Equity curve (graph only) -->
       <div class="kcard">
         <div class="klabel">Equity Curve</div>
         <div id="equityChart" class="equity" data-sign="pos"></div>
@@ -225,6 +261,26 @@
       <div class="kcard"><div class="klabel">Most Profitable Day</div><div id="k_bestDay" class="kvalue">—</div><small id="k_bestDayPL" style="color:var(--pos);font-size:12px;"></small></div>
       <div class="kcard"><div class="klabel">Least Profitable Day</div><div id="k_worstDay" class="kvalue">—</div><small id="k_worstDayPL" style="color:var(--neg);font-size:12px;"></small></div>
       <div class="kcard"><div class="klabel">Total Number of Trades</div><div id="k_totalTrades" class="kvalue">—</div></div>
+
+      <!-- NEW: Breakdown + Notes -->
+      <div class="kcard" style="grid-column: span 3;">
+        <div class="klabel">Breakdown (This Month)</div>
+
+        <div class="break-group">
+          <div class="klabel" style="margin:0 0 6px 0;">Top Symbols</div>
+          <div id="k_bySymbol" class="sub">—</div>
+        </div>
+
+        <div class="break-group" style="margin-top:14px">
+          <div class="klabel" style="margin:0 0 6px 0;">Top Setups</div>
+          <div id="k_bySetup" class="sub">—</div>
+        </div>
+
+        <div class="break-notes">
+          <div class="klabel" style="margin:0 0 8px 0;">Day Notes</div>
+          <div id="k_notes" class="sub">—</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -530,16 +586,26 @@
       render();
     }
 
-    // ===== STATS + EQUITY =====
+    // ===== STATS + EQUITY + BREAKDOWN =====
     function getMonthStats(){
       let totalPL=0, trades=0, wins=0, losses=0, grossWin=0, grossLoss=0;
       const dayTotals = {};
+
+      // Breakdown buckets
+      const bySymbol = {};
+      const bySetup = {};
+      const notesByDay = []; // [{date, text}]
 
       // day totals from trades (current month only)
       Object.entries(DATA).forEach(([k,v])=>{
         const [Y,M,D]=k.split('-').map(Number);
         const dt=new Date(Y,M-1,D);
         if(dt.getFullYear()!==current.getFullYear() || dt.getMonth()!==current.getMonth()) return;
+
+        const dayNotes = (v?.notes || '').trim();
+        if(dayNotes){
+          notesByDay.push({ date: k, text: dayNotes });
+        }
 
         const t = (v?.trades || []).map(normalizeTrade).filter(x => Number.isFinite(x.pnl));
         if(t.length === 0) return;
@@ -552,6 +618,17 @@
           if(tr.pnl > 0){ wins++; grossWin += tr.pnl; }
           else if(tr.pnl < 0){ losses++; grossLoss += Math.abs(tr.pnl); }
           trades++;
+
+          const symKey = (tr.sym || '').trim() || '—';
+          const setupKey = (tr.setup || '').trim() || '—';
+
+          (bySymbol[symKey] ||= { pnl:0, count:0, wins:0 }).pnl += tr.pnl;
+          bySymbol[symKey].count++;
+          if(tr.pnl > 0) bySymbol[symKey].wins++;
+
+          (bySetup[setupKey] ||= { pnl:0, count:0, wins:0 }).pnl += tr.pnl;
+          bySetup[setupKey].count++;
+          if(tr.pnl > 0) bySetup[setupKey].wins++;
         });
       });
 
@@ -575,6 +652,9 @@
         equityPoints.push(cum);
       }
 
+      // sort notes by date asc
+      notesByDay.sort((a,b)=> a.date.localeCompare(b.date));
+
       return {
         totalPL, trades, wins, losses,
         winRate: trades ? (wins / trades * 100) : 0,
@@ -583,7 +663,10 @@
         pf: profitFactor,
         bestPct, bestDayProfit, grossWin,
         dayTotals,
-        equityPoints
+        equityPoints,
+        bySymbol,
+        bySetup,
+        notesByDay
       };
     }
 
@@ -694,8 +777,53 @@
       totalBar.style.width = `${totalPct}%`;
       totalBar.className = 'fill ' + (s.totalPL>=0?'pos':'neg');
 
-      // Equity chart (graph only)
+      // Equity chart
       renderEquityChart(s.equityPoints || [], s.totalPL);
+
+      // ===== Breakdown rendering =====
+      const renderAgg = (agg, maxRows=8) => {
+        const entries = Object.entries(agg || {}).filter(([_,v]) => v && v.count > 0);
+        if(entries.length === 0) return `<div class="small">No trades</div>`;
+
+        entries.sort((a,b) => Math.abs(b[1].pnl) - Math.abs(a[1].pnl));
+
+        return entries.slice(0, maxRows).map(([k,v]) => {
+          const winPctLocal = v.count ? (v.wins / v.count * 100) : 0;
+          const color = v.pnl >= 0 ? 'var(--pos)' : 'var(--neg)';
+          return `
+            <div class="break-row">
+              <div class="break-name">${escapeHtml(k)}</div>
+              <div class="break-meta">
+                <span style="color:${color};font-weight:700">${fmtC(v.pnl)}</span>
+                &nbsp;•&nbsp;${v.count} (${winPctLocal.toFixed(0)}%)
+              </div>
+            </div>
+          `;
+        }).join('');
+      };
+
+      const symEl = document.getElementById('k_bySymbol');
+      const setupEl = document.getElementById('k_bySetup');
+      const notesEl2 = document.getElementById('k_notes');
+
+      if(symEl) symEl.innerHTML = renderAgg(s.bySymbol, 10);
+      if(setupEl) setupEl.innerHTML = renderAgg(s.bySetup, 10);
+
+      if(notesEl2){
+        if(!s.notesByDay || s.notesByDay.length === 0){
+          notesEl2.innerHTML = `<div class="small">No notes this month</div>`;
+        } else {
+          notesEl2.innerHTML = s.notesByDay.map(n => {
+            const label = asDate(n.date);
+            return `
+              <div class="note-item">
+                <div class="note-date">${escapeHtml(label)}</div>
+                <div class="note-text">${escapeHtml(n.text)}</div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
     }
 
     // === RENDER CALENDAR ===
@@ -747,7 +875,7 @@
           c.dataset.date = key;
           c.innerHTML = `
             <div class="dtop"><span>${d.getDate()}</span>${trades.length?`<span>${trades.length} trades</span>`:''}</div>
-            <div class="pnl ${total>=0?'pos':'neg'}">${total!=null? (total<0?'-':'')+fmt.format(Math.abs(total)) : ''}</div>
+            <div class="pnl ${total==null ? '' : (total>=0?'pos':'neg')}">${total!=null? (total<0?'-':'')+fmt.format(Math.abs(total)) : ''}</div>
           `;
           c.addEventListener('click', ()=> openModal(key));
           row.appendChild(c);
