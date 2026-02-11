@@ -41,6 +41,30 @@
 
     @media (max-width: 720px){ .cell,.wcell{height:82px} body{font-size:13px} }
 
+    /* Calendar screenshot thumbnail */
+    .thumb{
+      position:absolute;
+      left:8px; right:8px; bottom:8px;
+      height:30px;
+      border-radius:10px;
+      object-fit:cover;
+      opacity:.9;
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 6px 14px rgba(0,0,0,.25);
+      background:#0e0f12;
+    }
+    .thumbBadge{
+      position:absolute;
+      right:8px; bottom:44px;
+      font-size:10px;
+      color:rgba(255,255,255,.85);
+      padding:3px 6px;
+      border-radius:999px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(4px);
+    }
+
     /* Modal */
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
     .modal{width:min(760px,100%);background:#121216;border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
@@ -52,6 +76,32 @@
     .row-flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .small{font-size:12px;color:var(--muted)}
     .danger{background:#2a1114;border-color:#5a1b22}
+
+    /* Screenshot preview in modal */
+    .shotPreview{
+      margin-top:8px;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:14px;
+      overflow:hidden;
+      background:#0e0f12;
+      display:none;
+    }
+    .shotPreview img{
+      width:100%;
+      max-height:240px;
+      display:block;
+      object-fit:cover;
+    }
+    .shotMeta{
+      padding:10px 12px;
+      border-top:1px solid rgba(255,255,255,.08);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      color:var(--muted);
+      font-size:12px;
+    }
 
     /* Trade rows (with metadata) */
     .trade-head{
@@ -155,14 +205,36 @@
       overflow:visible;
     }
     .note-item{
-      padding:8px 10px;
+      padding:10px 10px;
       border:1px solid rgba(255,255,255,.08);
-      border-radius:12px;
+      border-radius:14px;
       background:#0e0f12;
-      margin-bottom:8px;
+      margin-bottom:10px;
     }
-    .note-item .note-date{color:var(--muted);font-size:12px;margin-bottom:6px}
+    .note-item .note-date{color:var(--muted);font-size:12px;margin-bottom:8px}
     .note-item .note-text{white-space:pre-wrap}
+    .note-shot{
+      margin-top:10px;
+      border-radius:12px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.10);
+      background:#0b0c0f;
+    }
+    .note-shot img{
+      width:100%;
+      max-height:240px;
+      display:block;
+      object-fit:cover;
+    }
+    .note-shot .shot-link{
+      display:block;
+      padding:8px 10px;
+      color:var(--muted);
+      font-size:12px;
+      text-decoration:none;
+      border-top:1px solid rgba(255,255,255,.08);
+    }
+    .note-shot .shot-link:hover{filter:brightness(1.1)}
   </style>
 </head>
 <body>
@@ -262,7 +334,7 @@
       <div class="kcard"><div class="klabel">Least Profitable Day</div><div id="k_worstDay" class="kvalue">—</div><small id="k_worstDayPL" style="color:var(--neg);font-size:12px;"></small></div>
       <div class="kcard"><div class="klabel">Total Number of Trades</div><div id="k_totalTrades" class="kvalue">—</div></div>
 
-      <!-- NEW: Breakdown + Notes -->
+      <!-- Breakdown + Notes -->
       <div class="kcard" style="grid-column: span 3;">
         <div class="klabel">Breakdown (This Month)</div>
 
@@ -277,7 +349,7 @@
         </div>
 
         <div class="break-notes">
-          <div class="klabel" style="margin:0 0 8px 0;">Day Notes</div>
+          <div class="klabel" style="margin:0 0 8px 0;">Day Notes &amp; Screenshots</div>
           <div id="k_notes" class="sub">—</div>
         </div>
       </div>
@@ -310,6 +382,17 @@
         </div>
 
         <datalist id="setupDatalist"></datalist>
+
+        <!-- NEW: Screenshot attach -->
+        <div>
+          <label class="small" for="shotUrl">Screenshot (optional)</label>
+          <div class="row-flex">
+            <input id="shotUrl" class="inp" type="url" placeholder="Paste TradingView share link or direct image URL" />
+            <button class="btn" id="clearShot" type="button">Clear</button>
+          </div>
+          <div id="shotHint" class="small" style="margin-top:6px;"></div>
+          <div id="shotPreview" class="shotPreview" aria-live="polite"></div>
+        </div>
 
         <div>
           <label class="small" for="notes">Notes</label>
@@ -357,6 +440,43 @@
       return a[lo] * (1 - frac) + a[hi] * frac;
     }
 
+    // === TradingView share-link -> direct image URL ===
+    // Example:
+    // https://www.tradingview.com/x/zmvqqD7T/
+    // => https://s3.tradingview.com/snapshots/z/zmvqqD7T.png
+    function tradingViewShareToImageUrl(raw){
+      const s = String(raw || '').trim();
+      if(!s) return '';
+
+      // If user pasted only the ID (e.g. zmvqqD7T)
+      if(/^[A-Za-z0-9]{5,}$/.test(s) && !s.includes('/')){
+        const id = s;
+        const folder = (id[0] || 'x').toLowerCase();
+        return `https://s3.tradingview.com/snapshots/${folder}/${id}.png`;
+      }
+
+      // Full share link
+      const m = s.match(/https?:\/\/(?:www\.)?tradingview\.com\/x\/([A-Za-z0-9]+)\/?/i);
+      if(m){
+        const id = m[1];
+        const folder = (id[0] || 'x').toLowerCase();
+        return `https://s3.tradingview.com/snapshots/${folder}/${id}.png`;
+      }
+
+      // Otherwise treat as already-direct image URL (or any image URL)
+      // If missing protocol but starts with //, fix it
+      if(s.startsWith('//')) return 'https:' + s;
+
+      return s;
+    }
+
+    function isLikelyImageUrl(url){
+      const u = String(url || '').trim();
+      if(!u) return false;
+      if(u.startsWith('data:image/')) return true;
+      return /^https?:\/\//i.test(u) && (/\.(png|jpg|jpeg|gif|webp)(\?.*)?$/i.test(u) || u.includes('tradingview.com/snapshots'));
+    }
+
     // === DATA MIGRATION (numbers -> trade objects) ===
     function normalizeTrade(t){
       if(typeof t === 'number') return { pnl: t, sym:'', dir:'', setup:'' };
@@ -372,9 +492,17 @@
     }
 
     function normalizeDay(day){
-      const out = { trades: [], notes: '' };
+      const out = { trades: [], notes: '', shot: '' };
       if(!day || typeof day !== 'object') return out;
+
       out.notes = (typeof day.notes === 'string') ? day.notes : '';
+
+      // Back-compat: accept screenshot fields if you ever named them differently
+      const shotCandidate = (typeof day.shot === 'string' ? day.shot :
+                             typeof day.screenshot === 'string' ? day.screenshot :
+                             typeof day.image === 'string' ? day.image : '');
+      out.shot = String(shotCandidate || '');
+
       const arr = Array.isArray(day.trades) ? day.trades : [];
       out.trades = arr.map(normalizeTrade).filter(t => Number.isFinite(t.pnl));
       return out;
@@ -389,7 +517,12 @@
         out[k] = day;
 
         const hadNumbers = v && typeof v === 'object' && Array.isArray(v.trades) && v.trades.some(x => typeof x === 'number');
-        const weirdShape = (!v || typeof v !== 'object' || !Array.isArray(v.trades) || typeof v.notes !== 'string');
+        const weirdShape =
+          (!v || typeof v !== 'object' ||
+           !Array.isArray(v.trades) ||
+           typeof v.notes !== 'string' ||
+           (typeof v.shot !== 'string' && typeof v.screenshot !== 'string' && typeof v.image !== 'string' && typeof v.shot !== 'undefined'));
+
         if(hadNumbers || weirdShape) changed = true;
       }
       return { out, changed };
@@ -474,6 +607,12 @@
     const deleteBtn = document.getElementById('deleteDay');
     const setupDL = document.getElementById('setupDatalist');
 
+    // NEW: screenshot modal refs
+    const shotUrlEl = document.getElementById('shotUrl');
+    const clearShotBtn = document.getElementById('clearShot');
+    const shotHintEl = document.getElementById('shotHint');
+    const shotPreviewEl = document.getElementById('shotPreview');
+
     let editingDate = null;
 
     closeBtn.addEventListener('click', closeModal);
@@ -489,6 +628,15 @@
       }
     });
 
+    clearShotBtn.addEventListener('click', ()=>{
+      shotUrlEl.value = '';
+      updateShotUI('');
+    });
+
+    shotUrlEl.addEventListener('input', ()=>{
+      updateShotUI(shotUrlEl.value);
+    });
+
     function escapeHtml(s){
       return String(s)
         .replaceAll('&','&amp;')
@@ -496,6 +644,43 @@
         .replaceAll('>','&gt;')
         .replaceAll('"','&quot;')
         .replaceAll("'","&#039;");
+    }
+
+    function updateShotUI(raw){
+      const trimmed = String(raw || '').trim();
+      if(!trimmed){
+        shotHintEl.textContent = '';
+        shotPreviewEl.style.display = 'none';
+        shotPreviewEl.innerHTML = '';
+        return;
+      }
+
+      const converted = tradingViewShareToImageUrl(trimmed);
+      const isConverted = converted !== trimmed && /tradingview\.com\/x\//i.test(trimmed) || (converted !== trimmed && /^[A-Za-z0-9]{5,}$/.test(trimmed) && !trimmed.includes('/'));
+
+      // If it looks like a share link or ID, we auto-convert in the input so it "sticks"
+      if(isConverted){
+        shotUrlEl.value = converted;
+        shotHintEl.textContent = 'Converted TradingView share link to direct image URL.';
+      } else {
+        shotHintEl.textContent = 'Saved as URL. Tip: TradingView share links auto-convert.';
+      }
+
+      const finalUrl = shotUrlEl.value.trim();
+      if(!isLikelyImageUrl(finalUrl)){
+        shotPreviewEl.style.display = 'none';
+        shotPreviewEl.innerHTML = '';
+        return;
+      }
+
+      shotPreviewEl.style.display = 'block';
+      shotPreviewEl.innerHTML = `
+        <img src="${escapeHtml(finalUrl)}" alt="Screenshot preview" loading="lazy" />
+        <div class="shotMeta">
+          <span>Preview</span>
+          <a href="${escapeHtml(finalUrl)}" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:none">Open</a>
+        </div>
+      `;
     }
 
     function openModal(dateStr){
@@ -507,8 +692,12 @@
       const suggestions = setupSuggestions();
       setupDL.innerHTML = suggestions.map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
 
-      const day = DATA[dateStr] || { trades: [], notes: '' };
+      const day = DATA[dateStr] || { trades: [], notes: '', shot: '' };
       notesEl.value = day.notes || '';
+
+      // screenshot
+      shotUrlEl.value = (day.shot || '').trim();
+      updateShotUI(shotUrlEl.value);
 
       if((day.trades || []).length === 0) addTradeRow({ pnl:'', sym:'', dir:'', setup:'' });
       else day.trades.forEach(t => addTradeRow(normalizeTrade(t)));
@@ -580,7 +769,16 @@
 
     function saveModal(){
       const trades = gatherTrades();
-      DATA[editingDate] = { trades, notes: notesEl.value || '' };
+
+      // Normalize screenshot URL (auto converts TradingView share links)
+      const shot = tradingViewShareToImageUrl(shotUrlEl.value || '').trim();
+
+      DATA[editingDate] = {
+        trades,
+        notes: notesEl.value || '',
+        shot
+      };
+
       saveData(DATA);
       closeModal();
       render();
@@ -594,7 +792,9 @@
       // Breakdown buckets
       const bySymbol = {};
       const bySetup = {};
-      const notesByDay = []; // [{date, text}]
+
+      // Notes/screenshots by day
+      const notesByDay = []; // [{date, text, shot}]
 
       // day totals from trades (current month only)
       Object.entries(DATA).forEach(([k,v])=>{
@@ -603,8 +803,9 @@
         if(dt.getFullYear()!==current.getFullYear() || dt.getMonth()!==current.getMonth()) return;
 
         const dayNotes = (v?.notes || '').trim();
-        if(dayNotes){
-          notesByDay.push({ date: k, text: dayNotes });
+        const dayShot = (v?.shot || '').trim();
+        if(dayNotes || dayShot){
+          notesByDay.push({ date: k, text: dayNotes, shot: dayShot });
         }
 
         const t = (v?.trades || []).map(normalizeTrade).filter(x => Number.isFinite(x.pnl));
@@ -652,7 +853,7 @@
         equityPoints.push(cum);
       }
 
-      // sort notes by date asc
+      // sort notes/screenshots by date asc
       notesByDay.sort((a,b)=> a.date.localeCompare(b.date));
 
       return {
@@ -811,14 +1012,29 @@
 
       if(notesEl2){
         if(!s.notesByDay || s.notesByDay.length === 0){
-          notesEl2.innerHTML = `<div class="small">No notes this month</div>`;
+          notesEl2.innerHTML = `<div class="small">No notes/screenshots this month</div>`;
         } else {
           notesEl2.innerHTML = s.notesByDay.map(n => {
             const label = asDate(n.date);
+            const hasText = (n.text || '').trim().length > 0;
+            const hasShot = (n.shot || '').trim().length > 0;
+
+            const textHtml = hasText
+              ? `<div class="note-text">${escapeHtml(n.text)}</div>`
+              : `<div class="small">Screenshot only</div>`;
+
+            const shotHtml = hasShot && isLikelyImageUrl(n.shot) ? `
+              <div class="note-shot">
+                <img src="${escapeHtml(n.shot)}" alt="Day screenshot" loading="lazy" />
+                <a class="shot-link" href="${escapeHtml(n.shot)}" target="_blank" rel="noopener">Open screenshot</a>
+              </div>
+            ` : '';
+
             return `
               <div class="note-item">
                 <div class="note-date">${escapeHtml(label)}</div>
-                <div class="note-text">${escapeHtml(n.text)}</div>
+                ${textHtml}
+                ${shotHtml}
               </div>
             `;
           }).join('');
@@ -863,6 +1079,8 @@
           const trades = (entry?.trades || []).map(normalizeTrade).filter(t => Number.isFinite(t.pnl));
           const total = trades.length ? trades.reduce((a,t)=>a + t.pnl, 0) : null;
 
+          const shot = (entry?.shot || '').trim();
+
           if(total!=null) wsum += total;
           wtrades += trades.length;
 
@@ -873,10 +1091,19 @@
           if (inMonth && isSameDay(d,today)) c.classList.add('today');
 
           c.dataset.date = key;
+
+          const pnlText = (total!=null) ? ((total<0?'-':'') + fmt.format(Math.abs(total))) : '';
+          const thumbHtml = (shot && isLikelyImageUrl(shot)) ? `
+            <div class="thumbBadge">📸</div>
+            <img class="thumb" src="${escapeHtml(shot)}" alt="Screenshot thumbnail" loading="lazy" />
+          ` : '';
+
           c.innerHTML = `
             <div class="dtop"><span>${d.getDate()}</span>${trades.length?`<span>${trades.length} trades</span>`:''}</div>
-            <div class="pnl ${total==null ? '' : (total>=0?'pos':'neg')}">${total!=null? (total<0?'-':'')+fmt.format(Math.abs(total)) : ''}</div>
+            <div class="pnl ${total==null ? '' : (total>=0?'pos':'neg')}">${pnlText}</div>
+            ${thumbHtml}
           `;
+
           c.addEventListener('click', ()=> openModal(key));
           row.appendChild(c);
         });
@@ -896,7 +1123,7 @@
 
     // ===== EXPORT =====
     document.getElementById('exportBtn').addEventListener('click', ()=>{
-      const payload = { schema: 'pl-calendar-v2', exportedAt: new Date().toISOString(), data: DATA };
+      const payload = { schema: 'pl-calendar-v3', exportedAt: new Date().toISOString(), data: DATA };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
