@@ -4,6 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ProfitHub — Trade Journal & Dashboard</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#080910">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ProfitHub">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -261,6 +267,16 @@
     .empty-state .big{font-size:40px}
     .empty-state p{font-family:var(--font-mono);font-size:12px;max-width:260px;line-height:1.8}
 
+
+    /* ── INSTALL BUTTON ── */
+    .btn-install{
+      background:linear-gradient(135deg,rgba(155,109,255,.18),rgba(155,109,255,.08));
+      border-color:rgba(155,109,255,.45);color:var(--purple);
+      display:none;gap:6px;align-items:center;
+    }
+    .btn-install.visible{display:flex}
+    .btn-install:hover{background:rgba(155,109,255,.28);border-color:var(--purple);color:#fff}
+
     @media(max-width:720px){
       .cell,.wcell{height:82px}
       .comp-overview{grid-template-columns:1fr 1fr}
@@ -287,6 +303,7 @@
     </div>
 
     <div class="topbar-right">
+      <button class="btn btn-install" id="installBtn">⬇ Install App</button>
       <button class="btn btn-info" id="infoBtn">? Help</button>
     </div>
   </div>
@@ -631,6 +648,38 @@ function normalizeDay(day){
   return out;
 }
 function migrateAllData(map){const out={};for(const[k,v]of Object.entries(map||{})){out[k]=normalizeDay(v)}return{out}}
+
+// ===== CROSS-ORIGIN MIGRATION (vvsreaps.github.io -> profithub.app) =====
+const MIGRATE_KEY='profithub_migrated_v1';
+const OLD_ORIGIN='https://vvsreaps.github.io';
+const OLD_URL='https://vvsreaps.github.io/Calendar/';
+if(!localStorage.getItem(MIGRATE_KEY)){
+  const iframe=document.createElement('iframe');
+  iframe.src=OLD_URL;
+  iframe.style.cssText='position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;border:none;';
+  document.body.appendChild(iframe);
+  function onMigrateMsg(e){
+    if(e.origin!==OLD_ORIGIN)return;
+    if(!e.data||e.data.type!=='ph_migrate')return;
+    window.removeEventListener('message',onMigrateMsg);
+    iframe.remove();
+    if(e.data.payload){
+      const existing=loadData();
+      if(Object.keys(existing).length===0){
+        localStorage.setItem(KEY,e.data.payload);
+        localStorage.setItem(MIGRATE_KEY,'1');
+        location.reload();return;
+      }
+    }
+    localStorage.setItem(MIGRATE_KEY,'1');
+  }
+  window.addEventListener('message',onMigrateMsg);
+  setTimeout(()=>{
+    window.removeEventListener('message',onMigrateMsg);
+    if(document.body.contains(iframe))iframe.remove();
+    localStorage.setItem(MIGRATE_KEY,'1');
+  },8000);
+}
 
 // ===== STATE =====
 let DATA=loadData();
@@ -1011,6 +1060,36 @@ function renderComparison(){
     eqEl.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:12px;font-family:var(--font-mono)">No data</div>';
   }
 }
+
+// ===== PWA SERVICE WORKER =====
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
+
+// ===== INSTALL PROMPT =====
+let deferredPrompt=null;
+const installBtn=document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  installBtn.classList.add('visible');
+});
+
+installBtn.addEventListener('click',async()=>{
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  const{outcome}=await deferredPrompt.userChoice;
+  deferredPrompt=null;
+  installBtn.classList.remove('visible');
+});
+
+window.addEventListener('appinstalled',()=>{
+  installBtn.classList.remove('visible');
+  deferredPrompt=null;
+});
 
 // ===== EXPORT / IMPORT =====
 document.getElementById('exportBtn').addEventListener('click',()=>{
