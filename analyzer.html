@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ProfitHub AI Coach</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --bg:#080910;--panel:#0f1015;--panel-soft:#15161c;--line:#1e1f27;
+      --muted:#6b6b80;--pos:#00e5a0;--neg:#ff4d6d;--text:#ddddf0;
+      --purple:#9b6dff;--accent:#f0c060;--warn:#f0a060;
+      --font-mono:'Space Mono',monospace;--font-sans:'DM Sans',sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:14px;line-height:1.5;
+      background-image:radial-gradient(ellipse 80% 40% at 50% -10%,rgba(155,109,255,.07),transparent);
+      min-height:100vh}
+
+    /* TOPBAR */
+    .topbar{display:flex;align-items:center;justify-content:space-between;
+      padding:0 20px;height:52px;background:var(--panel);border-bottom:1px solid var(--line);
+      position:sticky;top:0;z-index:40;backdrop-filter:blur(14px)}
+    .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .logo-mark{width:30px;height:30px;border-radius:8px;
+      background:linear-gradient(135deg,var(--purple),#6040cc);
+      display:grid;place-items:center;font-family:var(--font-mono);font-size:13px;font-weight:700;color:#fff;
+      box-shadow:0 2px 10px rgba(155,109,255,.4);flex-shrink:0}
+    .logo-text{font-family:var(--font-mono);font-weight:700;font-size:15px;color:var(--text)}
+    .logo-text span{color:var(--pos)}
+    .logo-tag{font-size:10px;font-family:var(--font-mono);background:rgba(0,229,160,.1);color:var(--pos);
+      border:1px solid rgba(0,229,160,.2);padding:2px 8px;border-radius:999px}
+
+    /* LAYOUT */
+    .wrap{max-width:1100px;margin:0 auto;padding:28px 16px}
+
+    /* DROP ZONE */
+    .drop-zone{border:2px dashed var(--line);border-radius:16px;padding:60px 24px;text-align:center;
+      transition:all .2s;cursor:pointer;background:var(--panel)}
+    .drop-zone:hover,.drop-zone.drag{border-color:var(--purple);background:rgba(155,109,255,.05)}
+    .drop-icon{font-size:48px;margin-bottom:16px;opacity:.4}
+    .drop-title{font-family:var(--font-mono);font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)}
+    .drop-sub{color:var(--muted);font-size:13px;margin-bottom:24px}
+    .btn-primary{background:var(--purple);color:#fff;border:none;padding:10px 24px;border-radius:8px;
+      font-family:var(--font-sans);font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s}
+    .btn-primary:hover{opacity:.85}
+    .btn-outline{background:var(--panel-soft);border:1px solid var(--line);color:var(--text);
+      padding:7px 16px;border-radius:8px;cursor:pointer;font-family:var(--font-sans);font-size:13px;
+      font-weight:500;transition:all .15s}
+    .btn-outline:hover{border-color:var(--purple);color:var(--purple)}
+    #file-input{display:none}
+
+    /* DASHBOARD */
+    #dashboard{display:none}
+
+    /* SECTION */
+    .section-title{font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:.08em;
+      color:var(--muted);text-transform:uppercase;margin-bottom:12px;margin-top:32px}
+    .section-title:first-child{margin-top:0}
+
+    /* STAT CARDS */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+    .stat-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+    .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--font-mono);margin-bottom:6px}
+    .stat-value{font-size:22px;font-weight:700;font-family:var(--font-mono)}
+    .stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+    .pos{color:var(--pos)}
+    .neg{color:var(--neg)}
+    .neutral{color:var(--text)}
+    .warn{color:var(--warn)}
+
+    /* INSIGHT CARDS */
+    .insights-list{display:flex;flex-direction:column;gap:10px}
+    .insight-card{background:var(--panel);border-radius:12px;padding:16px 18px;
+      display:flex;gap:14px;align-items:flex-start;border-left:3px solid transparent}
+    .insight-card.good{border-left-color:var(--pos)}
+    .insight-card.bad{border-left-color:var(--neg)}
+    .insight-card.neutral{border-left-color:var(--purple)}
+    .insight-card.warn{border-left-color:var(--warn)}
+    .insight-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;
+      font-size:16px;flex-shrink:0}
+    .insight-card.good .insight-icon{background:rgba(0,229,160,.12)}
+    .insight-card.bad .insight-icon{background:rgba(255,77,109,.12)}
+    .insight-card.neutral .insight-icon{background:rgba(155,109,255,.12)}
+    .insight-card.warn .insight-icon{background:rgba(240,160,96,.12)}
+    .insight-body{}
+    .insight-title{font-weight:600;font-size:14px;margin-bottom:3px}
+    .insight-card.good .insight-title{color:var(--pos)}
+    .insight-card.bad .insight-title{color:var(--neg)}
+    .insight-card.neutral .insight-title{color:var(--purple)}
+    .insight-card.warn .insight-title{color:var(--warn)}
+    .insight-desc{font-size:13px;color:var(--muted);line-height:1.55}
+
+    /* SETUP TABLE */
+    .table-wrap{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+    table{width:100%;border-collapse:collapse}
+    th{font-size:11px;font-family:var(--font-mono);color:var(--muted);text-transform:uppercase;
+      letter-spacing:.06em;padding:12px 16px;text-align:left;border-bottom:1px solid var(--line)}
+    td{padding:11px 16px;border-bottom:1px solid var(--line);font-size:13px;color:var(--text)}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:var(--panel-soft)}
+
+    /* WIN RATE BAR */
+    .wr-bar-bg{height:6px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;margin-top:6px}
+    .wr-bar-fill{height:100%;border-radius:999px;background:var(--pos);transition:width .4s}
+
+    /* DOW GRID */
+    .dow-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    .dow-cell{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 8px;text-align:center}
+    .dow-name{font-size:11px;font-family:var(--font-mono);color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+    .dow-pnl{font-size:15px;font-weight:700;font-family:var(--font-mono)}
+    .dow-count{font-size:10px;color:var(--muted);margin-top:3px}
+
+    /* CHARTS */
+    .chart-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+    .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:640px){.charts-row{grid-template-columns:1fr}.dow-grid{grid-template-columns:repeat(4,1fr)}}
+
+    /* TRADE LOG */
+    .log-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .badge{font-size:11px;font-family:var(--font-mono);padding:3px 9px;border-radius:999px;font-weight:700}
+    .badge-pos{background:rgba(0,229,160,.12);color:var(--pos)}
+    .badge-neg{background:rgba(255,77,109,.12);color:var(--neg)}
+    .badge-dir{background:rgba(155,109,255,.1);color:var(--purple);margin-right:6px}
+
+    /* RESET BTN */
+    .reset-row{display:flex;justify-content:flex-end;margin-bottom:20px}
+
+    /* EQUITY CURVE */
+    .equity-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:14px}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="logo" href="#">
+    <div class="logo-mark">P</div>
+    <span class="logo-text">ProfitHub <span>AI</span></span>
+  </a>
+  <span class="logo-tag">ANALYZER</span>
+</div>
+
+<div class="wrap">
+
+  <!-- DROP ZONE -->
+  <div id="drop-zone" class="drop-zone">
+    <div class="drop-icon">📊</div>
+    <div class="drop-title">Drop your ProfitHub export</div>
+    <div class="drop-sub">Upload the .json file exported from your PnL calendar to get detailed feedback on your trading</div>
+	<div class="drop-sub">Made by @SeanDayTrades</div>
+    <button class="btn-primary" onclick="document.getElementById('file-input').click()">Choose file</button>
+    <input type="file" id="file-input" accept=".json"/>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+
+    <div class="reset-row">
+      <button class="btn-outline" onclick="resetUI()">↩ Load another file</button>
+    </div>
+
+    <!-- OVERVIEW STATS -->
+    <div class="section-title">Overview</div>
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <!-- EQUITY CURVE -->
+    <div class="section-title">Equity curve</div>
+    <div class="equity-box"><canvas id="equity-chart" height="120"></canvas></div>
+
+    <!-- INSIGHTS -->
+    <div class="section-title">AI feedback &amp; insights</div>
+    <div class="insights-list" id="insights-list"></div>
+
+    <!-- DAY OF WEEK -->
+    <div class="section-title">Performance by day of week</div>
+    <div class="dow-grid" id="dow-grid"></div>
+
+    <!-- CHARTS ROW -->
+    <div class="section-title">Breakdown</div>
+    <div class="charts-row">
+      <div class="chart-box"><canvas id="setup-chart" height="220"></canvas></div>
+      <div class="chart-box"><canvas id="dir-chart" height="220"></canvas></div>
+    </div>
+
+    <!-- SETUP TABLE -->
+    <div class="section-title">Setup breakdown</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Setup</th>
+            <th>Trades</th>
+            <th>Win rate</th>
+            <th>Avg win</th>
+            <th>Avg loss</th>
+            <th>Total PnL</th>
+          </tr>
+        </thead>
+        <tbody id="setup-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- TRADE LOG -->
+    <div class="section-title" style="margin-top:32px">Trade log</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Day</th>
+            <th>Symbol</th>
+            <th>Setup</th>
+            <th>Direction</th>
+            <th>PnL</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="trade-tbody"></tbody>
+      </table>
+    </div>
+
+  </div><!-- /dashboard -->
+</div><!-- /wrap -->
+
+<script>
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const $ = id => document.getElementById(id);
+let equityChart, setupChart, dirChart;
+
+function fmt(v){return(v>=0?'+':'')+v.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})}
+function fmtPlain(v){return v.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})}
+function pct(v){return v.toFixed(1)+'%'}
+function colorCls(v){return v>0?'pos':v<0?'neg':'neutral'}
+
+// FILE INPUT
+$('file-input').addEventListener('change', e=>{
+  const f=e.target.files[0]; if(f) readFile(f);
+});
+const dz=$('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();dz.classList.remove('drag');
+  const f=e.dataTransfer.files[0]; if(f) readFile(f);
+});
+
+function readFile(f){
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const raw=JSON.parse(e.target.result);
+      const data=raw.data||raw;
+      analyze(data);
+    }catch(err){alert('Could not parse file. Make sure it is a valid ProfitHub JSON export.');}
+  };
+  r.readAsText(f);
+}
+
+function resetUI(){
+  $('drop-zone').style.display='';
+  $('dashboard').style.display='none';
+  $('file-input').value='';
+  if(equityChart){equityChart.destroy();equityChart=null;}
+  if(setupChart){setupChart.destroy();setupChart=null;}
+  if(dirChart){dirChart.destroy();dirChart=null;}
+}
+
+function analyze(data){
+  // flatten trades
+  const trades=[];
+  Object.entries(data).sort(([a],[b])=>a.localeCompare(b)).forEach(([dateStr, day])=>{
+    const d=new Date(dateStr+'T12:00:00');
+    (day.trades||[]).forEach(t=>{
+      trades.push({
+        date:dateStr,
+        dow:d.getDay(),
+        dowName:DAYS[d.getDay()],
+        sym:t.sym||'',
+        dir:t.dir||'',
+        setup:t.setup||'Unknown',
+        pnl:Number(t.pnl)||0,
+        notes:day.notes||''
+      });
+    });
+  });
+
+  if(!trades.length){alert('No trades found in this file.');return;}
+
+  // AGGREGATE
+  const totalPnl=trades.reduce((a,t)=>a+t.pnl,0);
+  const wins=trades.filter(t=>t.pnl>0);
+  const losses=trades.filter(t=>t.pnl<0);
+  const winRate=wins.length/trades.length*100;
+  const avgWin=wins.length?wins.reduce((a,t)=>a+t.pnl,0)/wins.length:0;
+  const avgLoss=losses.length?losses.reduce((a,t)=>a+t.pnl,0)/losses.length:0;
+  const profitFactor=losses.length?Math.abs(wins.reduce((a,t)=>a+t.pnl,0)/losses.reduce((a,t)=>a+t.pnl,0)):Infinity;
+  const maxWin=Math.max(...trades.map(t=>t.pnl));
+  const maxLoss=Math.min(...trades.map(t=>t.pnl));
+  const bestDay=trades.find(t=>t.pnl===maxWin);
+  const worstDay=trades.find(t=>t.pnl===maxLoss);
+
+  // equity curve
+  let running=0;
+  const equityDates=[], equityVals=[];
+  trades.forEach(t=>{running+=t.pnl;equityDates.push(t.date.slice(5));equityVals.push(+running.toFixed(2));});
+
+  // by setup
+  const bySetup={};
+  trades.forEach(t=>{
+    if(!bySetup[t.setup]) bySetup[t.setup]={trades:[],pnl:0};
+    bySetup[t.setup].trades.push(t);
+    bySetup[t.setup].pnl+=t.pnl;
+  });
+
+  // by direction
+  const byDir={};
+  trades.forEach(t=>{
+    if(!byDir[t.dir]) byDir[t.dir]={trades:[],pnl:0};
+    byDir[t.dir].trades.push(t);
+    byDir[t.dir].pnl+=t.pnl;
+  });
+
+  // by DOW
+  const byDow=Array.from({length:7},()=>({trades:[],pnl:0}));
+  trades.forEach(t=>{byDow[t.dow].trades.push(t);byDow[t.dow].pnl+=t.pnl;});
+
+  // ── RENDER ──
+
+  // Stats grid
+  const statsData=[
+    {label:'Total PnL',value:fmt(totalPnl),cls:colorCls(totalPnl),sub:`${trades.length} trades`},
+    {label:'Win rate',value:pct(winRate),cls:winRate>=50?'pos':'neg',sub:`${wins.length}W / ${losses.length}L`},
+    {label:'Profit factor',value:isFinite(profitFactor)?profitFactor.toFixed(2):'∞',cls:profitFactor>=1?'pos':'neg',sub:'wins÷losses gross'},
+    {label:'Avg win',value:fmtPlain(avgWin),cls:'pos',sub:'per winning trade'},
+    {label:'Avg loss',value:fmtPlain(avgLoss),cls:'neg',sub:'per losing trade'},
+    {label:'Best trade',value:fmt(maxWin),cls:'pos',sub:bestDay?.date||''},
+    {label:'Worst trade',value:fmt(maxLoss),cls:maxLoss<0?'neg':'pos',sub:worstDay?.date||''},
+  ];
+  $('stats-grid').innerHTML=statsData.map(s=>`
+    <div class="stat-card">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value ${s.cls}">${s.value}</div>
+      <div class="stat-sub">${s.sub}</div>
+    </div>`).join('');
+
+  // Equity chart
+  const ctx=$('equity-chart').getContext('2d');
+  const gradPos=ctx.createLinearGradient(0,0,0,200);
+  gradPos.addColorStop(0,'rgba(0,229,160,.18)');
+  gradPos.addColorStop(1,'rgba(0,229,160,0)');
+  const gradNeg=ctx.createLinearGradient(0,0,0,200);
+  gradNeg.addColorStop(0,'rgba(255,77,109,.18)');
+  gradNeg.addColorStop(1,'rgba(255,77,109,0)');
+  const finalPos=equityVals[equityVals.length-1]>=0;
+  equityChart=new Chart(ctx,{
+    type:'line',
+    data:{labels:equityDates,datasets:[{
+      data:equityVals,
+      borderColor:finalPos?'#00e5a0':'#ff4d6d',
+      borderWidth:2,
+      pointRadius:3,
+      pointBackgroundColor:finalPos?'#00e5a0':'#ff4d6d',
+      fill:true,
+      backgroundColor:finalPos?gradPos:gradNeg,
+      tension:.35
+    }]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:'#15161c',borderColor:'#1e1f27',borderWidth:1,
+        titleColor:'#ddddf0',bodyColor:'#ddddf0',
+        callbacks:{label:ctx=>'  '+fmt(ctx.parsed.y)}
+      }},
+      scales:{
+        x:{ticks:{color:'#6b6b80',font:{size:10}},grid:{color:'#1e1f27'}},
+        y:{ticks:{color:'#6b6b80',font:{size:10},callback:v=>fmtPlain(v)},grid:{color:'#1e1f27'}}
+      }
+    }
+  });
+
+  // Insights
+  const insights=generateInsights(trades,bySetup,byDow,winRate,profitFactor,avgWin,avgLoss);
+  $('insights-list').innerHTML=insights.map(ins=>`
+    <div class="insight-card ${ins.type}">
+      <div class="insight-icon">${ins.icon}</div>
+      <div class="insight-body">
+        <div class="insight-title">${ins.title}</div>
+        <div class="insight-desc">${ins.desc}</div>
+      </div>
+    </div>`).join('');
+
+  // DOW grid
+  const activeDows=[1,2,3,4,5,6,0].filter(d=>byDow[d].trades.length>0);
+  $('dow-grid').style.gridTemplateColumns=`repeat(${Math.min(7,Math.max(activeDows.length,3))},1fr)`;
+  $('dow-grid').innerHTML=[1,2,3,4,5,6,0].map(d=>{
+    const dd=byDow[d];
+    if(!dd.trades.length) return `<div class="dow-cell"><div class="dow-name">${DAY_SHORT[d]}</div><div class="dow-pnl" style="color:var(--muted)">—</div></div>`;
+    const wr=dd.trades.filter(t=>t.pnl>0).length/dd.trades.length*100;
+    return `<div class="dow-cell">
+      <div class="dow-name">${DAY_SHORT[d]}</div>
+      <div class="dow-pnl ${colorCls(dd.pnl)}">${dd.pnl>=0?'+':''}$${Math.abs(dd.pnl/1000).toFixed(1)}k</div>
+      <div class="dow-count">${dd.trades.length}T · ${pct(wr)} WR</div>
+    </div>`;
+  }).join('');
+
+  // Setup donut
+  const setupLabels=Object.keys(bySetup);
+  const setupColors=['#9b6dff','#00e5a0','#f0c060','#ff4d6d','#60b0f0','#f09b60'];
+  const setupChartCtx=$('setup-chart').getContext('2d');
+  setupChart=new Chart(setupChartCtx,{
+    type:'doughnut',
+    data:{labels:setupLabels,datasets:[{
+      data:setupLabels.map(s=>bySetup[s].trades.length),
+      backgroundColor:setupColors.slice(0,setupLabels.length),
+      borderColor:'#0f1015',borderWidth:2
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#ddddf0',font:{size:11},boxWidth:10,padding:12}},
+        title:{display:true,text:'Trades by setup',color:'#6b6b80',font:{size:11}}}}
+  });
+
+  // Direction chart
+  const dirLabels=Object.keys(byDir);
+  const dirChartCtx=$('dir-chart').getContext('2d');
+  dirChart=new Chart(dirChartCtx,{
+    type:'bar',
+    data:{
+      labels:dirLabels,
+      datasets:[
+        {label:'PnL',data:dirLabels.map(d=>+byDir[d].pnl.toFixed(2)),
+          backgroundColor:dirLabels.map(d=>byDir[d].pnl>=0?'rgba(0,229,160,.7)':'rgba(255,77,109,.7)'),
+          borderRadius:6},
+        {label:'Trades',data:dirLabels.map(d=>byDir[d].trades.length),
+          backgroundColor:'rgba(155,109,255,.5)',borderRadius:6,yAxisID:'y2'}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#ddddf0',font:{size:11},boxWidth:10}},
+        title:{display:true,text:'Long vs Short',color:'#6b6b80',font:{size:11}}},
+      scales:{
+        x:{ticks:{color:'#6b6b80'},grid:{color:'#1e1f27'}},
+        y:{ticks:{color:'#6b6b80',callback:v=>fmtPlain(v)},grid:{color:'#1e1f27'}},
+        y2:{position:'right',ticks:{color:'#9b6dff'},grid:{display:false}}
+      }
+    }
+  });
+
+  // Setup table
+  const sortedSetups=Object.entries(bySetup).sort((a,b)=>b[1].pnl-a[1].pnl);
+  $('setup-tbody').innerHTML=sortedSetups.map(([name,s])=>{
+    const sw=s.trades.filter(t=>t.pnl>0);
+    const sl=s.trades.filter(t=>t.pnl<0);
+    const swr=sw.length/s.trades.length*100;
+    const savgW=sw.length?sw.reduce((a,t)=>a+t.pnl,0)/sw.length:0;
+    const savgL=sl.length?sl.reduce((a,t)=>a+t.pnl,0)/sl.length:0;
+    return `<tr>
+      <td style="font-weight:600">${name}</td>
+      <td>${s.trades.length}</td>
+      <td>
+        <span class="${colorCls(swr-50)}">${pct(swr)}</span>
+        <div class="wr-bar-bg"><div class="wr-bar-fill" style="width:${swr}%;background:${swr>=50?'var(--pos)':'var(--neg)'}"></div></div>
+      </td>
+      <td class="pos">${savgW?fmtPlain(savgW):'—'}</td>
+      <td class="neg">${savgL?fmtPlain(savgL):'—'}</td>
+      <td class="${colorCls(s.pnl)}" style="font-weight:600">${fmt(s.pnl)}</td>
+    </tr>`;
+  }).join('');
+
+  // Trade log
+  $('trade-tbody').innerHTML=trades.map(t=>`
+    <tr>
+      <td style="font-family:var(--font-mono);font-size:12px">${t.date}</td>
+      <td style="color:var(--muted);font-size:12px">${t.dowName.slice(0,3)}</td>
+      <td style="font-family:var(--font-mono);font-size:12px">${t.sym}</td>
+      <td><span style="font-size:12px">${t.setup}</span></td>
+      <td><span class="badge badge-dir">${t.dir}</span></td>
+      <td style="font-family:var(--font-mono)" class="${colorCls(t.pnl)}">${fmt(t.pnl)}</td>
+      <td style="color:var(--muted);font-size:12px;max-width:220px">${t.notes||'—'}</td>
+    </tr>`).join('');
+
+  // SHOW
+  $('drop-zone').style.display='none';
+  $('dashboard').style.display='block';
+}
+
+function generateInsights(trades, bySetup, byDow, winRate, profitFactor, avgWin, avgLoss){
+  const ins=[];
+  const wins=trades.filter(t=>t.pnl>0);
+  const losses=trades.filter(t=>t.pnl<0);
+  const totalPnl=trades.reduce((a,t)=>a+t.pnl,0);
+  const activeDays=byDow.filter(d=>d.trades.length>0).length;
+  const greenDays=byDow.filter(d=>d.trades.length>0&&d.pnl>0).length;
+  const dayWinRate=activeDays?greenDays/activeDays*100:0;
+
+  const isMissingSetupTag=value=>{
+    const normalized=String(value??'').trim().toLowerCase();
+    return !normalized||['unknown','unspecified','untagged','no tag','n/a','none','null'].includes(normalized);
+  };
+
+  const pushInsight=item=>{
+    if(!ins.some(existing=>existing.title===item.title)) ins.push(item);
+  };
+
+  const noteMatches={
+    movedStop: trades.filter(t=>t.notes&&(t.notes.toLowerCase().includes('moved sl')||t.notes.toLowerCase().includes('moved stop')||t.notes.toLowerCase().includes('stop in the money')||t.notes.toLowerCase().includes('stopped in the money'))),
+    needToStop: trades.filter(t=>t.notes&&/(need to stop|have to stop|should stop)/i.test(t.notes)),
+    volatility: trades.filter(t=>t.notes&&/(volatility|fills?|slippage)/i.test(t.notes)),
+    patience: trades.filter(t=>t.notes&&/(waited|wait for|failed to deliver lower|failed to deliver higher)/i.test(t.notes)),
+    rebalance: trades.filter(t=>t.notes&&/(rebalance|fvg|fair value gap|ce)/i.test(t.notes)),
+    htfBias: trades.filter(t=>t.notes&&/(htf|higher timeframe|bullish|bearish)/i.test(t.notes)),
+    perfect: trades.filter(t=>t.notes&&/perfect/i.test(t.notes))
+  };
+
+  const missingSetupTrades=trades.filter(t=>isMissingSetupTag(t.setup));
+  const setupArr=Object.entries(bySetup).filter(([name])=>!isMissingSetupTag(name));
+
+  // Overall win rate
+  if(winRate>=60){
+    pushInsight({type:'good',icon:'🎯',title:`Strong ${winRate.toFixed(0)}% win rate`,
+      desc:`You're winning more than 6 in every 10 trades. That's a solid foundation — keep executing your setups with the same discipline.`});
+  } else if(winRate>=50){
+    pushInsight({type:'neutral',icon:'📈',title:`Above-breakeven win rate at ${winRate.toFixed(0)}%`,
+      desc:`You're positive but close to 50/50. Focus on cutting losses quicker or sizing up on your highest-conviction setups to widen the edge.`});
+  } else {
+    pushInsight({type:'bad',icon:'⚠️',title:`Win rate is below 50% (${winRate.toFixed(0)}%)`,
+      desc:`You're losing more trades than you win. This isn't fatal if your avg win is much bigger than your avg loss — but it signals you may be entering too early or your stops are too tight.`});
+  }
+
+  // Profit factor
+  if(losses.length===0&&wins.length>0){
+    pushInsight({type:'warn',icon:'🧪',title:'No losses appear in this export',
+      desc:'That is great if the file is complete, but it also means your loss behavior cannot be stress-tested yet. For the best coaching, make sure your export includes red days too.'});
+  } else if(profitFactor>=2){
+    pushInsight({type:'good',icon:'💰',title:`Excellent profit factor of ${profitFactor.toFixed(2)}`,
+      desc:`For every $1 you lose you make $${profitFactor.toFixed(2)}. This is a hallmark of great trade management. Your winners run and your losers are cut.`});
+  } else if(profitFactor>=1.2){
+    pushInsight({type:'neutral',icon:'⚖️',title:`Profit factor is ${profitFactor.toFixed(2)} — room to improve`,
+      desc:`You're profitable but the edge is thin. Try to let winners run a bit longer before moving your stop, and make sure you're not exiting early out of fear.`});
+  } else if(isFinite(profitFactor)){
+    pushInsight({type:'bad',icon:'📉',title:`Low profit factor of ${profitFactor.toFixed(2)}`,
+      desc:`Your losers are almost as big as your winners. This usually means you're moving stops into profit too soon and cutting wins short, or holding losses too long.`});
+  }
+
+  // Coach comments
+  if(totalPnl>0){
+    pushInsight({type:'good',icon:'🧠',title:'Coach comment: overall sample is profitable',
+      desc:`Net PnL is ${fmt(totalPnl)} across ${activeDays} trading days and ${trades.length} trades. The base process is working — now the goal is tightening the leaks instead of reinventing everything.`});
+  }
+
+  if(activeDays>0&&dayWinRate>=60){
+    pushInsight({type:'good',icon:'🗓️',title:'Coach comment: most of your days finish green',
+      desc:`Your day win rate is ${dayWinRate.toFixed(0)}% (${greenDays}/${activeDays}). That usually means your daily read is putting you on the right side of the session more often than not.`});
+  }
+
+  if(trades.length<15||activeDays<10){
+    pushInsight({type:'warn',icon:'📎',title:'Coach comment: sample size is still small',
+      desc:`This file has ${activeDays} trading days and ${trades.length} trades. These patterns are useful, but treat them as early signals until you log a bigger sample.`});
+  }
+
+  if(missingSetupTrades.length>0){
+    pushInsight({type:'warn',icon:'🏷️',title:`${missingSetupTrades.length} trade${missingSetupTrades.length===1?' is':'s are'} missing a setup tag`,
+      desc:`Start journaling properly and give every trade a tag. Untagged trades make it harder to see what actually works, what keeps failing, and which setups deserve more size.`});
+  }
+
+  // Moving stops in money (from notes)
+  if(noteMatches.movedStop.length>=2){
+    const cost=noteMatches.movedStop.reduce((a,t)=>a+t.pnl,0);
+    pushInsight({type:'warn',icon:'🚫',title:`You moved your stop early ${noteMatches.movedStop.length} times`,
+      desc:`Your notes mention moving the SL into profit early on ${noteMatches.movedStop.length} trades. These trades returned ${fmt(cost)} — but the setups may have been worth more. Trust your original plan and only move stops when price action confirms the move, not out of fear.`});
+  }
+
+  if(noteMatches.needToStop.length>=1){
+    pushInsight({type:'warn',icon:'🛑',title:'Coach comment: your notes already identified a bad habit',
+      desc:`You literally wrote that you need to stop doing something. Take that seriously — self-identified mistakes are usually your clearest leak and should become an explicit review rule.`});
+  }
+
+  if(noteMatches.volatility.length>=1){
+    pushInsight({type:'warn',icon:'🌪️',title:'Coach comment: volatility or fills are affecting execution',
+      desc:`Your notes mention volatility, bad fills, or slippage. That can distort entries and exits, so review whether certain times of day need smaller size or stricter patience.`});
+  }
+
+  if(noteMatches.patience.length>=2){
+    pushInsight({type:'good',icon:'⏳',title:'Coach comment: patience shows up in your notes',
+      desc:`You repeatedly mention waiting for confirmation before entry. That is a real strength — keep protecting it, because patience is usually what separates your clean trades from your forced ones.`});
+  }
+
+  if(noteMatches.rebalance.length>=2){
+    pushInsight({type:'good',icon:'📚',title:'Coach comment: you are documenting structured entry logic',
+      desc:`Your notes repeatedly mention rebalance or FVG logic. That is exactly what good journaling should capture because it helps turn your best trades into a repeatable playbook.`});
+  }
+
+  if(noteMatches.htfBias.length>=2){
+    pushInsight({type:'good',icon:'🧭',title:'Coach comment: higher-timeframe bias is being tracked',
+      desc:`You are writing down directional context like bullish or bearish bias. Keep doing that — it makes post-trade review much more useful than just recording the result.`});
+  }
+
+  // DOW analysis
+  const dowWithTrades=byDow.map((d,i)=>({...d,dow:i})).filter(d=>d.trades.length>0);
+  if(dowWithTrades.length>1){
+    const bestDow=dowWithTrades.reduce((a,b)=>a.pnl>b.pnl?a:b);
+    const worstDow=dowWithTrades.reduce((a,b)=>a.pnl<b.pnl?a:b);
+    if(bestDow.pnl>0){
+      const bwr=bestDow.trades.filter(t=>t.pnl>0).length/bestDow.trades.length*100;
+      pushInsight({type:'good',icon:'📅',title:`${DAYS[bestDow.dow]} is your best day`,
+        desc:`${DAYS[bestDow.dow]} has generated ${fmt(bestDow.pnl)} across ${bestDow.trades.length} trades with a ${bwr.toFixed(0)}% win rate. Market conditions on this day seem to suit your style — keep trading it with confidence.`});
+    }
+    if(worstDow.pnl<0){
+      const wwr=worstDow.trades.filter(t=>t.pnl>0).length/worstDow.trades.length*100;
+      pushInsight({type:'bad',icon:'📅',title:`${DAYS[worstDow.dow]} is your worst day`,
+        desc:`${DAYS[worstDow.dow]} is down ${fmt(worstDow.pnl)} across ${worstDow.trades.length} trades (${wwr.toFixed(0)}% WR). Consider reducing size or skipping ${DAYS[worstDow.dow]} altogether until you identify why it underperforms.`});
+    }
+
+    const bestDowShare=wins.length&&bestDow.pnl>0?(bestDow.pnl/wins.reduce((a,t)=>a+t.pnl,0))*100:0;
+    if(bestDowShare>=25){
+      pushInsight({type:'warn',icon:'🎯',title:'Coach comment: results are somewhat concentrated in one standout day',
+        desc:`Your best day contributes ${bestDowShare.toFixed(1)}% of all gross winning PnL. Great when it happens, but you want the edge to become more evenly repeatable across sessions.`});
+    }
+  }
+
+  // Best setup
+  if(setupArr.length>0){
+    const bestSetup=setupArr.reduce((a,b)=>b[1].pnl>a[1].pnl?b:a);
+    const worstSetup=setupArr.reduce((a,b)=>b[1].pnl<a[1].pnl?b:a);
+    const bsw=bestSetup[1].trades.filter(t=>t.pnl>0).length;
+    const bswr=bsw/bestSetup[1].trades.length*100;
+    pushInsight({type:'good',icon:'✅',title:`"${bestSetup[0]}" is your best setup`,
+      desc:`This setup has produced ${fmt(bestSetup[1].pnl)} across ${bestSetup[1].trades.length} trades with a ${bswr.toFixed(0)}% win rate. This is your A+ setup — prioritize it and scale it when the conditions line up.`});
+
+    if(bestSetup[1].trades.length>=2){
+      pushInsight({type:'neutral',icon:'🗂️',title:`Coach comment: build your playbook around "${bestSetup[0]}"`,
+        desc:`It is currently your strongest tagged setup by performance. Save the clean examples, compare new entries against them, and treat them as your benchmark before pulling the trigger.`});
+    }
+
+    if(worstSetup[1].pnl<0||worstSetup[0]!==bestSetup[0]){
+      const wsw=worstSetup[1].trades.filter(t=>t.pnl>0).length;
+      const wswr=wsw/worstSetup[1].trades.length*100;
+      pushInsight({type:'bad',icon:'❌',title:`"${worstSetup[0]}" is underperforming`,
+        desc:`This setup has only returned ${fmt(worstSetup[1].pnl)} across ${worstSetup[1].trades.length} trades with a ${wswr.toFixed(0)}% win rate. Consider reviewing recent chart examples and tightening your criteria before taking it again.`});
+    }
+
+    const setupConcentration=Math.abs(bestSetup[1].pnl)/(Math.abs(totalPnl)||1)*100;
+    if(setupConcentration>=55){
+      pushInsight({type:'warn',icon:'🧩',title:`Coach comment: a large share of results comes from "${bestSetup[0]}"`,
+        desc:`That setup contributes ${setupConcentration.toFixed(1)}% of your net PnL. Great if intentional, but risky if the sample is narrow or if you are ignoring weaker setups that still need review.`});
+    }
+  }
+
+  // Long vs short
+  const longs=trades.filter(t=>t.dir==='Long');
+  const shorts=trades.filter(t=>t.dir==='Short');
+  if(longs.length&&shorts.length){
+    const lPnl=longs.reduce((a,t)=>a+t.pnl,0);
+    const sPnl=shorts.reduce((a,t)=>a+t.pnl,0);
+    const lWr=longs.filter(t=>t.pnl>0).length/longs.length*100;
+    const sWr=shorts.filter(t=>t.pnl>0).length/shorts.length*100;
+    if(Math.abs(lPnl-sPnl)>500){
+      const better=lPnl>sPnl?'Long':'Short';
+      const betterPnl=lPnl>sPnl?lPnl:sPnl;
+      const worseDir=lPnl>sPnl?'Short':'Long';
+      const worsePnl=lPnl>sPnl?sPnl:lPnl;
+      pushInsight({type:'neutral',icon:'↕️',title:`You trade ${better}s better`,
+        desc:`${better}s: ${fmt(betterPnl)} (${(lPnl>sPnl?lWr:sWr).toFixed(0)}% WR). ${worseDir}s: ${fmt(worsePnl)} (${(lPnl>sPnl?sWr:lWr).toFixed(0)}% WR). You could tighten your criteria for ${worseDir} trades or stick to ${better}s when bias is unclear.`});
+    }
+  }
+
+  // avg win vs avg loss ratio
+  const rrRatio=avgLoss!==0?Math.abs(avgWin/avgLoss):0;
+  if(rrRatio>0){
+    if(rrRatio>=2){
+      pushInsight({type:'good',icon:'📐',title:`Strong avg R:R of ${rrRatio.toFixed(2)}:1`,
+        desc:`Your average winner (${fmtPlain(avgWin)}) is ${rrRatio.toFixed(2)}x bigger than your average loser (${fmtPlain(Math.abs(avgLoss))}). You're letting profits run and cutting losses — this is the right way to trade.`});
+    } else if(rrRatio<1&&avgLoss<0){
+      pushInsight({type:'bad',icon:'📐',title:`Avg R:R below 1:1 (${rrRatio.toFixed(2)}:1)`,
+        desc:`Your average loser (${fmtPlain(Math.abs(avgLoss))}) is bigger than your average winner (${fmtPlain(avgWin)}). Either your targets are too small, or you're holding losses too long. Focus on a minimum 1:1 R:R on every trade.`});
+    }
+  }
+
+  // Perfect trade notes
+  if(noteMatches.perfect.length>=3){
+    const pPnl=noteMatches.perfect.reduce((a,t)=>a+t.pnl,0);
+    pushInsight({type:'good',icon:'⭐',title:`${noteMatches.perfect.length} trades flagged as "perfect"`,
+      desc:`You tagged ${noteMatches.perfect.length} trades as perfect, generating ${fmt(pPnl)}. Study these replays carefully — what did the setup look like? What was your entry timing? Use these as the benchmark for all future trades.`});
+  }
+
+  if(noteMatches.perfect.length>=2){
+    pushInsight({type:'neutral',icon:'📝',title:'Coach comment: keep note quality high',
+      desc:'The cleaner and more honest your notes are, the better the feedback gets. Keep writing down mistakes, patience, bias, and management decisions every session.'});
+  }
+
+  return ins;
+}
+</script>
+</body>
+</html>
