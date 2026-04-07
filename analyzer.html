@@ -239,6 +239,32 @@ function fmtPlain(v){return v.toLocaleString('en-US',{style:'currency',currency:
 function pct(v){return v.toFixed(1)+'%'}
 function colorCls(v){return v>0?'pos':v<0?'neg':'neutral'}
 
+const STORAGE_KEY='pl_calendar_data_v4';
+
+function loadCalendarDataFromStorage(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+    if(!raw||typeof raw!=='object') return null;
+    return raw.data||raw;
+  }catch{
+    return null;
+  }
+}
+
+function hasStoredTrades(data){
+  if(!data||typeof data!=='object') return false;
+  return Object.values(data).some(day=>day&&typeof day==='object'&&Array.isArray(day.trades)&&day.trades.length);
+}
+
+function tryAutoLoadFromStorage(){
+  const stored=loadCalendarDataFromStorage();
+  if(hasStoredTrades(stored)){
+    analyze(stored);
+    return true;
+  }
+  return false;
+}
+
 // FILE INPUT
 $('file-input').addEventListener('change', e=>{
   const f=e.target.files[0]; if(f) readFile(f);
@@ -696,6 +722,8 @@ function generateInsights(trades, bySetup, byDow, winRate, profitFactor, avgWin,
 
   return ins;
 }
+
+tryAutoLoadFromStorage();
 </script>
 </body>
 </html>
