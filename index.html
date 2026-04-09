@@ -301,6 +301,7 @@
     <div class="topbar-tabs">
       <button class="tab-btn active" data-tab="calPage">📅 Calendar</button>
       <button class="tab-btn" data-tab="comparePage">📊 Comparison</button>
+      <button class="tab-btn" onclick="window.location.href='analyzer.html'; return false;">🧠 Analyzer</button>
     </div>
 
     <div class="topbar-right">
@@ -320,7 +321,6 @@
   <button class="btn" id="prevBtn">◀</button>
   <div id="monthLabel" style="font-family:var(--font-mono);font-size:13px;min-width:130px;text-align:center"></div>
   <button class="btn" id="nextBtn">▶</button>
-  <button class="btn" onclick="window.location.href='analyzer.html'">🧠 Analyzer</button>
   <button class="btn" id="importBtn">⬆ Import</button>
   <button class="btn" id="exportBtn">⬇ Export</button>
 </div>
@@ -690,9 +690,9 @@ let current=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 let SHADE={posDenom:1000,negDenom:1000};
 
 // ===== TABS =====
-document.querySelectorAll('.tab-btn').forEach(btn=>{
+document.querySelectorAll('.tab-btn[data-tab]').forEach(btn=>{
   btn.addEventListener('click',()=>{
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn[data-tab]').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(btn.dataset.tab).classList.add('active');
