@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ProfitHub — Trade Journal & Dashboard</title>
+  <title>ProfitHub.app — SeanDayTrades</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="logo.png">
   <meta name="theme-color" content="#080910">
@@ -169,17 +169,6 @@
     }
     .info-card-text{font-size:12px;color:var(--muted);line-height:1.6}
 
-    .changelog{display:grid;gap:10px}
-    .cl-item{display:flex;gap:12px;align-items:flex-start}
-    .cl-badge{
-      font-size:10px;font-family:var(--font-mono);font-weight:700;
-      padding:3px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0;margin-top:1px;
-    }
-    .cl-badge.new{background:rgba(0,229,160,.12);color:var(--pos);border:1px solid rgba(0,229,160,.25)}
-    .cl-badge.fix{background:rgba(155,109,255,.12);color:var(--purple);border:1px solid rgba(155,109,255,.25)}
-    .cl-badge.ui{background:rgba(240,192,96,.1);color:var(--accent);border:1px solid rgba(240,192,96,.2)}
-    .cl-text{font-size:12px;color:var(--muted);line-height:1.6}
-    .cl-text strong{color:var(--text);font-weight:600}
 
     .info-footer{
       padding:12px 20px;border-top:1px solid var(--line);
@@ -277,6 +266,19 @@
     }
     .btn-install.visible{display:flex}
     .btn-install:hover{background:rgba(155,109,255,.28);border-color:var(--purple);color:#fff}
+    .btn-eye{
+      min-width:40px;
+      padding:6px 0;
+      display:grid;
+      place-items:center;
+      font-size:15px;
+      line-height:1;
+    }
+    .btn-eye.active{
+      color:var(--accent);
+      border-color:rgba(240,192,96,.35);
+      background:rgba(240,192,96,.10);
+    }
 
     @media(max-width:720px){
       .cell,.wcell{height:82px}
@@ -306,6 +308,7 @@
 
     <div class="topbar-right">
       <button class="btn btn-install" id="installBtn">⬇ Install App</button>
+      <button class="btn btn-eye" id="privacyBtn" aria-label="Toggle private mode" aria-pressed="false" title="Private mode: OFF">👁</button>
       <button class="btn btn-info" id="infoBtn">? Help</button>
     </div>
   </div>
@@ -553,44 +556,6 @@
           </div>
         </div>
 
-        <!-- CHANGELOG -->
-        <div class="info-section">
-          <div class="info-section-title">Changelog</div>
-          <div class="changelog">
-            <div class="cl-item">
-              <div class="cl-badge new">NEW</div>
-              <div class="cl-text"><strong>Monthly Comparison view</strong> — See all 12 months side by side with a bar chart, full stats table (Net P&amp;L, Win %, Day Win %, Profit Factor, Best/Worst day), year totals footer, and a cumulative year equity curve. Supports multiple years via the year selector.</div>
-            </div>
-            <div class="cl-item">
-              <div class="cl-badge new">NEW</div>
-              <div class="cl-text"><strong>ProfitHub branding</strong> — Renamed from "My Trades" to ProfitHub with a new logo mark, sticky topbar navigation, and a cleaner page layout.</div>
-            </div>
-            <div class="cl-item">
-              <div class="cl-badge new">NEW</div>
-              <div class="cl-text"><strong>This Help modal</strong> — Full feature guide, metric definitions, and live changelog accessible from the topbar at any time.</div>
-            </div>
-            <div class="cl-item">
-              <div class="cl-badge ui">UI</div>
-              <div class="cl-text"><strong>Refined design system</strong> — Space Mono + DM Sans typography, tighter card styling with gradient overlays, improved color palette with purer greens/reds, and a sticky modal header so the date stays visible while scrolling long trade lists.</div>
-            </div>
-            <div class="cl-item">
-              <div class="cl-badge ui">UI</div>
-              <div class="cl-text"><strong>Topbar navigation</strong> — Calendar and Comparison tabs moved into a persistent top bar alongside the logo, replacing the previous standalone tab strip.</div>
-            </div>
-            <div class="cl-item">
-              <div class="cl-badge fix">PREV</div>
-              <div class="cl-text"><strong>Trade metadata</strong> — Symbol, direction, and setup fields per trade. Breakdown cards group P&amp;L and win rate by symbol and setup.</div>
-            </div>
-            <div class="cl-item">
-              <div class="cl-badge fix">PREV</div>
-              <div class="cl-text"><strong>TradingView screenshot integration</strong> — Paste a share link, ProfitHub converts it to a direct image URL. Thumbnails render on calendar cells; full previews in the notes section below the calendar.</div>
-            </div>
-            <div class="cl-item">
-              <div class="cl-badge fix">PREV</div>
-              <div class="cl-text"><strong>Percentile heat scaling</strong> — Calendar cell shading adapts to your data. Darkest green = 90th percentile day, darkest red = 10th percentile day, so the heatmap is meaningful regardless of account size.</div>
-            </div>
-          </div>
-        </div>
 
       </div>
 
@@ -612,8 +577,23 @@ const DIRS=['','Long','Short'];
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+const PRIVATE_MODE_KEY='ph_private_mode_v1';
+let privateMode=localStorage.getItem(PRIVATE_MODE_KEY)==='1';
+
 const fmt=new Intl.NumberFormat(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
-function fmtC(n){return fmt.format(n)}
+function maskedCurrency(){return '$******'}
+function fmtC(n){
+  const num=Number(n)||0;
+  return privateMode?maskedCurrency(num):fmt.format(num);
+}
+function syncPrivateModeUI(){
+  const btn=document.getElementById('privacyBtn');
+  if(!btn)return;
+  btn.classList.toggle('active',privateMode);
+  btn.setAttribute('aria-pressed',privateMode?'true':'false');
+  btn.title=privateMode?'Private mode: ON':'Private mode: OFF';
+  btn.textContent=privateMode?'🙈':'👁';
+}
 function iso(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function startOfWeekSun(d){const x=new Date(d);x.setDate(x.getDate()-x.getDay());x.setHours(0,0,0,0);return x}
 function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
@@ -706,6 +686,16 @@ document.getElementById('infoBtn').addEventListener('click',()=>{infoOverlay.sty
 document.getElementById('closeInfoBtn').addEventListener('click',()=>{infoOverlay.style.display='none'});
 document.getElementById('closeInfoBtn2').addEventListener('click',()=>{infoOverlay.style.display='none'});
 infoOverlay.addEventListener('click',e=>{if(e.target===infoOverlay)infoOverlay.style.display='none'});
+
+document.getElementById('privacyBtn').addEventListener('click',()=>{
+  privateMode=!privateMode;
+  localStorage.setItem(PRIVATE_MODE_KEY,privateMode?'1':'0');
+  syncPrivateModeUI();
+  render();
+  if(document.getElementById('comparePage').classList.contains('active'))renderComparison();
+  if(overlay.style.display==='flex')recalc();
+});
+syncPrivateModeUI();
 
 // ===== SHADE =====
 function computeShadeScale(dayTotals){
