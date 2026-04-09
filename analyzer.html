@@ -121,12 +121,18 @@
 </head>
 <body>
 <div class="topbar">
-  <a class="logo" href="#">
-    <div class="logo-mark">P</div>
-    <span class="logo-text">ProfitHub <span>AI</span></span>
-  </a>
+  <div class="topbar">
+    <a class="logo" href="#" onclick="return false">
+      <img src="logo.png" alt="ProfitHub" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;" />
+      <div>
+        <div class="logo-text">Profit<span>Hub</span></div>
+      </div>
   <span class="logo-tag">ANALYZER</span>
+  
+    </a>
 </div>
+</div>
+
 <div class="wrap">
   <div id="drop-zone" class="drop-zone">
     <div class="drop-icon">&#x1F4CA;</div>
@@ -477,5 +483,47 @@ function generateInsights(trades,bySetup,byDow,winRate,profitFactor,avgWin,avgLo
 }
 tryAutoLoadFromStorage();
 </script>
+
+<footer style="
+    margin-top:48px;
+    padding:20px 16px;
+    border-top:1px solid var(--line);
+    text-align:center;
+  ">
+    <span style="
+      font-family:var(--font-mono);
+      font-size:12px;
+      color:var(--muted);
+      letter-spacing:.04em;
+    ">
+      Made by
+      <a
+        href="https://www.instagram.com/seandaytrades?igsh=MWxuNXppN3JmbGFmdg%3D%3D&utm_source=qr"
+        target="_blank"
+        rel="noopener"
+        style="color:var(--pos);text-decoration:none;font-weight:700;"
+        onmouseover="this.style.textDecoration='underline'"
+        onmouseout="this.style.textDecoration='none'"
+      >@SeanDayTrades</a>
+    </span>
+
+        <span style="
+      font-family:var(--font-mono);
+      font-size:12px;
+      color:var(--muted);
+      letter-spacing:.04em;
+    ">
+      ---
+      <a
+        href="https://whop.com/ace-of-trades/ace-of-trades?a=seandaytrades"
+        target="_blank"
+        rel="noopener"
+        style="color:var(--pos);text-decoration:none;font-weight:700;"
+        onmouseover="this.style.textDecoration='underline'"
+        onmouseout="this.style.textDecoration='none'"
+      >Learn To Trade</a>
+    </span>
+  </footer>
+  
 </body>
 </html>
