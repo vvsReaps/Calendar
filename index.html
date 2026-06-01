@@ -286,7 +286,6 @@
     .empty-state .big{font-size:40px}
     .empty-state p{font-family:var(--font-mono);font-size:12px;max-width:260px;line-height:1.8}
 
-
     /* ── INSTALL BUTTON ── */
     .btn-install{
       background:linear-gradient(135deg,rgba(155,109,255,.18),rgba(155,109,255,.08));
@@ -309,11 +308,108 @@
       background:rgba(240,192,96,.10);
     }
 
+    /* ── SHARE BUTTON ── */
+    .btn-share{
+      background:linear-gradient(135deg,rgba(0,229,160,.14),rgba(0,229,160,.06));
+      border-color:rgba(0,229,160,.3);color:var(--pos);
+      font-family:var(--font-mono);font-size:12px;font-weight:700;
+      letter-spacing:.02em;
+      display:flex;align-items:center;gap:5px;
+    }
+    .btn-share:hover{background:rgba(0,229,160,.22);border-color:var(--pos);color:#fff}
+
+    /* ── SHARE MODAL ── */
+    .share-modal{width:min(540px,100%)}
+    .share-card-wrap{padding:20px;display:flex;flex-direction:column;align-items:center;gap:16px}
+
+    #shareCard{
+      width:480px;max-width:100%;
+      background:linear-gradient(145deg,#0c0d16 0%,#0f1220 50%,#090e16 100%);
+      border:1px solid rgba(155,109,255,.2);
+      border-radius:20px;
+      padding:24px 24px 20px;
+      font-family:'Space Mono',monospace;
+      position:relative;
+      overflow:hidden;
+    }
+    #shareCard::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:1px;
+      background:linear-gradient(90deg,transparent,rgba(155,109,255,.4),rgba(0,229,160,.3),transparent);
+    }
+    #shareCard::after{
+      content:'';position:absolute;
+      top:-60px;right:-60px;width:200px;height:200px;
+      background:radial-gradient(circle,rgba(155,109,255,.08) 0%,transparent 70%);
+      pointer-events:none;
+    }
+
+    .sc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .sc-logo{display:flex;align-items:center;gap:9px}
+    .sc-logo-mark{
+      width:28px;height:28px;border-radius:7px;
+      background:linear-gradient(135deg,#9b6dff,#5030cc);
+      display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;
+      box-shadow:0 2px 8px rgba(155,109,255,.35);
+    }
+    .sc-logo-text{font-size:14px;font-weight:700;color:#ddddf0;letter-spacing:-.01em}
+    .sc-logo-text span{color:#00e5a0}
+    .sc-period{font-size:10px;color:#4a4a60;letter-spacing:.08em;text-transform:uppercase;text-align:right}
+
+    .sc-pnl-section{margin-bottom:20px}
+    .sc-pnl-label{font-size:9px;color:#4a4a60;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+    .sc-pnl{font-size:36px;font-weight:700;letter-spacing:-.04em;line-height:1}
+    .sc-pnl.pos{color:#00e5a0;text-shadow:0 0 30px rgba(0,229,160,.2)}
+    .sc-pnl.neg{color:#ff4d6d;text-shadow:0 0 30px rgba(255,77,109,.2)}
+
+    .sc-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);margin:18px 0}
+
+    .sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+    .sc-stat{
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:10px;padding:10px 11px;
+    }
+    .sc-stat-label{font-size:9px;color:#4a4a60;letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px}
+    .sc-stat-val{font-size:15px;font-weight:700;color:#ddddf0;letter-spacing:-.02em}
+    .sc-stat-val.pos{color:#00e5a0}
+    .sc-stat-val.neg{color:#ff4d6d}
+
+    .sc-eq-label{font-size:9px;color:#4a4a60;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+    .sc-eq-wrap{
+      background:rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.05);
+      border-radius:10px;padding:8px 10px;height:60px;overflow:hidden;
+    }
+    .sc-eq-wrap svg{width:100%;height:100%;display:block}
+
+    .sc-footer{display:flex;align-items:center;justify-content:space-between;margin-top:16px}
+    .sc-tag{font-size:9px;color:#3a3a50;letter-spacing:.05em}
+    .sc-watermark{font-size:9px;color:rgba(155,109,255,.4);letter-spacing:.06em;font-weight:700}
+
+    .share-actions{display:flex;gap:8px;width:480px;max-width:100%}
+    .share-actions .btn{flex:1;text-align:center;padding:10px 8px;font-family:var(--font-mono);font-size:12px;font-weight:700}
+    .btn-save-img{
+      background:linear-gradient(135deg,rgba(0,229,160,.16),rgba(0,229,160,.06));
+      border-color:rgba(0,229,160,.35);color:var(--pos);
+    }
+    .btn-save-img:hover{background:rgba(0,229,160,.24);border-color:var(--pos);color:#fff}
+    .btn-copy-img{
+      background:rgba(155,109,255,.1);border-color:rgba(155,109,255,.3);color:var(--purple);
+    }
+    .btn-copy-img:hover{background:rgba(155,109,255,.2);border-color:var(--purple);color:#fff}
+    .share-hint{
+      font-size:11px;color:var(--muted);font-family:var(--font-mono);
+      text-align:center;transition:color .2s;
+    }
+    .share-hint.success{color:var(--pos)}
+
     @media(max-width:720px){
       .cell,.wcell{height:82px}
       .comp-overview{grid-template-columns:1fr 1fr}
       .topbar-tabs .tab-btn{padding:6px 10px;font-size:12px}
       .logo-tag{display:none}
+      #shareCard{width:100%}
+      .share-actions{width:100%}
     }
   </style>
 </head>
@@ -354,6 +450,8 @@
 
     <div class="topbar-right">
       <button class="btn btn-install" id="installBtn">⬇ Install App</button>
+      <!-- ══ SHARE BUTTON (new) ══ -->
+      <button class="btn btn-share" id="shareBtn" title="Share monthly stats card">📤 Share</button>
       <button class="btn btn-eye" id="privacyBtn" aria-label="Toggle private mode" aria-pressed="false" title="Private mode: OFF">👁</button>
       <button class="btn btn-info" id="infoBtn">? Help</button>
     </div>
@@ -521,6 +619,78 @@
     </div>
   </div>
 
+  <!-- ══ SHARE STATS MODAL (new) ══ -->
+  <div class="overlay" id="shareOverlay" role="dialog" aria-modal="true" aria-label="Share Monthly Stats">
+    <div class="modal share-modal">
+      <div class="modal-h">
+        <h3 id="shareModalTitle" style="font-family:var(--font-mono)">Share Stats</h3>
+        <button class="btn" id="closeShareBtn">✕</button>
+      </div>
+      <div class="share-card-wrap">
+
+        <!-- The shareable card that gets rendered to image -->
+        <div id="shareCard">
+          <div class="sc-header">
+            <div class="sc-logo">
+              <div class="sc-logo-mark">PH</div>
+              <div class="sc-logo-text">Profit<span>Hub</span></div>
+            </div>
+            <div class="sc-period" id="sc_period">MAY 2025</div>
+          </div>
+
+          <div class="sc-pnl-section">
+            <div class="sc-pnl-label">Net P&amp;L</div>
+            <div class="sc-pnl pos" id="sc_pnl">+$0.00</div>
+          </div>
+
+          <div class="sc-divider"></div>
+
+          <div class="sc-grid">
+            <div class="sc-stat">
+              <div class="sc-stat-label">Trade Win %</div>
+              <div class="sc-stat-val" id="sc_winrate">—</div>
+            </div>
+            <div class="sc-stat">
+              <div class="sc-stat-label">Day Win %</div>
+              <div class="sc-stat-val" id="sc_daywin">—</div>
+            </div>
+            <div class="sc-stat">
+              <div class="sc-stat-label">Profit Factor</div>
+              <div class="sc-stat-val" id="sc_pf">—</div>
+            </div>
+            <div class="sc-stat">
+              <div class="sc-stat-label">Total Trades</div>
+              <div class="sc-stat-val" id="sc_trades">—</div>
+            </div>
+            <div class="sc-stat">
+              <div class="sc-stat-label">Avg Win</div>
+              <div class="sc-stat-val pos" id="sc_avgwin">—</div>
+            </div>
+            <div class="sc-stat">
+              <div class="sc-stat-label">Avg Loss</div>
+              <div class="sc-stat-val neg" id="sc_avgloss">—</div>
+            </div>
+          </div>
+
+          <div class="sc-eq-label">Equity Curve</div>
+          <div class="sc-eq-wrap" id="sc_equity"></div>
+
+          <div class="sc-footer">
+            <div class="sc-tag" id="sc_daystats">— trading days</div>
+            <div class="sc-watermark">profithub.app</div>
+          </div>
+        </div>
+        <!-- end #shareCard -->
+
+        <div class="share-actions">
+          <button class="btn btn-save-img" id="saveImgBtn">⬇ Save as Image</button>
+          <button class="btn btn-copy-img" id="copyShareBtn">📋 Copy to Clipboard</button>
+        </div>
+        <div class="share-hint" id="shareHint">Right-click the card above to save, or use the buttons below</div>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ INFO MODAL ══ -->
   <div class="overlay" id="infoOverlay" role="dialog" aria-modal="true" aria-label="ProfitHub Help">
     <div class="modal info-modal">
@@ -561,8 +731,8 @@
               <div class="info-card-text">Calendar cells are colour-coded by P&amp;L intensity. Shading uses percentile scaling — the darkest green is your 90th percentile day, so the heatmap always adapts to your account size.</div>
             </div>
             <div class="info-card">
-              <div class="info-card-label">📊 Comparison Tab</div>
-              <div class="info-card-text">Switch to the Comparison tab to see all 12 months side by side. Pick any year from the selector. Includes a bar chart, full stats table, and a cumulative year equity curve.</div>
+              <div class="info-card-label">📤 Share Stats</div>
+              <div class="info-card-text">Click the Share button in the top bar to generate a shareable stats card for the current month. Save it as a PNG or copy to clipboard to drop directly into Discord or send to friends.</div>
             </div>
           </div>
         </div>
@@ -597,7 +767,6 @@
             </div>
           </div>
         </div>
-
 
       </div>
 
@@ -668,7 +837,6 @@ function normalizeDay(day){
   if(!day||typeof day!=='object')return out;
   out.notes=(typeof day.notes==='string')?day.notes:'';
   out.shot=String(day.shot||day.screenshot||day.image||'');
-  // shots array: prefer explicit shots[], else migrate single shot into array
   if(Array.isArray(day.shots)){out.shots=day.shots.map(s=>String(s||'').trim()).filter(Boolean)}
   else if(out.shot){out.shots=[out.shot]}
   out.trades=(Array.isArray(day.trades)?day.trades:[]).map(normalizeTrade).filter(t=>Number.isFinite(t.pnl));
@@ -676,7 +844,7 @@ function normalizeDay(day){
 }
 function migrateAllData(map){const out={};for(const[k,v]of Object.entries(map||{})){out[k]=normalizeDay(v)}return{out}}
 
-// ===== CROSS-ORIGIN MIGRATION (vvsreaps.github.io -> profithub.app) =====
+// ===== CROSS-ORIGIN MIGRATION =====
 const MIGRATE_KEY='profithub_migrated_v1';
 const OLD_ORIGIN='https://vvsreaps.github.io';
 const OLD_URL='https://vvsreaps.github.io/Calendar/';
@@ -789,7 +957,6 @@ document.getElementById('saveDay').addEventListener('click',saveModal);
 document.getElementById('deleteDay').addEventListener('click',()=>{if(editingDate){delete DATA[editingDate];saveData(DATA);closeModal();render()}});
 document.getElementById('addShot').addEventListener('click',()=>addShotRow(''));
 
-/* ── MULTI-SCREENSHOT ── */
 function makeShotThumbHtml(url){
   if(!url||!isLikelyImageUrl(url))return'';
   return`<div class="shot-thumb-wrap" style="display:block"><img src="${escapeHtml(url)}" alt="Preview" loading="lazy"/><div class="shot-thumb-meta"><span>Preview</span><a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:none">Open ↗</a></div></div>`;
@@ -1190,6 +1357,152 @@ document.getElementById('importBtn').addEventListener('click',async()=>{
   };
   input.click();
 });
+
+// ===========================
+// ===== SHARE STATS (new) ====
+// ===========================
+const shareOverlay=document.getElementById('shareOverlay');
+const shareBtn=document.getElementById('shareBtn');
+const shareHint=document.getElementById('shareHint');
+
+document.getElementById('closeShareBtn').addEventListener('click',()=>{shareOverlay.style.display='none'});
+shareOverlay.addEventListener('click',e=>{if(e.target===shareOverlay)shareOverlay.style.display='none'});
+
+function buildShareCard(){
+  const y=current.getFullYear(),m=current.getMonth();
+  const s=getMonthStats(y,m);
+  const monthName=current.toLocaleString(undefined,{month:'long',year:'numeric'});
+
+  // Update modal title
+  document.getElementById('shareModalTitle').textContent=`Share — ${monthName}`;
+
+  // Period label
+  document.getElementById('sc_period').textContent=monthName.toUpperCase();
+
+  // P&L — always show real value (not masked) on share card
+  const pnlEl=document.getElementById('sc_pnl');
+  const absPnl=Math.abs(s.totalPL);
+  const sign=s.totalPL>=0?'+':'-';
+  pnlEl.textContent=`${sign}${fmt.format(absPnl)}`;
+  pnlEl.className='sc-pnl '+(s.totalPL>=0?'pos':'neg');
+
+  // Stats
+  document.getElementById('sc_winrate').textContent=s.trades?`${s.winRate.toFixed(1)}%`:'—';
+  document.getElementById('sc_daywin').textContent=s.dayWinRate!=null?`${s.dayWinRate.toFixed(1)}%`:'—';
+  document.getElementById('sc_pf').textContent=s.pf!=null?s.pf.toFixed(2):'—';
+  document.getElementById('sc_trades').textContent=s.trades||'—';
+  document.getElementById('sc_avgwin').textContent=s.wins?fmt.format(s.avgWin):'—';
+  document.getElementById('sc_avgloss').textContent=s.losses?`-${fmt.format(s.avgLoss)}`:'—';
+  document.getElementById('sc_daystats').textContent=
+    `${s.dayCount} trading day${s.dayCount!==1?'s':''}  •  ${s.dayWins} green  •  ${s.dayCount-s.dayWins} red`;
+
+  // Mini equity curve (SVG inline)
+  const eqWrap=document.getElementById('sc_equity');
+  const pts=s.equityPoints;
+  if(pts&&pts.length>=2){
+    const w=440,h=44,pad=4,minP=Math.min(...pts,0),maxP=Math.max(...pts,0),rng=(maxP-minP)||1;
+    const toX=i=>pad+(w-2*pad)*(i/(pts.length-1));
+    const toY=v=>pad+(h-2*pad)*(1-(v-minP)/rng);
+    const polyPts=pts.map((v,i)=>`${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ');
+    const color=s.totalPL>=0?'#00e5a0':'#ff4d6d';
+    const zeroY=toY(0).toFixed(1);
+    eqWrap.innerHTML=`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+      <line x1="${pad}" y1="${zeroY}" x2="${w-pad}" y2="${zeroY}" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+      <polyline points="${polyPts}" fill="none" stroke="${color}" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>
+    </svg>`;
+  }else{
+    eqWrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(107,107,128,.5);font-size:11px;font-family:Space Mono,monospace">No equity data</div>`;
+  }
+
+  // Reset hint
+  shareHint.textContent='Right-click the card above to save, or use the buttons below';
+  shareHint.className='share-hint';
+}
+
+shareBtn.addEventListener('click',()=>{
+  buildShareCard();
+  shareOverlay.style.display='flex';
+});
+
+// Lazy-load html2canvas when needed
+let html2canvasLoaded=false;
+async function ensureHtml2Canvas(){
+  if(html2canvasLoaded||typeof html2canvas!=='undefined'){html2canvasLoaded=true;return;}
+  await new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload=()=>{html2canvasLoaded=true;res()};
+    s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
+
+async function renderCardToCanvas(){
+  await ensureHtml2Canvas();
+  const card=document.getElementById('shareCard');
+  return html2canvas(card,{
+    backgroundColor:'#0c0d16',
+    scale:3,
+    useCORS:true,
+    logging:false,
+    allowTaint:false
+  });
+}
+
+// Save as PNG
+document.getElementById('saveImgBtn').addEventListener('click',async()=>{
+  const btn=document.getElementById('saveImgBtn');
+  btn.textContent='Rendering...';btn.disabled=true;
+  shareHint.textContent='Building your card...';shareHint.className='share-hint';
+  try{
+    const canvas=await renderCardToCanvas();
+    const link=document.createElement('a');
+    const monthStr=current.toLocaleString(undefined,{month:'long',year:'numeric'})
+      .replace(/\s+/g,'-').toLowerCase();
+    link.download=`profithub-${monthStr}.png`;
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+    shareHint.textContent='Saved! Drop it in Discord or share with friends 🚀';
+    shareHint.className='share-hint success';
+  }catch(err){
+    shareHint.textContent='Render failed — try right-clicking the card to save instead.';
+    console.error(err);
+  }finally{
+    btn.textContent='⬇ Save as Image';btn.disabled=false;
+  }
+});
+
+// Copy to clipboard
+document.getElementById('copyShareBtn').addEventListener('click',async()=>{
+  const btn=document.getElementById('copyShareBtn');
+  btn.textContent='Copying...';btn.disabled=true;
+  shareHint.textContent='Building your card...';shareHint.className='share-hint';
+  try{
+    const canvas=await renderCardToCanvas();
+    canvas.toBlob(async blob=>{
+      try{
+        await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+        shareHint.textContent='Copied! Paste directly into Discord with Ctrl+V / Cmd+V 📋';
+        shareHint.className='share-hint success';
+      }catch{
+        // Fallback: download instead
+        const link=document.createElement('a');
+        const monthStr=current.toLocaleString(undefined,{month:'long',year:'numeric'})
+          .replace(/\s+/g,'-').toLowerCase();
+        link.download=`profithub-${monthStr}.png`;
+        link.href=canvas.toDataURL('image/png');
+        link.click();
+        shareHint.textContent='Clipboard blocked — downloaded instead. Drop the file in Discord!';
+        shareHint.className='share-hint';
+      }
+      btn.textContent='📋 Copy to Clipboard';btn.disabled=false;
+    },'image/png');
+  }catch(err){
+    shareHint.textContent='Could not render image. Try right-clicking the card.';
+    btn.textContent='📋 Copy to Clipboard';btn.disabled=false;
+    console.error(err);
+  }
+});
 </script>
 
   <footer style="
@@ -1215,7 +1528,7 @@ document.getElementById('importBtn').addEventListener('click',async()=>{
       >@SeanDayTrades</a>
     </span>
 
-        <span style="
+    <span style="
       font-family:var(--font-mono);
       font-size:12px;
       color:var(--muted);
