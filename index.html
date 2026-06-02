@@ -402,6 +402,37 @@
       text-align:center;transition:color .2s;
     }
     .share-hint.success{color:var(--pos)}
+    .username-row{
+      display:flex;align-items:center;gap:0;
+      width:480px;max-width:100%;
+      background:#0b0c10;border:1px solid rgba(155,109,255,.25);
+      border-radius:10px;overflow:hidden;
+      transition:border-color .15s;
+    }
+    .username-row:focus-within{border-color:rgba(155,109,255,.6);box-shadow:0 0 0 3px rgba(155,109,255,.08)}
+    .username-at{
+      padding:0 10px 0 13px;
+      font-family:var(--font-mono);font-size:15px;font-weight:700;
+      color:var(--pos);
+      user-select:none;line-height:1;
+    }
+    .username-inp{
+      flex:1;background:transparent;border:none;
+      color:var(--text);font-family:var(--font-mono);font-size:13px;
+      padding:10px 12px 10px 0;outline:none;
+    }
+    .username-inp::placeholder{color:#3a3a55}
+    .username-label{
+      font-size:10px;font-family:var(--font-mono);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--muted);
+      width:480px;max-width:100%;margin-bottom:2px;
+    }
+    /* handle on the card */
+    .sc-handle{
+      font-size:12px;font-weight:700;font-family:'Space Mono',monospace;
+      color:rgba(155,109,255,.7);letter-spacing:.02em;
+    }
+    .sc-handle:empty{display:none}
 
     @media(max-width:720px){
       .cell,.wcell{height:82px}
@@ -424,7 +455,7 @@
   -->
   <script>
     const BANNER_ENABLED = true;
-    const BANNER_TEXT = 'Share button added. Get a score card image for the month!';
+    const BANNER_TEXT = 'Share button added!';
   </script>
 
   <div id="announcementBanner" class="announcement-banner" style="display:none">
@@ -677,11 +708,19 @@
 
           <div class="sc-footer">
             <div class="sc-tag" id="sc_daystats">— trading days</div>
-            <div class="sc-watermark">profithub.app</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+              <div class="sc-handle" id="sc_handle"></div>
+              <div class="sc-watermark">profithub.app</div>
+            </div>
           </div>
         </div>
         <!-- end #shareCard -->
 
+        <div class="username-label">Your handle (shows on card)</div>
+        <div class="username-row">
+          <span class="username-at">@</span>
+          <input class="username-inp" id="usernameInp" type="text" maxlength="32" placeholder="yourtag" autocomplete="off" spellcheck="false"/>
+        </div>
         <div class="share-actions">
           <button class="btn btn-save-img" id="saveImgBtn">⬇ Save as Image</button>
           <button class="btn btn-copy-img" id="copyShareBtn">📋 Copy to Clipboard</button>
@@ -1358,6 +1397,22 @@ document.getElementById('importBtn').addEventListener('click',async()=>{
   input.click();
 });
 
+// ===== USERNAME / HANDLE =====
+const USERNAME_KEY='ph_username_v1';
+const usernameInp=document.getElementById('usernameInp');
+const scHandle=document.getElementById('sc_handle');
+
+function syncHandle(){
+  const val=(usernameInp.value||'').trim();
+  scHandle.textContent=val?`@${val}`:'';
+  localStorage.setItem(USERNAME_KEY,val);
+}
+
+// Restore saved username
+usernameInp.value=localStorage.getItem(USERNAME_KEY)||'';
+syncHandle();
+usernameInp.addEventListener('input',syncHandle);
+
 // ===========================
 // ===== SHARE STATS (new) ====
 // ===========================
@@ -1417,6 +1472,8 @@ function buildShareCard(){
   // Reset hint
   shareHint.textContent='Right-click the card above to save, or use the buttons below';
   shareHint.className='share-hint';
+  // Sync handle in case it changed
+  syncHandle();
 }
 
 shareBtn.addEventListener('click',()=>{
