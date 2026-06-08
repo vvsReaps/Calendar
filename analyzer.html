@@ -117,20 +117,105 @@
       font-size:10px;font-family:var(--font-mono);font-weight:700;cursor:default}
     .streak-dot.win{background:rgba(0,229,160,.15);color:var(--pos)}
     .streak-dot.loss{background:rgba(255,77,109,.15);color:var(--neg)}
+
+    /* ── SCOPE BAR ── */
+    .scope-bar{
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+      background:var(--panel);border:1px solid var(--line);border-radius:12px;
+      padding:12px 16px;margin-bottom:20px;
+    }
+    .scope-label{font-size:11px;font-weight:700;font-family:var(--font-mono);
+      letter-spacing:.07em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+    .scope-pills{display:flex;gap:5px;flex-wrap:wrap}
+    .scope-pill{
+      padding:5px 13px;border-radius:7px;border:1px solid var(--line);
+      background:transparent;color:var(--muted);font-family:var(--font-mono);
+      font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.03em;
+    }
+    .scope-pill:hover:not(.active){color:var(--text);border-color:rgba(155,109,255,.3)}
+    .scope-pill.active{background:var(--panel-soft);color:var(--text);border-color:rgba(155,109,255,.5);
+      box-shadow:0 0 0 1px rgba(155,109,255,.2)}
+    .scope-pill.active-month{background:rgba(0,229,160,.08);color:var(--pos);border-color:rgba(0,229,160,.35)}
+    .scope-divider{width:1px;height:20px;background:var(--line);flex-shrink:0}
+    .scope-context{font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+    .scope-context span{color:var(--text)}
+
+    /* ── MONTH COMPARE SECTION ── */
+    .compare-section{margin-top:32px}
+    .compare-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:20px}
+    .cmp-card{
+      background:var(--panel);border:1px solid var(--line);border-radius:12px;
+      padding:14px 16px;position:relative;overflow:hidden;cursor:pointer;transition:border-color .15s;
+    }
+    .cmp-card:hover{border-color:rgba(155,109,255,.3)}
+    .cmp-card.cmp-active{border-color:var(--purple);background:rgba(155,109,255,.05)}
+    .cmp-card.cmp-current{border-color:rgba(0,229,160,.4);background:rgba(0,229,160,.04)}
+    .cmp-month{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.05em;
+      color:var(--muted);margin-bottom:6px;text-transform:uppercase}
+    .cmp-pnl{font-family:var(--font-mono);font-size:18px;font-weight:700}
+    .cmp-stats{font-size:10px;color:var(--muted);font-family:var(--font-mono);margin-top:4px}
+    .cmp-badge{position:absolute;top:10px;right:10px;font-size:9px;font-family:var(--font-mono);
+      font-weight:700;padding:2px 6px;border-radius:999px;letter-spacing:.04em}
+    .cmp-badge.this-month{background:rgba(0,229,160,.15);color:var(--pos)}
+    .cmp-badge.selected{background:rgba(155,109,255,.2);color:var(--purple)}
+
+    /* delta pills in comparison table */
+    .delta{font-size:10px;font-family:var(--font-mono);font-weight:700;
+      padding:2px 6px;border-radius:5px;display:inline-block;margin-left:6px}
+    .delta.up{background:rgba(0,229,160,.12);color:var(--pos)}
+    .delta.dn{background:rgba(255,77,109,.12);color:var(--neg)}
+    .delta.flat{background:rgba(255,255,255,.06);color:var(--muted)}
+
+    /* compare table */
+    .cmp-table-wrap{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:20px}
+    .cmp-table{width:100%;border-collapse:collapse}
+    .cmp-table th{padding:10px 14px;text-align:left;font-family:var(--font-mono);font-size:10px;
+      font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+      background:var(--panel);border-bottom:1px solid var(--line)}
+    .cmp-table th:not(:first-child){text-align:right}
+    .cmp-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);
+      font-family:var(--font-mono);font-size:12px}
+    .cmp-table td:not(:first-child){text-align:right}
+    .cmp-table tr:last-child td{border-bottom:none}
+    .cmp-table tr.row-current td{background:rgba(0,229,160,.04)}
+    .cmp-table tr.row-selected td{background:rgba(155,109,255,.04)}
+
+    /* overlap equity chart */
+    .overlap-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:14px}
+    .overlap-legend{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+    .overlap-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0}
+
+    /* progress bar for metric comparison */
+    .metric-bars{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+    @media(max-width:600px){.metric-bars{grid-template-columns:1fr}}
+    .mbar-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+    .mbar-title{font-size:10px;font-family:var(--font-mono);font-weight:700;letter-spacing:.07em;
+      text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+    .mbar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .mbar-month{font-size:11px;font-family:var(--font-mono);min-width:44px;color:var(--muted)}
+    .mbar-track{flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden}
+    .mbar-fill{height:100%;border-radius:999px;transition:width .5s cubic-bezier(.23,1,.32,1)}
+    .mbar-val{font-size:11px;font-family:var(--font-mono);font-weight:700;white-space:nowrap;min-width:48px;text-align:right}
+
+    .no-compare{display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:40px;color:var(--muted);gap:8px;text-align:center;background:var(--panel);
+      border:1px solid var(--line);border-radius:12px}
+    .no-compare .big{font-size:32px;opacity:.4}
+    .no-compare p{font-size:12px;font-family:var(--font-mono);max-width:260px;line-height:1.8}
   </style>
 </head>
 <body>
 <div class="topbar">
   <div class="topbar">
-    <a class="logo" href="#" onclick="return false">
-      <img src="logo.png" alt="ProfitHub" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;" />
+    <a class="logo" href="index.html">
+      <img src="logo.png" alt="ProfitHub" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+      <div class="logo-mark" style="display:none">P</div>
       <div>
         <div class="logo-text">Profit<span>Hub</span></div>
       </div>
-  <span class="logo-tag">ANALYZER</span>
-  
+      <span class="logo-tag">ANALYZER</span>
     </a>
-</div>
+  </div>
 </div>
 
 <div class="wrap">
@@ -145,15 +230,25 @@
   <div class="back-row">
     <button class="btn-outline" onclick="window.location.href='index.html'">&#8592; Back to Calendar</button>
   </div>
+
   <div id="dashboard">
     <div class="reset-row">
       <button class="btn-outline" onclick="resetUI()">&#8617; Load another file</button>
     </div>
+
+    <!-- ── SCOPE BAR ── -->
+    <div class="scope-bar" id="scopeBar">
+      <div class="scope-label">Viewing</div>
+      <div class="scope-pills" id="scopePills"></div>
+      <div class="scope-divider"></div>
+      <div class="scope-context" id="scopeContext"></div>
+    </div>
+
     <div class="section-title">Overview</div>
     <div class="stats-grid" id="stats-grid"></div>
     <div class="section-title">Equity curve</div>
     <div class="equity-box"><canvas id="equity-chart" height="120"></canvas></div>
-    <div class="section-title">Win / loss streak (hover over)</div>
+    <div class="section-title">Win / loss streak</div>
     <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px">
       <div class="streak-row" id="streak-dots"></div>
       <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--muted)">
@@ -189,29 +284,175 @@
         <tbody id="trade-tbody"></tbody>
       </table>
     </div>
-  </div>
+
+    <!-- ── MONTH COMPARISON ── -->
+    <div class="compare-section" id="compareSection" style="display:none">
+      <div class="section-title" style="margin-top:40px;border-top:1px solid var(--line);padding-top:32px">
+        Month-over-month comparison
+        <span id="compareSubLabel" style="color:var(--text);text-transform:none;font-size:12px;letter-spacing:0;margin-left:8px"></span>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;font-family:var(--font-mono)">
+        Click any month card to compare it against the current view.
+      </p>
+
+      <!-- month cards -->
+      <div class="compare-grid" id="compareGrid"></div>
+
+      <!-- overlay equity -->
+      <div id="compareEquityWrap" style="display:none">
+        <div class="section-title" style="margin-top:0">Equity curve overlay</div>
+        <div class="overlap-box">
+          <canvas id="overlap-chart" height="140"></canvas>
+          <div class="overlap-legend" id="overlapLegend"></div>
+        </div>
+      </div>
+
+      <!-- metric bars -->
+      <div id="compareMetricWrap" style="display:none">
+        <div class="section-title" style="margin-top:0">Metric comparison</div>
+        <div class="metric-bars" id="metricBars"></div>
+      </div>
+
+      <!-- comparison table -->
+      <div id="compareTableWrap" style="display:none">
+        <div class="section-title" style="margin-top:0">Side-by-side stats</div>
+        <div class="cmp-table-wrap">
+          <table class="cmp-table">
+            <thead><tr>
+              <th>Metric</th>
+              <th id="cmpColA"></th>
+              <th id="cmpColB"></th>
+              <th>Change</th>
+            </tr></thead>
+            <tbody id="cmpTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="no-compare" id="compareEmpty">
+        <div class="big">📅</div>
+        <p>Click a month card above to compare it against your current view.</p>
+      </div>
+    </div>
+
+  </div><!-- /dashboard -->
 </div>
+
 <script>
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const DAY_SHORT=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS_FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_SHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const $=id=>document.getElementById(id);
-let equityChart,setupChart,dirChart;
+let equityChart,setupChart,dirChart,overlapChart;
+let ALL_DATA=null; // raw parsed object
+let CURRENT_SCOPE='current'; // 'current' | 'YYYY-MM' | 'all'
+let SELECTED_MONTH=null; // for comparison panel
+
 function fmt(v){return(v>=0?'+':'')+v.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})}
 function fmtPlain(v){return v.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})}
 function pct(v){return v.toFixed(1)+'%'}
 function colorCls(v){return v>0?'pos':v<0?'neg':'neutral'}
+
 const STORAGE_KEY='pl_calendar_data_v4';
 function loadCalendarDataFromStorage(){try{const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');if(!raw||typeof raw!=='object')return null;return raw.data||raw;}catch{return null;}}
 function hasStoredTrades(data){if(!data||typeof data!=='object')return false;return Object.values(data).some(day=>day&&typeof day==='object'&&Array.isArray(day.trades)&&day.trades.length);}
-function tryAutoLoadFromStorage(){const stored=loadCalendarDataFromStorage();if(hasStoredTrades(stored)){analyze(stored);return true;}return false;}
+function tryAutoLoadFromStorage(){const stored=loadCalendarDataFromStorage();if(hasStoredTrades(stored)){ALL_DATA=stored;renderWithScope();return true;}return false;}
+
 $('file-input').addEventListener('change',e=>{const f=e.target.files[0];if(f)readFile(f);});
 const dz=$('drop-zone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
 dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
 dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)readFile(f);});
-function readFile(f){const r=new FileReader();r.onload=e=>{try{const raw=JSON.parse(e.target.result);const data=raw.data||raw;analyze(data);}catch(err){alert('Could not parse file. Make sure it is a valid ProfitHub JSON export.');}};r.readAsText(f);}
-function resetUI(){$('drop-zone').style.display='';$('dashboard').style.display='none';$('file-input').value='';if(equityChart){equityChart.destroy();equityChart=null;}if(setupChart){setupChart.destroy();setupChart=null;}if(dirChart){dirChart.destroy();dirChart=null;}}
+function readFile(f){const r=new FileReader();r.onload=e=>{try{const raw=JSON.parse(e.target.result);ALL_DATA=raw.data||raw;renderWithScope();}catch(err){alert('Could not parse file. Make sure it is a valid ProfitHub JSON export.');}};r.readAsText(f);}
+function resetUI(){ALL_DATA=null;CURRENT_SCOPE='current';SELECTED_MONTH=null;$('drop-zone').style.display='';$('dashboard').style.display='none';$('file-input').value='';destroyCharts();}
+function destroyCharts(){[equityChart,setupChart,dirChart,overlapChart].forEach(c=>{if(c){c.destroy();}});equityChart=setupChart=dirChart=overlapChart=null;}
+
 function mn(trades,patterns){return trades.filter(t=>t.notes&&patterns.some(p=>typeof p==='string'?t.notes.toLowerCase().includes(p):p.test(t.notes)));}
+
+// ── SCOPE HELPERS ──
+function getCurrentMonthKey(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');}
+
+function getAvailableMonths(data){
+  const months=new Set();
+  Object.keys(data).forEach(dateStr=>{
+    const m=dateStr.slice(0,7);
+    const day=data[dateStr];
+    if(day&&(day.trades||[]).length>0)months.add(m);
+  });
+  return Array.from(months).sort();
+}
+
+function filterDataByScope(data,scope){
+  if(scope==='all')return data;
+  const prefix=scope==='current'?getCurrentMonthKey():scope;
+  const out={};
+  Object.entries(data).forEach(([k,v])=>{if(k.startsWith(prefix))out[k]=v;});
+  return out;
+}
+
+// ── SCOPE BAR ──
+function buildScopeBar(data){
+  const months=getAvailableMonths(data);
+  const curKey=getCurrentMonthKey();
+  const pills=$('scopePills');
+  pills.innerHTML='';
+
+  // "This month" pill
+  const thisMoPill=document.createElement('button');
+  thisMoPill.className='scope-pill'+(CURRENT_SCOPE==='current'?' active active-month':'');
+  thisMoPill.textContent='This month';
+  thisMoPill.onclick=()=>setScope('current');
+  pills.appendChild(thisMoPill);
+
+  // individual past months
+  months.filter(m=>m!==curKey).reverse().slice(0,6).forEach(m=>{
+    const [yr,mo]=m.split('-');
+    const pill=document.createElement('button');
+    pill.className='scope-pill'+(CURRENT_SCOPE===m?' active':'');
+    pill.textContent=MONTHS_SHORT[parseInt(mo)-1]+' '+yr.slice(2);
+    pill.onclick=()=>setScope(m);
+    pills.appendChild(pill);
+  });
+
+  // "All time" pill
+  const allPill=document.createElement('button');
+  allPill.className='scope-pill'+(CURRENT_SCOPE==='all'?' active':'');
+  allPill.textContent='All time';
+  allPill.onclick=()=>setScope('all');
+  pills.appendChild(allPill);
+
+  updateScopeContext();
+}
+
+function updateScopeContext(){
+  const ctx=$('scopeContext');
+  const [yr,mo]=CURRENT_SCOPE==='current'?getCurrentMonthKey().split('-'):CURRENT_SCOPE.split('-');
+  if(CURRENT_SCOPE==='all'){
+    ctx.innerHTML='Analyzing <span>all available data</span>';
+  } else if(CURRENT_SCOPE==='current'){
+    ctx.innerHTML='Analyzing <span>'+MONTHS_FULL[parseInt(mo)-1]+' '+yr+'</span> (current month)';
+  } else {
+    ctx.innerHTML='Analyzing <span>'+MONTHS_FULL[parseInt(mo)-1]+' '+yr+'</span>';
+  }
+}
+
+function setScope(scope){
+  CURRENT_SCOPE=scope;
+  SELECTED_MONTH=null;
+  renderWithScope();
+}
+
+function renderWithScope(){
+  if(!ALL_DATA)return;
+  const filtered=filterDataByScope(ALL_DATA,CURRENT_SCOPE);
+  destroyCharts();
+  analyze(filtered);
+  buildScopeBar(ALL_DATA);
+  buildCompareSection(ALL_DATA);
+}
+
+// ── MAIN ANALYZE ──
 function analyze(data){
   const trades=[];
   Object.entries(data).sort(([a],[b])=>a.localeCompare(b)).forEach(([dateStr,day])=>{
@@ -220,7 +461,15 @@ function analyze(data){
       trades.push({date:dateStr,dow:d.getDay(),dowName:DAYS[d.getDay()],sym:t.sym||'',dir:t.dir||'',setup:(t.setup||'').trim()||'Untagged',pnl:Number(t.pnl)||0,notes:(day.notes||'').trim()});
     });
   });
-  if(!trades.length){alert('No trades found in this file.');return;}
+  if(!trades.length){
+    if(CURRENT_SCOPE!=='all'&&CURRENT_SCOPE!=='current'){
+      // show empty state for a specific month
+      $('stats-grid').innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 0;grid-column:1/-1">No trades found for this period.</div>';
+      $('drop-zone').style.display='none';$('dashboard').style.display='block';
+      return;
+    }
+    alert('No trades found.');return;
+  }
   const wins=trades.filter(t=>t.pnl>0),losses=trades.filter(t=>t.pnl<0);
   const totalPnl=trades.reduce((a,t)=>a+t.pnl,0);
   const winRate=wins.length/trades.length*100;
@@ -237,8 +486,9 @@ function analyze(data){
     if(!byDir[t.dir])byDir[t.dir]={trades:[],pnl:0};byDir[t.dir].trades.push(t);byDir[t.dir].pnl+=t.pnl;
     byDow[t.dow].trades.push(t);byDow[t.dow].pnl+=t.pnl;
   });
-  const activeDays=byDow.filter(d=>d.trades.length>0).length;
-  const greenDays=byDow.filter(d=>d.trades.length>0&&d.pnl>0).length;
+  const uniqueTradingDays=[...new Set(trades.map(t=>t.date))];
+  const activeDays=uniqueTradingDays.length;
+  const greenDays=uniqueTradingDays.filter(d=>{const dayTrades=trades.filter(t=>t.date===d);return dayTrades.reduce((a,t)=>a+t.pnl,0)>0;}).length;
 
   // Stats
   const statsData=[
@@ -254,6 +504,7 @@ function analyze(data){
   $('stats-grid').innerHTML=statsData.map(s=>'<div class="stat-card"><div class="stat-label">'+s.label+'</div><div class="stat-value '+s.cls+'">'+s.value+'</div><div class="stat-sub">'+s.sub+'</div></div>').join('');
 
   // Equity chart
+  if(equityChart)equityChart.destroy();
   const ctx=$('equity-chart').getContext('2d');
   const gradPos=ctx.createLinearGradient(0,0,0,200);gradPos.addColorStop(0,'rgba(0,229,160,.18)');gradPos.addColorStop(1,'rgba(0,229,160,0)');
   const gradNeg=ctx.createLinearGradient(0,0,0,200);gradNeg.addColorStop(0,'rgba(255,77,109,.18)');gradNeg.addColorStop(1,'rgba(255,77,109,0)');
@@ -324,6 +575,8 @@ function analyze(data){
   }).join('');
 
   // Charts
+  if(setupChart)setupChart.destroy();
+  if(dirChart)dirChart.destroy();
   const setupLabels=Object.keys(bySetup);const setupColors=['#9b6dff','#00e5a0','#f0c060','#ff4d6d','#60b0f0','#f09b60'];
   setupChart=new Chart($('setup-chart').getContext('2d'),{type:'doughnut',data:{labels:setupLabels,datasets:[{data:setupLabels.map(s=>bySetup[s].trades.length),backgroundColor:setupColors.slice(0,setupLabels.length),borderColor:'#0f1015',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#ddddf0',font:{size:11},boxWidth:10,padding:12}},title:{display:true,text:'Trades by setup',color:'#6b6b80',font:{size:11}}}}});
   const dirLabels=Object.keys(byDir).filter(k=>k!=='');
@@ -342,6 +595,171 @@ function analyze(data){
   $('drop-zone').style.display='none';$('dashboard').style.display='block';
 }
 
+// ── MONTH COMPARE SECTION ──
+function calcMonthStats(data,monthKey){
+  const filtered=filterDataByScope(data,monthKey);
+  const trades=[];
+  Object.entries(filtered).sort(([a],[b])=>a.localeCompare(b)).forEach(([dateStr,day])=>{
+    (day.trades||[]).forEach(t=>{
+      trades.push({date:dateStr,pnl:Number(t.pnl)||0,setup:(t.setup||'').trim()||'Untagged',dir:t.dir||'',notes:(day.notes||'').trim()});
+    });
+  });
+  if(!trades.length)return null;
+  const wins=trades.filter(t=>t.pnl>0),losses=trades.filter(t=>t.pnl<0);
+  const totalPnl=trades.reduce((a,t)=>a+t.pnl,0);
+  const winRate=trades.length?wins.length/trades.length*100:0;
+  const avgWin=wins.length?wins.reduce((a,t)=>a+t.pnl,0)/wins.length:0;
+  const avgLoss=losses.length?losses.reduce((a,t)=>a+t.pnl,0)/losses.length:0;
+  const profitFactor=losses.length?Math.abs(wins.reduce((a,t)=>a+t.pnl,0)/losses.reduce((a,t)=>a+t.pnl,0)):Infinity;
+  const uniqueDays=[...new Set(trades.map(t=>t.date))];
+  const greenDays=uniqueDays.filter(d=>trades.filter(t=>t.date===d).reduce((a,t)=>a+t.pnl,0)>0).length;
+  // equity series
+  let running=0;const equity=[];
+  trades.forEach(t=>{running+=t.pnl;equity.push(+running.toFixed(2));});
+  return{trades,wins,losses,totalPnl,winRate,avgWin,avgLoss,profitFactor,activeDays:uniqueDays.length,greenDays,equity,monthKey};
+}
+
+function buildCompareSection(data){
+  const months=getAvailableMonths(data);
+  const curKey=getCurrentMonthKey();
+  const sec=$('compareSection');
+  if(months.length<2){sec.style.display='none';return;}
+  sec.style.display='block';
+
+  // Build cards
+  const grid=$('compareGrid');
+  grid.innerHTML=months.slice().reverse().map(m=>{
+    const stats=calcMonthStats(data,m);
+    if(!stats)return '';
+    const [yr,mo]=m.split('-');
+    const isCur=m===curKey;
+    const isScope=m===CURRENT_SCOPE||(CURRENT_SCOPE==='current'&&isCur);
+    const isSel=m===SELECTED_MONTH;
+    const label=MONTHS_SHORT[parseInt(mo)-1]+' '+yr;
+    const cls='cmp-card'+(isCur?' cmp-current':'')+(isSel?' cmp-active':'');
+    const badge=isCur?'<span class="cmp-badge this-month">THIS MONTH</span>':'';
+    const selBadge=isSel?'<span class="cmp-badge selected">COMPARING</span>':'';
+    return `<div class="${cls}" onclick="selectCompareMonth('${m}')">
+      ${badge}${selBadge}
+      <div class="cmp-month">${label}</div>
+      <div class="cmp-pnl ${colorCls(stats.totalPnl)}">${fmt(stats.totalPnl)}</div>
+      <div class="cmp-stats">${stats.trades.length}T &middot; ${stats.winRate.toFixed(0)}% WR &middot; ${stats.activeDays}d</div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  // Render comparison if a month is selected
+  if(SELECTED_MONTH){
+    renderComparison(data,SELECTED_MONTH);
+  } else {
+    $('compareEmpty').style.display='flex';
+    $('compareEquityWrap').style.display='none';
+    $('compareMetricWrap').style.display='none';
+    $('compareTableWrap').style.display='none';
+  }
+}
+
+function selectCompareMonth(m){
+  SELECTED_MONTH=SELECTED_MONTH===m?null:m;
+  buildCompareSection(ALL_DATA);
+}
+
+function renderComparison(data,compareKey){
+  $('compareEmpty').style.display='none';
+  $('compareEquityWrap').style.display='block';
+  $('compareMetricWrap').style.display='block';
+  $('compareTableWrap').style.display='block';
+
+  // Determine "current" month key for the scope bar context
+  const scopeKey=CURRENT_SCOPE==='current'?getCurrentMonthKey():CURRENT_SCOPE==='all'?null:CURRENT_SCOPE;
+  const aKey=scopeKey;
+  const bKey=compareKey;
+
+  const aStats=aKey?calcMonthStats(data,aKey):null;
+  const bStats=calcMonthStats(data,bKey);
+  if(!bStats)return;
+
+  const [aYr,aMo]=aKey?aKey.split('-'):[];
+  const [bYr,bMo]=bKey.split('-');
+  const aLabel=aKey?MONTHS_SHORT[parseInt(aMo)-1]+' '+aYr:'All time';
+  const bLabel=MONTHS_SHORT[parseInt(bMo)-1]+' '+bYr;
+
+  $('compareSubLabel').textContent='';
+  $('cmpColA').textContent=aLabel+' (current view)';
+  $('cmpColB').textContent=bLabel;
+
+  // Overlap equity chart
+  if(overlapChart)overlapChart.destroy();
+  const maxLen=Math.max(aStats?aStats.equity.length:0,bStats.equity.length);
+  const aEq=aStats?aStats.equity:[];
+  const bEq=bStats.equity;
+  const labels=Array.from({length:maxLen},(_,i)=>'T'+(i+1));
+  const octx=$('overlap-chart').getContext('2d');
+  overlapChart=new Chart(octx,{type:'line',data:{labels,datasets:[
+    ...(aStats?[{label:aLabel,data:aEq,borderColor:'#00e5a0',borderWidth:2,pointRadius:2,fill:false,tension:.35}]:[]),
+    {label:bLabel,data:bEq,borderColor:'#9b6dff',borderWidth:2,pointRadius:2,fill:false,tension:.35,borderDash:aStats?[5,3]:[]}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#15161c',borderColor:'#1e1f27',borderWidth:1,titleColor:'#ddddf0',bodyColor:'#ddddf0',callbacks:{label:c=>'  '+c.dataset.label+': '+fmt(c.parsed.y)}}},scales:{x:{ticks:{color:'#6b6b80',font:{size:10}},grid:{color:'#1e1f27'}},y:{ticks:{color:'#6b6b80',font:{size:10},callback:v=>fmtPlain(v)},grid:{color:'#1e1f27'}}}}});
+
+  $('overlapLegend').innerHTML=(aStats?`<span style="display:flex;align-items:center;font-size:11px;font-family:var(--font-mono);color:var(--muted)"><span class="overlap-dot" style="background:#00e5a0"></span>${aLabel} (current view)</span>`:'')+
+    `<span style="display:flex;align-items:center;font-size:11px;font-family:var(--font-mono);color:var(--muted)"><span class="overlap-dot" style="background:#9b6dff"></span>${bLabel} (comparing)</span>`;
+
+  // Metric bars
+  const metrics=[
+    {label:'Total PnL',aVal:aStats?aStats.totalPnl:null,bVal:bStats.totalPnl,fmt:v=>fmt(v),higher:true},
+    {label:'Win Rate',aVal:aStats?aStats.winRate:null,bVal:bStats.winRate,fmt:v=>v.toFixed(1)+'%',higher:true},
+    {label:'Profit Factor',aVal:aStats?(isFinite(aStats.profitFactor)?aStats.profitFactor:null):null,bVal:isFinite(bStats.profitFactor)?bStats.profitFactor:null,fmt:v=>v?v.toFixed(2):'∞',higher:true},
+    {label:'Avg Win',aVal:aStats?aStats.avgWin:null,bVal:bStats.avgWin,fmt:v=>fmtPlain(v),higher:true},
+    {label:'Avg Loss',aVal:aStats?aStats.avgLoss:null,bVal:bStats.avgLoss,fmt:v=>fmtPlain(v),higher:false},
+    {label:'Trading Days',aVal:aStats?aStats.activeDays:null,bVal:bStats.activeDays,fmt:v=>v,higher:true},
+  ];
+
+  $('metricBars').innerHTML=metrics.map(m=>{
+    const aV=m.aVal,bV=m.bVal;
+    if(aV===null&&bV===null)return '';
+    const aAbs=Math.abs(aV||0),bAbs=Math.abs(bV||0),maxAbs=Math.max(aAbs,bAbs,0.01);
+    const aW=aAbs/maxAbs*100,bW=bAbs/maxAbs*100;
+    const aColor=aV>=0?'#00e5a0':'#ff4d6d',bColor='#9b6dff';
+    return `<div class="mbar-card">
+      <div class="mbar-title">${m.label}</div>
+      ${aStats?`<div class="mbar-row">
+        <div class="mbar-month">${aLabel}</div>
+        <div class="mbar-track"><div class="mbar-fill" style="width:${aW.toFixed(0)}%;background:${aColor}"></div></div>
+        <div class="mbar-val" style="color:${aColor}">${aV!==null?m.fmt(aV):'—'}</div>
+      </div>`:''}
+      <div class="mbar-row">
+        <div class="mbar-month">${bLabel}</div>
+        <div class="mbar-track"><div class="mbar-fill" style="width:${bW.toFixed(0)}%;background:${bColor}"></div></div>
+        <div class="mbar-val" style="color:${bColor}">${bV!==null?m.fmt(bV):'—'}</div>
+      </div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  // Comparison table
+  function deltaTag(aV,bV,higher){
+    if(aV===null||bV===null)return '';
+    const diff=aV-bV;
+    if(Math.abs(diff)<0.01)return '<span class="delta flat">—</span>';
+    const better=(higher?diff>0:diff<0);
+    const sign=diff>0?'+':'';
+    const cls=better?'up':'dn';
+    // format delta
+    const formatted=typeof aV==='number'&&Math.abs(aV)>10?fmt(diff):diff.toFixed(1)+(typeof aV==='string'&&aV.includes('%')?'%':'');
+    return `<span class="delta ${cls}">${sign}${fmt(diff)}</span>`;
+  }
+
+  const rows=[
+    ['Net PnL',aStats?fmt(aStats.totalPnl):'—',fmt(bStats.totalPnl),aStats?deltaTag(aStats.totalPnl,bStats.totalPnl,true):''],
+    ['Trades',aStats?aStats.trades.length:'—',bStats.trades.length,''],
+    ['Win Rate',aStats?pct(aStats.winRate):'—',pct(bStats.winRate),aStats?`<span class="delta ${aStats.winRate>=bStats.winRate?'up':'dn'}">${aStats.winRate>=bStats.winRate?'+':''}${(aStats.winRate-bStats.winRate).toFixed(1)}%</span>`:''],
+    ['Profit Factor',aStats?(isFinite(aStats.profitFactor)?aStats.profitFactor.toFixed(2):'∞'):'—',isFinite(bStats.profitFactor)?bStats.profitFactor.toFixed(2):'∞',''],
+    ['Avg Win',aStats?fmtPlain(aStats.avgWin):'—',fmtPlain(bStats.avgWin),''],
+    ['Avg Loss',aStats?fmtPlain(aStats.avgLoss):'—',fmtPlain(bStats.avgLoss),''],
+    ['Trading Days',aStats?aStats.activeDays:'—',bStats.activeDays,''],
+    ['Green Days',aStats?aStats.greenDays:'—',bStats.greenDays,''],
+  ];
+  $('cmpTbody').innerHTML=rows.map(([label,a,b,delta])=>`<tr><td style="color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase">${label}</td><td style="color:var(--pos);font-weight:700">${a}</td><td style="color:var(--purple);font-weight:700">${b}</td><td>${delta||'—'}</td></tr>`).join('');
+}
+
+// ── INSIGHTS ENGINE (unchanged from original) ──
 function generateInsights(trades,bySetup,byDow,winRate,profitFactor,avgWin,avgLoss,activeDays,greenDays,wins,losses,totalPnl,byDir){
   const dayWinRate=activeDays?greenDays/activeDays*100:0;
   const rrRatio=avgLoss!==0?Math.abs(avgWin/avgLoss):0;
@@ -370,14 +788,12 @@ function generateInsights(trades,bySetup,byDow,winRate,profitFactor,avgWin,avgLo
     sizeNote:   nf([/1 nq/i,/sizing/i,/dont be a puss/i,/be more aggressive/i]),
   };
 
-  // Loss after win
   const lossAfterWin=[];let prevWin=false;
   trades.forEach(t=>{if(prevWin&&t.pnl<0)lossAfterWin.push(t);prevWin=t.pnl>0;});
 
   const perf=[],mistakes=[],strengths=[],setupEdge=[],dayAna=[],coaching=[];
   const p=(arr,item)=>arr.push(item);
 
-  // Performance
   if(winRate>=60)p(perf,{type:'good',icon:'&#127919;',title:'Strong '+winRate.toFixed(0)+'% win rate',desc:"You're winning more than 6 in every 10 trades. That is a solid foundation &mdash; keep executing with the same discipline."});
   else if(winRate>=50)p(perf,{type:'neutral',icon:'&#x1F4C8;',title:'Above-breakeven at '+winRate.toFixed(0)+'% win rate',desc:"Positive but close to 50/50. Focus on cutting losses quicker or sizing up on highest-conviction setups to widen the edge."});
   else p(perf,{type:'bad',icon:'&#9888;&#65039;',title:'Win rate below 50% ('+winRate.toFixed(0)+'%)',desc:"You're losing more trades than you win. Not fatal if your avg win is much bigger than avg loss &mdash; but signals you may be entering too early or stops are too tight."});
@@ -391,46 +807,27 @@ function generateInsights(trades,bySetup,byDow,winRate,profitFactor,avgWin,avgLo
   else if(rrRatio>0&&rrRatio<1&&avgLoss<0)p(perf,{type:'bad',icon:'&#x1F4D0;',title:'Avg R:R below 1:1 ('+rrRatio.toFixed(2)+':1)',desc:'Average loser ('+fmtPlain(Math.abs(avgLoss))+') is bigger than the average winner ('+fmtPlain(avgWin)+'). Targets too small or losses held too long. Minimum 1:1 on every trade.'});
 
   if(activeDays>0&&dayWinRate>=60)p(perf,{type:'good',icon:'&#x1F4C5;',title:dayWinRate.toFixed(0)+'% of trading days finish green',desc:greenDays+' out of '+activeDays+' days are profitable. Your daily read is putting you on the right side more often than not.'});
-
   if(lossAfterWin.length>=2)p(perf,{type:'warn',icon:'&#x1F501;',title:lossAfterWin.length+' losses immediately followed a winning trade',desc:'Watch for overconfidence after wins. If you loosen rules on the trade after a big winner, build a cool-down rule &mdash; walk away, or reduce size on the next entry.'});
 
-  // Recurring mistakes
   if(nm.fomo.length>=1){const fomoLoss=nm.fomo.filter(t=>t.pnl<0).reduce((a,t)=>a+t.pnl,0);p(mistakes,{type:'bad',icon:'&#x1F4B8;',title:'FOMO entries &mdash; spotted '+nm.fomo.length+' time'+(nm.fomo.length>1?'s':''),desc:'You identified FOMO trades in your own notes '+nm.fomo.length+' time'+(nm.fomo.length>1?'s':'')+'. Those trades lost '+fmt(fomoLoss)+'. FOMO entries break at least one rule every time &mdash; no setup, no trade. Period.'});}
-
   if(nm.earlyEntry.length>=2){const earlyWin=nm.earlyEntry.filter(t=>t.pnl>0).length;p(mistakes,{type:'bad',icon:'&#x23F0;',title:'Early entries &mdash; mentioned '+nm.earlyEntry.length+' times',desc:'You wrote "entered too early" across '+nm.earlyEntry.length+' sessions. Even when they work ('+earlyWin+' of them did), early entries give worse fills and miss the full move. Wait for the full confirmation every time.'});}
-
   if(nm.movedStop.length>=1){const cost=nm.movedStop.reduce((a,t)=>a+t.pnl,0);p(mistakes,{type:'warn',icon:'&#x1F6AB;',title:'Moved SL early &mdash; '+nm.movedStop.length+' time'+(nm.movedStop.length>1?'s':''),desc:'You moved your stop into profit before price confirmed the move on '+nm.movedStop.length+' trade'+(nm.movedStop.length>1?'s':'')+'. These trades returned '+fmt(cost)+'&mdash; but the setups were likely worth more. Set your stop, then leave it.'});}
-
   if(nm.noConfirm.length>=2)p(mistakes,{type:'bad',icon:'&#x1F514;',title:'Skipped confirmation &mdash; '+nm.noConfirm.length+' times',desc:"You noted that you didn't wait for confirmation on "+nm.noConfirm.length+" occasions. If your system requires a specific trigger (resoup, rebalance, displacement), that trigger IS the entry &mdash; not a suggestion."});
-
   if(nm.brokeRules.length>=1)p(mistakes,{type:'bad',icon:'&#x1F4CB;',title:'Broke own rules &mdash; '+nm.brokeRules.length+' time'+(nm.brokeRules.length>1?'s':''),desc:'You explicitly wrote that you didn\'t follow your rules on '+nm.brokeRules.length+' occasion'+(nm.brokeRules.length>1?'s':'')+'. Rules only protect you if you follow them &mdash; especially on the hard days.'});
-
   if(nm.wrongNarr.length>=1){const cost=nm.wrongNarr.filter(t=>t.pnl<0).reduce((a,t)=>a+t.pnl,0);p(mistakes,{type:'bad',icon:'&#x1F9ED;',title:'Traded against the narrative &mdash; '+nm.wrongNarr.length+' time'+(nm.wrongNarr.length>1?'s':''),desc:'You took at least '+nm.wrongNarr.length+' trade'+(nm.wrongNarr.length>1?'s':'')+' in the wrong direction despite having a clear bias. Cost: '+fmt(cost)+'. If HTF is bullish, shorts are counter-trend &mdash; only take them with a very specific structural reason.'});}
-
   if(nm.hesitation.length>=2)p(mistakes,{type:'warn',icon:'&#x1F300;',title:'Hesitation/overcomplication &mdash; '+nm.hesitation.length+' times',desc:'You flagged hesitation or overcomplicating the decision '+nm.hesitation.length+' times. When your own notes tell you to keep it simple, listen. Build a pre-trade checklist so the decision is made before the candle forms.'});
-
   if(nm.badEntry.length>=2)p(mistakes,{type:'bad',icon:'&#x1F4CD;',title:nm.badEntry.length+' self-labelled bad entries',desc:'You tagged '+nm.badEntry.length+' entries as bad in your own notes. Seeing it is step one. Step two is adding a rule that would have stopped each one before it happened.'});
-
   if(nm.volatility.length>=1)p(mistakes,{type:'warn',icon:'&#x1F32A;&#65039;',title:'Execution affected by volatility &mdash; '+nm.volatility.length+' time'+(nm.volatility.length>1?'s':''),desc:'Notes mention bad fills, slippage, or volatility. Around key windows like 10am, reduce size or widen entry criteria to account for spread widening.'});
-
   if(nm.needToStop.length>=1)p(mistakes,{type:'warn',icon:'&#x1F6D1;',title:'You told yourself to stop a bad habit',desc:'Your notes include phrases like "I need to stop doing that". Self-identified habits you haven\'t actioned yet become your biggest long-term leaks. Write the specific rule change down and treat it as law.'});
 
-  // Strengths
   if(nm.patience.length>=2)p(strengths,{type:'good',icon:'&#x23F3;',title:'Patience is showing up &mdash; '+nm.patience.length+' times',desc:'You wrote about waiting for the right moment on '+nm.patience.length+' sessions. Patience is one of the hardest skills to build and you\'re already doing it. Keep protecting it.'});
-
   if(nm.htfBias.length>=2)p(strengths,{type:'good',icon:'&#x1F9ED;',title:'HTF bias tracked &mdash; '+nm.htfBias.length+' sessions',desc:'You\'re writing down directional context on '+nm.htfBias.length+' sessions. This is exactly what good journaling captures &mdash; it makes post-trade review far more useful than just recording the result.'});
-
   if(nm.rebalance.length>=2)p(strengths,{type:'good',icon:'&#x1F4DA;',title:'FVG/Rebalance logic &mdash; '+nm.rebalance.length+' sessions',desc:'Notes repeatedly show FVG and rebalance logic as entry confluences. Document the cleanest examples and use them as reference before every entry.'});
-
   if(nm.perfect.length>=2){const pPnl=nm.perfect.reduce((a,t)=>a+t.pnl,0);p(strengths,{type:'good',icon:'&#11088;',title:nm.perfect.length+' trades flagged as perfect ('+fmt(pPnl)+')',desc:'Save the screenshots of all '+nm.perfect.length+' perfect trades. What did the entry structure look like? What confirmed the move? These are your A+ reference trades.'});}
-
   if(nm.selfAware.length>=1)p(strengths,{type:'good',icon:'&#x1FA9E;',title:'Strong self-awareness &mdash; '+nm.selfAware.length+' session'+(nm.selfAware.length>1?'s':''),desc:'You explicitly called out your own mistakes while reviewing trades. Most traders never do this honestly. Turn each observation into a concrete rule change.'});
-
   if(nm.setForget.length>=1)p(strengths,{type:'good',icon:'&#x1F3DB;&#65039;',title:'Set-and-forget mindset showing up',desc:'You referenced a set-and-forget approach. Letting trades run without interference is key discipline &mdash; especially combined with the clear target logic you already use.'});
 
-  // Setup edge
   if(missingSetupTrades.length>0)p(setupEdge,{type:'warn',icon:'&#x1F3F7;&#65039;',title:missingSetupTrades.length+' trade'+(missingSetupTrades.length===1?' is':'s are')+' missing a setup tag',desc:'Untagged trades make it impossible to see what actually works. Every trade needs a tag &mdash; even bad entries. The data is useless without it.'});
-
   if(setupArr.length>0){
     const best=setupArr.reduce((a,b)=>b[1].pnl>a[1].pnl?b:a);
     const worst=setupArr.reduce((a,b)=>b[1].pnl<a[1].pnl?b:a);
@@ -443,7 +840,6 @@ function generateInsights(trades,bySetup,byDow,winRate,profitFactor,avgWin,avgLo
       p(setupEdge,{type:'bad',icon:'&#x274C;',title:'"'+worst[0]+'" is underperforming',desc:fmt(worst[1].pnl)+' across '+worst[1].trades.length+' trades with only a '+wswr.toFixed(0)+'% win rate. Review recent examples, define exactly what you need to see before taking it again &mdash; or pause it.'});
     }
   }
-
   const longs=trades.filter(t=>t.dir==='Long'),shorts=trades.filter(t=>t.dir==='Short');
   if(longs.length&&shorts.length){
     const lPnl=longs.reduce((a,t)=>a+t.pnl,0),sPnl=shorts.reduce((a,t)=>a+t.pnl,0);
@@ -453,8 +849,6 @@ function generateInsights(trades,bySetup,byDow,winRate,profitFactor,avgWin,avgLo
       p(setupEdge,{type:'neutral',icon:'&#x2195;&#65039;',title:'You trade '+better+'s better',desc:better+'s: '+fmt(bPnl)+' ('+(lPnl>sPnl?lWr:sWr).toFixed(0)+'% WR). '+worse+'s: '+fmt(wPnl)+' ('+(lPnl>sPnl?sWr:lWr).toFixed(0)+'% WR). Tighten criteria for '+worse+' entries or only take them when the narrative explicitly requires it.'});
     }
   }
-
-  // Day analysis
   const dowWithTrades=byDow.map((d,i)=>({...d,dow:i})).filter(d=>d.trades.length>0);
   if(dowWithTrades.length>1){
     const bestDow=dowWithTrades.reduce((a,b)=>a.pnl>b.pnl?a:b);
@@ -464,8 +858,6 @@ function generateInsights(trades,bySetup,byDow,winRate,profitFactor,avgWin,avgLo
     const bestDowShare=wins.length&&bestDow.pnl>0?(bestDow.pnl/wins.reduce((a,t)=>a+t.pnl,0))*100:0;
     if(bestDowShare>=30)p(dayAna,{type:'warn',icon:'&#127919;',title:'Results concentrated in one standout day',desc:'Your best day contributes '+bestDowShare.toFixed(1)+'% of gross winning PnL. The edge needs to become more repeatable across all sessions &mdash; one special day carrying the week is fragile.'});
   }
-
-  // Coaching
   if(totalPnl>0)p(coaching,{type:'good',icon:'&#x1F9E0;',title:'Overall: the base process is working',desc:'Net PnL is '+fmt(totalPnl)+' across '+activeDays+' trading days. Don\'t reinvent the system &mdash; tighten the leaks. Most of the improvement available right now is in execution, not strategy.'});
   if(trades.length<15||activeDays<10)p(coaching,{type:'warn',icon:'&#x1F4CE;',title:'Sample size is still small',desc:activeDays+' trading days and '+trades.length+' trades. These patterns are useful early signals &mdash; treat them as directional until you have a bigger sample. Keep logging every session.'});
   if(nm.sizeNote.length>=1)p(coaching,{type:'neutral',icon:'&#x1F4CF;',title:'Size and aggression mentioned in notes',desc:'You referenced sizing on '+nm.sizeNote.length+' session'+(nm.sizeNote.length>1?'s':'')+'. Size should be a function of setup quality, not emotion. A+ setup = full size. Borderline setup = small or skip.'});
@@ -481,49 +873,21 @@ function generateInsights(trades,bySetup,byDow,winRate,profitFactor,avgWin,avgLo
     {label:'Coaching',items:coaching},
   ];
 }
+
 tryAutoLoadFromStorage();
 </script>
 
-<footer style="
-    margin-top:48px;
-    padding:20px 16px;
-    border-top:1px solid var(--line);
-    text-align:center;
-  ">
-    <span style="
-      font-family:var(--font-mono);
-      font-size:12px;
-      color:var(--muted);
-      letter-spacing:.04em;
-    ">
-      Made by
-      <a
-        href="https://www.instagram.com/seandaytrades?igsh=MWxuNXppN3JmbGFmdg%3D%3D&utm_source=qr"
-        target="_blank"
-        rel="noopener"
-        style="color:var(--pos);text-decoration:none;font-weight:700;"
-        onmouseover="this.style.textDecoration='underline'"
-        onmouseout="this.style.textDecoration='none'"
-      >@SeanDayTrades</a>
-    </span>
-
-        <span style="
-      font-family:var(--font-mono);
-      font-size:12px;
-      color:var(--muted);
-      letter-spacing:.04em;
-    ">
-      ---
-      <a
-        href="https://whop.com/ace-of-trades/ace-of-trades?a=seandaytrades"
-        target="_blank"
-        rel="noopener"
-        style="color:var(--pos);text-decoration:none;font-weight:700;"
-        onmouseover="this.style.textDecoration='underline'"
-        onmouseout="this.style.textDecoration='none'"
-      >Learn To Trade</a>
-    </span>
-  </footer>
-  
+<footer style="margin-top:48px;padding:20px 16px;border-top:1px solid var(--line);text-align:center">
+  <span style="font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:.04em">
+    Made by
+    <a href="https://www.instagram.com/seandaytrades?igsh=MWxuNXppN3JmbGFmdg%3D%3D&utm_source=qr" target="_blank" rel="noopener"
+       style="color:var(--pos);text-decoration:none;font-weight:700"
+       onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">@SeanDayTrades</a>
+    &nbsp;---&nbsp;
+    <a href="https://whop.com/ace-of-trades/ace-of-trades?a=seandaytrades" target="_blank" rel="noopener"
+       style="color:var(--pos);text-decoration:none;font-weight:700"
+       onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Learn To Trade</a>
+  </span>
+</footer>
 </body>
 </html>
