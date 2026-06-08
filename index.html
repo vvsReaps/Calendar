@@ -160,6 +160,35 @@
     .trade-head div{font-size:11px;color:var(--muted);padding:0 2px;font-family:var(--font-mono);letter-spacing:.04em}
     .trade-row{display:grid;grid-template-columns:1.1fr .85fr .85fr .75fr 1.2fr 46px;gap:8px;margin-bottom:8px}
 
+    /* mood selector */
+    .mood-section{display:grid;gap:8px;margin-top:2px}
+    .mood-title{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .mood-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .mood-pill{
+      display:flex;align-items:center;gap:9px;justify-content:flex-start;
+      background:#0b0c10;border:1px solid #252733;color:var(--text);
+      padding:10px 12px;border-radius:11px;cursor:pointer;
+      font-family:var(--font-sans);font-size:13px;font-weight:700;
+      transition:all .15s;min-height:42px;text-align:left;
+    }
+    .mood-pill:hover{border-color:rgba(155,109,255,.45);background:#11121a}
+    .mood-pill.selected{
+      border-color:rgba(155,109,255,.75);
+      background:linear-gradient(135deg,rgba(155,109,255,.20),rgba(0,229,160,.06));
+      box-shadow:0 0 0 1px rgba(155,109,255,.14) inset;
+      color:#fff;
+    }
+    .mood-pill .emoji{font-size:16px;line-height:1;width:20px;text-align:center}
+    .mood-pill .mood-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .note-moods{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}
+    .note-mood{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:4px 8px;border-radius:999px;
+      background:rgba(155,109,255,.10);border:1px solid rgba(155,109,255,.24);
+      color:var(--text);font-size:11px;font-family:var(--font-mono);
+    }
+    @media(max-width:620px){.mood-grid{grid-template-columns:1fr 1fr}}
+
     /* ── INFO MODAL ── */
     .info-modal{width:min(680px,100%)}
     .info-logo-row{
@@ -632,6 +661,13 @@
           <button class="btn" id="addTrade">+ Add trade</button>
           <div class="small">Trades: <span id="tradeCount">0</span> &nbsp;|&nbsp; Day Total: <span id="dayTotal" style="font-family:var(--font-mono)">$0.00</span></div>
         </div>
+        <div class="mood-section">
+          <div class="mood-title">
+            <div class="small" style="font-weight:700;color:var(--text)">How were you feeling?</div>
+            <div class="small">Select all that apply</div>
+          </div>
+          <div id="moodGrid" class="mood-grid" role="group" aria-label="How were you feeling?"></div>
+        </div>
         <datalist id="setupDatalist"></datalist>
         <div>
           <label class="small" for="shotUrl">Screenshots (optional) — paste TradingView share links or image URLs</label>
@@ -824,6 +860,18 @@ function saveData(map){localStorage.setItem(KEY,JSON.stringify(map))}
 
 const SYMBOLS=['','NQ','YM','ES','GC','MGC'];
 const DIRS=['','Long','Short'];
+const MOODS=[
+  {key:'confident',emoji:'💪',label:'Confident'},
+  {key:'anxious',emoji:'🥶',label:'Anxious'},
+  {key:'fomo',emoji:'🏃',label:'FOMO'},
+  {key:'greedy',emoji:'🤑',label:'Greedy'},
+  {key:'fearful',emoji:'😨',label:'Fearful'},
+  {key:'patient',emoji:'🧘',label:'Patient'},
+  {key:'impatient',emoji:'⏰',label:'Impatient'},
+  {key:'focused',emoji:'🎯',label:'Focused'},
+  {key:'excited',emoji:'🚀',label:'Excited'},
+  {key:'frustrated',emoji:'😤',label:'Frustrated'}
+];
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -872,12 +920,15 @@ function normalizeTrade(t){
   return{pnl:NaN,sym:'',dir:'',setup:'',time:''};
 }
 function normalizeDay(day){
-  const out={trades:[],notes:'',shot:'',shots:[]};
+  const out={trades:[],notes:'',shot:'',shots:[],moods:[]};
   if(!day||typeof day!=='object')return out;
   out.notes=(typeof day.notes==='string')?day.notes:'';
   out.shot=String(day.shot||day.screenshot||day.image||'');
   if(Array.isArray(day.shots)){out.shots=day.shots.map(s=>String(s||'').trim()).filter(Boolean)}
   else if(out.shot){out.shots=[out.shot]}
+  const savedMoods=Array.isArray(day.moods)?day.moods:(day.mood?[day.mood]:[]);
+  const validMoodKeys=new Set(MOODS.map(m=>m.key));
+  out.moods=savedMoods.map(m=>String(m||'').trim()).filter(m=>validMoodKeys.has(m));
   out.trades=(Array.isArray(day.trades)?day.trades:[]).map(normalizeTrade).filter(t=>Number.isFinite(t.pnl));
   return out;
 }
@@ -987,6 +1038,7 @@ const dayTotalEl=document.getElementById('dayTotal');
 const notesEl=document.getElementById('notes');
 const setupDL=document.getElementById('setupDatalist');
 const shotListEl=document.getElementById('shotList');
+const moodGrid=document.getElementById('moodGrid');
 let editingDate=null;
 
 document.getElementById('closeBtn').addEventListener('click',closeModal);
@@ -995,6 +1047,27 @@ document.getElementById('addTrade').addEventListener('click',()=>addTradeRow({pn
 document.getElementById('saveDay').addEventListener('click',saveModal);
 document.getElementById('deleteDay').addEventListener('click',()=>{if(editingDate){delete DATA[editingDate];saveData(DATA);closeModal();render()}});
 document.getElementById('addShot').addEventListener('click',()=>addShotRow(''));
+
+function renderMoodGrid(selected=[]){
+  if(!moodGrid)return;
+  const selectedSet=new Set((selected||[]).map(String));
+  moodGrid.innerHTML=MOODS.map(m=>`
+    <button class="mood-pill ${selectedSet.has(m.key)?'selected':''}" type="button" data-mood="${escapeHtml(m.key)}" aria-pressed="${selectedSet.has(m.key)?'true':'false'}">
+      <span class="emoji">${m.emoji}</span><span class="mood-label">${escapeHtml(m.label)}</span>
+    </button>`).join('');
+  moodGrid.querySelectorAll('.mood-pill').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const isSelected=btn.classList.toggle('selected');
+      btn.setAttribute('aria-pressed',isSelected?'true':'false');
+    });
+  });
+}
+function gatherMoods(){
+  if(!moodGrid)return[];
+  return Array.from(moodGrid.querySelectorAll('.mood-pill.selected')).map(b=>b.dataset.mood).filter(Boolean);
+}
+function moodLabel(key){return MOODS.find(m=>m.key===key)?.label||key}
+function moodEmoji(key){return MOODS.find(m=>m.key===key)?.emoji||'•'}
 
 function makeShotThumbHtml(url){
   if(!url||!isLikelyImageUrl(url))return'';
@@ -1036,8 +1109,9 @@ function openModal(dateStr){
   tradeList.innerHTML='';
   shotListEl.innerHTML='';
   setupDL.innerHTML=setupSuggestions().map(s=>`<option value="${escapeHtml(s)}"></option>`).join('');
-  const day=DATA[dateStr]||{trades:[],notes:'',shots:[]};
+  const day=normalizeDay(DATA[dateStr]||{trades:[],notes:'',shots:[],moods:[]});
   notesEl.value=day.notes||'';
+  renderMoodGrid(day.moods||[]);
   const shots=(day.shots&&day.shots.length)?day.shots:(day.shot?[day.shot]:[]);
   shots.forEach(s=>addShotRow(s));
   if(!day.trades||!day.trades.length)addTradeRow({pnl:'',sym:'',dir:'',setup:'',time:''});
@@ -1076,7 +1150,8 @@ function saveModal(){
   const trades=gatherTrades();
   const shots=gatherShots().map(s=>tradingViewShareToImageUrl(s)).filter(Boolean);
   const shot=shots[0]||'';
-  DATA[editingDate]={trades,notes:notesEl.value||'',shot,shots};
+  const moods=gatherMoods();
+  DATA[editingDate]={trades,notes:notesEl.value||'',shot,shots,moods};
   saveData(DATA);closeModal();render();
 }
 
@@ -1089,7 +1164,8 @@ function getMonthStats(year,month){
     if(Y!==year||M-1!==month)return;
     const dayNotes=(v?.notes||'').trim(),dayShot=(v?.shot||'').trim();
     const dayShots=(Array.isArray(v?.shots)&&v.shots.length)?v.shots:(dayShot?[dayShot]:[]);
-    if(dayNotes||dayShots.length)notesByDay.push({date:k,text:dayNotes,shots:dayShots});
+    const dayMoods=Array.isArray(v?.moods)?v.moods:[];
+    if(dayNotes||dayShots.length||dayMoods.length)notesByDay.push({date:k,text:dayNotes,shots:dayShots,moods:dayMoods});
     const t=(v?.trades||[]).map(normalizeTrade).filter(x=>Number.isFinite(x.pnl));
     if(!t.length)return;
     const daySum=t.reduce((a,b)=>a+b.pnl,0);
@@ -1182,9 +1258,11 @@ function updateMetrics(s){
     notesEl2.innerHTML=s.notesByDay.map(n=>{
       const label=asDate(n.date),hasText=(n.text||'').trim().length>0;
       const shots=(n.shots||[]).filter(s=>s&&isLikelyImageUrl(s));
-      const textHtml=hasText?`<div class="note-text">${escapeHtml(n.text)}</div>`:(!shots.length?'<div class="small">No content</div>':`<div class="small">Screenshot${shots.length>1?'s':''} only</div>`);
+      const moods=(n.moods||[]).filter(Boolean);
+      const moodsHtml=moods.length?`<div class="note-moods">${moods.map(m=>`<span class="note-mood">${moodEmoji(m)} ${escapeHtml(moodLabel(m))}</span>`).join('')}</div>`:'';
+      const textHtml=hasText?`<div class="note-text">${escapeHtml(n.text)}</div>`:(!shots.length&&!moods.length?'<div class="small">No content</div>':(!shots.length?'':`<div class="small">Screenshot${shots.length>1?'s':''} only</div>`));
       const shotsHtml=shots.map((url,i)=>`<div class="note-shot"><img src="${escapeHtml(url)}" alt="Screenshot ${i+1}" loading="lazy"/><a class="shot-link" href="${escapeHtml(url)}" target="_blank" rel="noopener">Open screenshot ${shots.length>1?`#${i+1} `:''}↗</a></div>`).join('');
-      return`<div class="note-item"><div class="note-date">${escapeHtml(label)}</div>${textHtml}${shotsHtml}</div>`;
+      return`<div class="note-item"><div class="note-date">${escapeHtml(label)}</div>${moodsHtml}${textHtml}${shotsHtml}</div>`;
     }).join('');
   }
 }
