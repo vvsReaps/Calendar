@@ -826,6 +826,7 @@ const SMT_LOOKBACK = 400;
 const PIVOT_K = 3;
 const SMT_MIN_PTS = 0.5;   // both legs smaller than this (in pts) → noise, skip
 const SMT_MAX_SEGS = 14;   // keep only the most recent confirmed segments on screen
+const SMT_SPAN_PAIRS = 4;  // divergences may span up to this many swing pairs back
 const EXT_K = 5;           // external swing strength (bars each side) — stronger than SMT pivots
 const EXT_LOOKBACK = 400;  // bars scanned for external highs/lows
 const EMA_LEN = 9;
@@ -1673,13 +1674,34 @@ function computeSMT(barsA, barsB, tfMin) {
   const tol = tfMin * 60000 * (PIVOT_K + 1);
   const scan = (sa, sb, kind) => {
     const pairs = matchPairs(sa, sb, tol);
+    const seen = new Set();
     for (let i = 1; i < pairs.length; i++) {
-      const P = pairs[i-1], Q = pairs[i];
-      const dA = Q.a.p - P.a.p, dB = Q.b.p - P.b.p;
-      if ((dA > 0) === (dB > 0)) continue;                       // markets agree — no SMT
-      if (Math.abs(dA) < SMT_MIN_PTS && Math.abs(dB) < SMT_MIN_PTS) continue; // noise floor
-      out.A.push({ t1:P.a.t, p1:P.a.p, t2:Q.a.t, p2:Q.a.p, kind });
-      out.B.push({ t1:P.b.t, p1:P.b.p, t2:Q.b.t, p2:Q.b.p, kind });
+      const Q = pairs[i];
+      // Candidate references: the adjacent pair (classic SMT), plus the most
+      // significant pair within the lookback window on EACH asset — the
+      // highest prior high / lowest prior low. This catches divergences that
+      // span an intermediate swing (A→C misses hidden by a B in the middle).
+      const lo = Math.max(0, i - SMT_SPAN_PAIRS);
+      let extA = null, extB = null;
+      for (let j = lo; j < i; j++) {
+        const c = pairs[j];
+        if (!extA || (kind === 'high' ? c.a.p > extA.a.p : c.a.p < extA.a.p)) extA = c;
+        if (!extB || (kind === 'high' ? c.b.p > extB.b.p : c.b.p < extB.b.p)) extB = c;
+      }
+      const candidates = [pairs[i-1]];
+      if (extA && !candidates.includes(extA)) candidates.push(extA);
+      if (extB && !candidates.includes(extB)) candidates.push(extB);
+      for (const P of candidates) {
+        const dA = Q.a.p - P.a.p, dB = Q.b.p - P.b.p;
+        if ((dA > 0) === (dB > 0)) continue;                       // markets agree — no SMT
+        if (Math.abs(dA) < SMT_MIN_PTS && Math.abs(dB) < SMT_MIN_PTS) continue; // noise floor
+        const key = kind + ':' + Q.a.t;
+        if (seen.has(key)) break;                                  // one segment per swing
+        seen.add(key);
+        out.A.push({ t1:P.a.t, p1:P.a.p, t2:Q.a.t, p2:Q.a.p, kind });
+        out.B.push({ t1:P.b.t, p1:P.b.p, t2:Q.b.t, p2:Q.b.p, kind });
+        break;
+      }
     }
   };
   scan(pa.highs, pb.highs, 'high');
@@ -1705,7 +1727,19 @@ function computeLiveSMT(barsA, barsB, tfMin, liveA, liveB) {
   const check = (sa, sb, kind) => {
     const pairs = matchPairs(sa, sb, tol);
     if (!pairs.length) return;
-    const ref = pairs[pairs.length - 1];   // latest matched swing pair
+    // Reference candidates within the recent window: the latest matched pair
+    // (classic), plus the most significant pair on each asset — so a live
+    // sweep of an OLDER, higher swing is caught even if minor swings printed
+    // in between.
+    const win = pairs.slice(-SMT_SPAN_PAIRS);
+    let extA = win[0], extB = win[0];
+    for (const c of win) {
+      if (kind === 'high' ? c.a.p > extA.a.p : c.a.p < extA.a.p) extA = c;
+      if (kind === 'high' ? c.b.p > extB.b.p : c.b.p < extB.b.p) extB = c;
+    }
+    const refs = [pairs[pairs.length - 1]];
+    if (!refs.includes(extA)) refs.push(extA);
+    if (!refs.includes(extB)) refs.push(extB);
     const ext = (bars, t0, live) => {      // extreme since the reference swing
       let m = kind === 'high' ? -Infinity : Infinity, mt = null;
       for (let i = bars.length - 1; i >= 0 && bars[i].t > t0; i--) {
@@ -1717,13 +1751,16 @@ function computeLiveSMT(barsA, barsB, tfMin, liveA, liveB) {
       }
       return { m, mt };
     };
-    const eA = ext(barsA, ref.a.t, liveA), eB = ext(barsB, ref.b.t, liveB);
-    if (eA.mt === null || eB.mt === null) return;
-    const sweptA = kind === 'high' ? eA.m > ref.a.p : eA.m < ref.a.p;
-    const sweptB = kind === 'high' ? eB.m > ref.b.p : eB.m < ref.b.p;
-    if (sweptA === sweptB) return;         // both swept or both held — no divergence
-    out.A.push({ t1:ref.a.t, p1:ref.a.p, t2:eA.mt, p2:eA.m, kind, live:true, swept:sweptA });
-    out.B.push({ t1:ref.b.t, p1:ref.b.p, t2:eB.mt, p2:eB.m, kind, live:true, swept:sweptB });
+    for (const ref of refs) {
+      const eA = ext(barsA, ref.a.t, liveA), eB = ext(barsB, ref.b.t, liveB);
+      if (eA.mt === null || eB.mt === null) continue;
+      const sweptA = kind === 'high' ? eA.m > ref.a.p : eA.m < ref.a.p;
+      const sweptB = kind === 'high' ? eB.m > ref.b.p : eB.m < ref.b.p;
+      if (sweptA === sweptB) continue;     // both swept or both held — no divergence
+      out.A.push({ t1:ref.a.t, p1:ref.a.p, t2:eA.mt, p2:eA.m, kind, live:true, swept:sweptA });
+      out.B.push({ t1:ref.b.t, p1:ref.b.p, t2:eB.mt, p2:eB.m, kind, live:true, swept:sweptB });
+      return;                              // one live segment per kind
+    }
   };
   check(pa.highs, pb.highs, 'high');
   check(pa.lows,  pb.lows,  'low');
