@@ -36,6 +36,57 @@
     padding:8px 16px; background:var(--panel);
     border-bottom:1px solid var(--edge); flex-shrink:0; flex-wrap:wrap;
   }
+  #btnExit {
+    display:grid; place-items:center;
+    width:24px; height:24px; flex-shrink:0;
+    font-family:var(--mono); font-size:15px; line-height:1;
+    color:var(--dim); text-decoration:none;
+    border:1px solid var(--edge); border-radius:4px;
+    transition:color .15s, border-color .15s, background .15s;
+  }
+  #btnExit:hover { color:var(--dn); border-color:rgba(255,61,113,.5); background:rgba(255,61,113,.1); }
+
+  #btnHelp {
+    font-family:var(--mono); font-size:10px; letter-spacing:1px;
+    background:none; border:1px solid var(--edge); border-radius:3px;
+    color:var(--dim); padding:2px 8px; cursor:pointer;
+  }
+  #btnHelp:hover { color:var(--ink); }
+
+  #helpOverlay {
+    position:fixed; inset:0; z-index:80; display:none;
+    align-items:center; justify-content:center;
+    background:rgba(0,0,0,.65); backdrop-filter:blur(3px); padding:20px;
+  }
+  #helpOverlay.open { display:flex; }
+  #helpBox {
+    width:min(680px, 100%); max-height:min(80vh, 100%);
+    display:flex; flex-direction:column;
+    background:rgba(7,9,13,.98); border:1px solid var(--edge); border-radius:6px;
+    box-shadow:0 14px 44px rgba(0,0,0,.6);
+  }
+  .help-h {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 16px; border-bottom:1px solid var(--edge);
+    font-family:var(--mono); font-size:11px; letter-spacing:2px; color:var(--ink);
+  }
+  #helpClose {
+    background:none; border:1px solid var(--edge); border-radius:4px;
+    color:var(--dim); font-size:14px; width:24px; height:24px; cursor:pointer;
+  }
+  #helpClose:hover { color:var(--dn); border-color:rgba(255,61,113,.5); }
+  .help-body {
+    overflow-y:auto; padding:14px 18px 18px;
+    font-family:var(--sans); font-size:12px; line-height:1.75; color:var(--ink);
+    user-select:text; -webkit-user-select:text;
+  }
+  .help-body h3 {
+    font-family:var(--mono); font-size:10px; letter-spacing:2px;
+    color:var(--nq); margin:14px 0 4px;
+  }
+  .help-body h3:first-child { margin-top:0; }
+  .help-body p { margin:0 0 8px; color:#b9c3d0; }
+  .help-body b { color:var(--ink); font-weight:600; }
   .brand { font-family:var(--mono); font-size:14px; letter-spacing:2px; white-space:nowrap; }
   .brand .slash { color:var(--nq); }
   .brand .sub { display:block; font-size:8px; letter-spacing:3px; color:var(--dim); margin-top:1px; }
@@ -526,6 +577,7 @@
 <body>
 
 <header>
+  <a id="btnExit" href="index.html" title="Back to ProfitHub" aria-label="Back to ProfitHub">×</a>
   <div class="brand">
     AOT Paper Trader<span class="slash">//</span>@SeanDayTrades
   </div>
@@ -686,6 +738,49 @@
   <button id="btnAcctReset">RESET</button>
 </div>
 
+<div id="helpOverlay">
+  <div id="helpBox">
+    <div class="help-h">
+      <span>AOT PAPER TRADING — HELP</span>
+      <button id="helpClose" aria-label="Close help">×</button>
+    </div>
+    <div class="help-body">
+      <h3>GETTING STARTED</h3>
+      <p>Enter your TopstepX username and API key in the top bar and press CONNECT. Both fields are masked and saved locally on this device only — nothing is ever sent anywhere except directly to TopstepX. The API key comes from TopstepX Settings → API (requires a ProjectX API subscription). Once connected, live NQ and ES data streams into both charts.</p>
+
+      <h3>CHARTS</h3>
+      <p>NQ on the left, ES on the right. Scroll to zoom, drag to pan, double-click to snap back to live. TF buttons sync the timeframe on both charts. Hover any candle for its stats (range, body, delta) — the crosshair syncs across both charts by time. RESET VIEW restores default zoom. THEME lets you change the background and candle colors.</p>
+
+      <h3>REPLAY &amp; BACKTESTING</h3>
+      <p>Press REPLAY to enter backtest mode. Scrub the slider to any point in the loaded history, then PLAY (1×–30×) or step +1m bar by bar. All trading, rules, and day rolls run on the replay clock, so you can pass the eval, earn winning days, and reach payouts entirely inside replay. The slider locks while a position is open.</p>
+
+      <h3>TRADING &amp; TOPSTEP RULES</h3>
+      <p>BUY/SELL work on the NQ chart (set contracts with −/+, FLAT closes). Drag the SL and TP lines directly on the chart. Fills include 1 tick of slippage and simulated commissions.</p>
+      <p>You start on the 50K EVAL: reach $53,000 with best-day consistency at or under 50% to pass. Passing unlocks the 50K FUNDED account: balance starts at $0, the Maximum Loss Limit starts at −$2,000, trails your end-of-day balance, and locks at $0. Contracts scale 2 → 3 (at +$1,500) → 5 (at +$2,000), updating at session roll. Positions auto-flatten at 4:10 PM ET. Hitting the MLL permanently closes the account.</p>
+      <p>On the funded account, each day closing at +$150 or better is a winning day. At 5 winning days, REQUEST PAYOUT withdraws 50% of your balance and the counter resets for the next payout cycle.</p>
+
+      <h3>INDICATORS</h3>
+      <p><b>FVG</b> — 3-candle fair value gaps with a 50% midline; open gaps are outlined, filled gaps fade with the box ending at the fill.<br>
+      <b>SMT</b> — NQ×ES swing divergences. Solid lines are confirmed; pulsing "SMT LIVE" markers appear in real time the moment one market sweeps a swing the other holds (SWEPT vs HELD labels).<br>
+      <b>LIQ</b> — external swing highs/lows as dotted lines: red while unswept (open draws on liquidity), white once swept.<br>
+      <b>FLOW</b> — order flow: large resting DOM walls as bars at the right edge (live only, needs Level 2 data) and oversized trade prints as bubbles on the candles (green lifted the ask, red hit the bid).<br>
+      <b>EMA 9</b> — 9-period exponential moving average on the current timeframe.</p>
+
+      <h3>DOM LADDER</h3>
+      <p>The DOM button opens a draggable price ladder for NQ or ES. LV1 shows best bid/ask from quotes; LV2 shows the full depth ladder (requires the CME Level 2 data add-on on your Topstep account). The VOL PRO column is the session volume profile — traded volume at each price — and works on Level 1 data. Not available in replay.</p>
+
+      <h3>DRAWING TOOLS</h3>
+      <p>Floating toolbar (draggable): rectangle with midline, horizontal line, horizontal ray, and trendline. Drawings can extend into future space to the right of price. Click a drawing to select, Delete/Backspace removes it, Escape deselects. The trash button clears all drawings from both charts (with confirmation). Shift-drag measures price and time between two points.</p>
+
+      <h3>DATA &amp; BACKUP</h3>
+      <p>Everything (login, sim account, theme, settings) is stored in your browser tied to this page's location. Use BACKUP to download it all as a file and RESTORE to load it — do this before moving or renaming the file, and keep backups private since they include your API key. RESET in the account bar starts a fresh 50K Eval.</p>
+
+      <h3>QUICK KEYS</h3>
+      <p>Escape — cancel drawing tool / close popups · Delete — remove selected drawing · Double-click chart — snap to live · Shift-drag — measure.</p>
+    </div>
+  </div>
+</div>
+
 <footer>
   <span class="live">● ENGINE ONLINE</span>
   <span id="feedStatus" class="warn">FEED: CONNECTING…</span>
@@ -695,6 +790,7 @@
   <button id="btnRestore" title="Restore app data from a backup file">RESTORE</button>
   <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
   <span id="replayFooterTime"></span>
+  <button id="btnHelp" title="How everything works">? HELP</button>
 </footer>
 
 <script>
@@ -3426,6 +3522,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     clearActiveDrawingTool();
     $('drawClearConfirm').classList.remove('open');
+    $('helpOverlay').classList.remove('open');
     panes.forEach(p => {
       p.chart.selectedDrawingIndex = -1;
       p.chart._drawingDeleteBox = null;
@@ -4411,6 +4508,13 @@ $('thUp').addEventListener('input', e => { THEME.up = e.target.value; saveTheme(
 $('thDn').addEventListener('input', e => { THEME.dn = e.target.value; saveTheme(); });
 $('thReset').addEventListener('click', () => { THEME = { ...THEME_DEF }; saveTheme(); });
 applyTheme();
+
+/* ── help overlay ─────────────────────────────────────────────── */
+$('btnHelp').addEventListener('click', () => $('helpOverlay').classList.add('open'));
+$('helpClose').addEventListener('click', () => $('helpOverlay').classList.remove('open'));
+$('helpOverlay').addEventListener('click', e => {
+  if (e.target === $('helpOverlay')) $('helpOverlay').classList.remove('open');
+});
 
 /* NY clock */
 function tickClock() {
