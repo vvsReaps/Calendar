@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AOT Paper Trading // @SeanDayTrades</title>
+<title>The Matrix // @SeanDayTrades</title>
 <style>
   :root {
     --bg: #07090d;
@@ -92,7 +92,31 @@
   .brand .slash { color:var(--nq); }
   .brand .sub { display:block; font-size:8px; letter-spacing:3px; color:var(--dim); margin-top:1px; }
 
-  .ctl-group { display:flex; gap:4px; align-items:center; }
+  .ctl-group { display:flex; gap:4px; align-items:center; position:relative; }
+
+  /* indicator popover */
+  #indPop {
+    position:absolute; top:calc(100% + 8px); left:0; z-index:45;
+    display:none; flex-direction:column; min-width:250px;
+    background:rgba(7,9,13,.97); border:1px solid var(--edge); border-radius:4px;
+    box-shadow:0 8px 24px rgba(0,0,0,.5); overflow:hidden;
+  }
+  #indPop.open { display:flex; }
+  #indPop .ind-h {
+    font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--dim);
+    padding:8px 12px 6px; border-bottom:1px solid var(--edge);
+  }
+  .ind-row {
+    display:flex; flex-direction:column; align-items:flex-start; gap:1px;
+    text-align:left; background:none; border:none;
+    border-left:2px solid transparent;
+    padding:7px 12px; cursor:pointer; font-family:var(--mono);
+  }
+  .ind-row b { font-size:11px; letter-spacing:1px; color:var(--ink); font-weight:700; }
+  .ind-row span { font-size:9px; letter-spacing:.4px; color:var(--dim); }
+  .ind-row:hover { background:rgba(255,255,255,.05); }
+  .ind-row.active { border-left-color:var(--warn); background:rgba(255,176,32,.06); }
+  .ind-row.active b { color:var(--warn); }
   .ctl-group.push { margin-left:auto; }
   .ctl-label { font-family:var(--mono); font-size:10px; letter-spacing:1px; color:var(--dim); margin-right:4px; }
   .ctl-btn {
@@ -580,7 +604,7 @@
 <header>
   <a id="btnExit" href="index.html" title="Back to ProfitHub" aria-label="Back to ProfitHub">×</a>
   <div class="brand">
-    AOT Paper Trader<span class="slash">//</span>@SeanDayTrades
+    The Matrix<span class="slash">//</span>@SeanDayTrades
   </div>
 
   <div class="ctl-group push" role="group" aria-label="Chart controls">
@@ -595,15 +619,18 @@
     <button class="ctl-btn" id="thReset">RESET DEFAULTS</button>
   </div>
 
-  <div class="ctl-group" role="group" aria-label="Indicators">
-    <span class="ctl-label">IND</span>
-    <button class="ctl-btn ind" id="btnFVG">FVG</button>
-    <button class="ctl-btn ind" id="btnSMT">SMT</button>
-    <button class="ctl-btn ind" id="btnLIQ" title="External highs/lows — unswept liquidity draws">LIQ</button>
-    <button class="ctl-btn ind" id="btnLVLS" title="Session levels: PDH/PDL, overnight H/L, day H/L">LVLS</button>
-    <button class="ctl-btn ind" id="btnFLOW" title="Order flow: large resting DOM levels + big trade prints (live only)">FLOW</button>
+  <div class="ctl-group" role="group" aria-label="Indicators and tools">
+    <button class="ctl-btn" id="btnInd">IND ▾</button>
+    <button class="ctl-btn" id="btnFLOW" title="Order flow: large resting DOM levels + big trade prints (live only)">FLOW</button>
     <button class="ctl-btn" id="btnDOM" title="Toggle live depth-of-market ladder">DOM</button>
-    <button class="ctl-btn ind" id="btnEMA" title="9-period EMA">EMA 9</button>
+    <div id="indPop">
+      <div class="ind-h">CHART INDICATORS</div>
+      <button class="ind-row" id="btnFVG"><b>FVG</b><span>Fair value gaps with 50% midline</span></button>
+      <button class="ind-row" id="btnSMT"><b>SMT</b><span>NQ×ES divergences · live + confirmed</span></button>
+      <button class="ind-row" id="btnLIQ"><b>LIQ</b><span>External highs/lows · draws on liquidity</span></button>
+      <button class="ind-row" id="btnLVLS"><b>LVLS</b><span>PWH/PWL · PDH/PDL · Asia · London · HOD/LOD</span></button>
+      <button class="ind-row" id="btnEMA"><b>EMA 9</b><span>9-period exponential moving average</span></button>
+    </div>
   </div>
 
   <div class="ctl-group" role="group" aria-label="Timeframe (synced)">
@@ -765,6 +792,7 @@
       <p><b>FVG</b> — 3-candle fair value gaps with a 50% midline; open gaps are outlined, filled gaps fade with the box ending at the fill.<br>
       <b>SMT</b> — NQ×ES swing divergences. Solid lines are confirmed; pulsing "SMT LIVE" markers appear in real time the moment one market sweeps a swing the other holds (SWEPT vs HELD labels).<br>
       <b>LIQ</b> — external swing highs/lows as dotted lines: red while unswept (open draws on liquidity), white once swept.<br>
+      <b>LVLS</b> — session levels: previous week high/low (green), previous day high/low (amber), Asia 20:00–00:00 ET and London 02:00–05:00 ET session ranges (dashed), and the live day high/low (dotted).<br>
       <b>FLOW</b> — order flow: large resting DOM walls as bars at the right edge (live only, needs Level 2 data) and oversized trade prints as bubbles on the candles (green lifted the ask, red hit the bid).<br>
       <b>EMA 9</b> — 9-period exponential moving average on the current timeframe.</p>
 
@@ -1806,9 +1834,17 @@ function computeEMA(bars, len) {
 
 /* large resting DOM levels: filter the live book down to levels whose
    size is a multiple of the current book median — "the big walls" */
-/* session levels: previous day high/low, overnight (Globex 18:00–09:30 ET)
-   high/low, and current day high/low — computed from 1m bars so they're
-   historically correct at any replay position */
+/* session levels — windows in ET, tweak here:
+   Asia 20:00–00:00 · London 02:00–05:00 (ICT killzone convention) */
+const LVL_ASIA   = { fromH: 20, toH: 24 };
+const LVL_LONDON = { fromH: 2,  toH: 5  };
+
+function weekKey(dayStr) {           // Monday of the trading day's week
+  const d = new Date(dayStr + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+}
+
 function computeSessionLevels(m1) {
   if (!m1 || m1.length < 2) return [];
   const days = new Map();   // trading day -> {h,l,ht,lt,first}
@@ -1822,27 +1858,48 @@ function computeSessionLevels(m1) {
   const keys = [...days.keys()];
   const cur = keys[keys.length - 1];
   const prev = keys.length > 1 ? keys[keys.length - 2] : null;
-  const out = [];
   const c = days.get(cur);
+  const out = [];
+
+  // previous week high/low (Mon-keyed CME weeks)
+  const curWeek = weekKey(cur);
+  let pw = null;
+  for (const k of keys) {
+    const wk = weekKey(k);
+    if (wk >= curWeek) continue;
+    const r = days.get(k);
+    if (!pw || wk > pw.wk) pw = { wk, h:r.h, l:r.l };
+    else if (wk === pw.wk) { pw.h = Math.max(pw.h, r.h); pw.l = Math.min(pw.l, r.l); }
+  }
+  if (pw) {
+    out.push({ label:'PWH', p:pw.h, t:c.first, col:'#00e5a0', dash:[] });
+    out.push({ label:'PWL', p:pw.l, t:c.first, col:'#00e5a0', dash:[] });
+  }
+
   if (prev) {
     const p = days.get(prev);
     out.push({ label:'PDH', p:p.h, t:c.first, col:'#ffb020', dash:[] });
     out.push({ label:'PDL', p:p.l, t:c.first, col:'#ffb020', dash:[] });
   }
-  // overnight session of the current trading day: 18:00 ET -> 09:30 ET
-  let onh = -Infinity, onl = Infinity, onhT = null, onlT = null;
-  for (const b of m1) {
-    if (tradingDay(b.t) !== cur) continue;
-    const { h, m } = nyHM(b.t);
-    const inON = h >= 18 || h < 9 || (h === 9 && m < 30);
-    if (!inON) continue;
-    if (b.h > onh) { onh = b.h; onhT = b.t; }
-    if (b.l < onl) { onl = b.l; onlT = b.t; }
-  }
-  if (onhT !== null) {
-    out.push({ label:'ONH', p:onh, t:onhT, col:'#37d6ff', dash:[6,4] });
-    out.push({ label:'ONL', p:onl, t:onlT, col:'#37d6ff', dash:[6,4] });
-  }
+
+  // Asia & London sessions of the current trading day
+  const sess = (fromH, toH, label, col) => {
+    let hh = -Infinity, ll = Infinity, hT = null, lT = null;
+    for (const b of m1) {
+      if (tradingDay(b.t) !== cur) continue;
+      const { h } = nyHM(b.t);
+      if (h < fromH || h >= toH) continue;
+      if (b.h > hh) { hh = b.h; hT = b.t; }
+      if (b.l < ll) { ll = b.l; lT = b.t; }
+    }
+    if (hT !== null) {
+      out.push({ label:label+'H', p:hh, t:hT, col, dash:[6,4] });
+      out.push({ label:label+'L', p:ll, t:lT, col, dash:[6,4] });
+    }
+  };
+  sess(LVL_ASIA.fromH, LVL_ASIA.toH, 'ASIA', '#c47bff');
+  sess(LVL_LONDON.fromH, LVL_LONDON.toH, 'LDN', '#37d6ff');
+
   if (c && Number.isFinite(c.h)) {
     out.push({ label:'HOD', p:c.h, t:c.ht, col:'#d7dee8', dash:[2,4] });
     out.push({ label:'LOD', p:c.l, t:c.lt, col:'#d7dee8', dash:[2,4] });
@@ -2149,6 +2206,8 @@ class Chart {
     this.priceScaleFactor = 1;   // 1 = auto scale; drag price axis to zoom vertically
     this.pricePanOffset = 0;     // manual vertical chart-body pan, in price units
     this.dragLine = null;
+    this.autoLock = null;        // frozen autoscale during drags
+    this._lastAuto = null;
     this._lineY = {};            // id -> pixel y (hit testing)
     this._closeBox = null;       // entry-line close button hit box
     this.drawings = [];           // user drawings anchored by timestamp + price
@@ -2568,6 +2627,7 @@ class Chart {
         for (const id of ['sl','tp']) {
           if (this._lineY[id] !== undefined && Math.abs(my - this._lineY[id]) < 7) {
             this.dragLine = id;
+            this.autoLock = this._lastAuto ? { ...this._lastAuto } : null;  // freeze y-fit
             c.style.cursor = 'ns-resize';
             return;
           }
@@ -2583,6 +2643,7 @@ class Chart {
         panOffset:this.pricePanOffset,
         pricePerPx
       };
+      this.autoLock = this._lastAuto ? { ...this._lastAuto } : null;   // freeze y-fit for the drag
       c.style.cursor = 'grabbing';
     });
 
@@ -2644,7 +2705,8 @@ class Chart {
       }
 
       if (this.dragLine) {
-        const my = e.clientY - r.top;
+        const plotH = this._scale ? this._scale.plotH : this.h - this.axisH;
+        const my = Math.max(0, Math.min(plotH, e.clientY - r.top));   // clamp to plot — no runaway zoom
         const price = this._priceAt(my);
         if (price !== null && this.onLineDrag) this.onLineDrag(this.dragLine, price);
         return;
@@ -2690,6 +2752,7 @@ class Chart {
       drag = null;
       axisDrag = null;
       this.dragLine = null;
+      if (this.autoLock) { this.autoLock = null; this.draw(); }   // gentle one-time re-fit
       c.style.cursor = '';
     });
 
@@ -2812,8 +2875,17 @@ class Chart {
       }
     }
     if (!isFinite(lo)) { this._scale = null; return; }
-    // include order lines in scale so they're visible
-    if (this.tradable && pos) { lo = Math.min(lo, pos.sl, pos.tp); hi = Math.max(hi, pos.sl, pos.tp); }
+    // include order lines in scale so they're visible — but never the line
+    // currently being dragged, or the scale chases the cursor in a feedback
+    // loop and the chart zooms out uncontrollably
+    if (this.tradable && pos) {
+      if (this.dragLine !== 'sl') { lo = Math.min(lo, pos.sl); hi = Math.max(hi, pos.sl); }
+      if (this.dragLine !== 'tp') { lo = Math.min(lo, pos.tp); hi = Math.max(hi, pos.tp); }
+    }
+    // While the user is dragging (pan or SL/TP), freeze the autoscale so the
+    // vertical range doesn't re-fit every frame under the cursor.
+    if (this.autoLock) { lo = this.autoLock.lo; hi = this.autoLock.hi; }
+    else this._lastAuto = { lo, hi };
     const pad = (hi-lo)*0.08 || this.ins.tick*10;
     lo -= pad; hi += pad;
 
@@ -3659,6 +3731,7 @@ document.addEventListener('keydown', e => {
     clearActiveDrawingTool();
     $('drawClearConfirm').classList.remove('open');
     $('helpOverlay').classList.remove('open');
+    $('indPop').classList.remove('open');
     panes.forEach(p => {
       p.chart.selectedDrawingIndex = -1;
       p.chart._drawingDeleteBox = null;
@@ -3799,8 +3872,15 @@ function canTrade() {
 }
 function updateTradeButtons() {
   const ok = canTrade();
-  $('btnBuy').disabled = !ok || !!(pos && pos.dir < 0);
-  $('btnSell').disabled = !ok || !!(pos && pos.dir > 0);
+  // both sides stay enabled while in a trade: same direction adds (up to the
+  // scaling cap), opposite direction takes a partial — or flattens if the
+  // selected qty covers the whole position
+  $('btnBuy').disabled = !ok;
+  $('btnSell').disabled = !ok;
+  $('btnBuy').title = pos && pos.dir < 0
+    ? (qty >= pos.qty ? 'Buy to flatten the short' : `Buy ${qty} to partial the short (${pos.qty} held)`) : '';
+  $('btnSell').title = pos && pos.dir > 0
+    ? (qty >= pos.qty ? 'Sell to flatten the long' : `Sell ${qty} to partial the long (${pos.qty} held)`) : '';
   $('btnFlat').disabled = !pos;
   $('qtyVal').textContent = qty;
 }
@@ -3815,11 +3895,40 @@ function updatePosInfo() {
     `<span class="${upnl>=0?'up':'dn'}">${(upnl>=0?'+':'')}${fmt$(upnl).replace('$-','-$')}</span>`;
 }
 
+/* partial close: realize PnL + fees on part of the position, keep the rest */
+function closePartial(price, t, closeQty, reason) {
+  if (!pos) return;
+  const q = Math.min(closeQty, pos.qty);
+  if (q <= 0) return;
+  if (q >= pos.qty) { closePos(price, t, reason); return; }
+  const gross = (price - pos.entry) * pos.dir * PT_VALUE * q;
+  const net = gross - FEE_RT * q;
+  acct.bal += net;
+  const dk = tradingDay(t);
+  acct.days[dk] = (acct.days[dk] || 0) + net;
+  acct.trades.push({
+    dir: pos.dir, qty: q, entry: pos.entry, exit: price,
+    tIn: pos.t, tOut: t, pts: (price - pos.entry) * pos.dir, net, reason,
+  });
+  if (acct.trades.length > 400) acct.trades.shift();
+  pos.qty -= q;
+  flog(net >= 0 ? 'ok' : 'err',
+    `PARTIAL ${q} @ ${price.toFixed(2)} (${reason}) net ${fmt$(net)} · ${pos.qty} ct${pos.qty===1?'':'s'} remaining`);
+  saveAcct();
+}
+
 function enter(dir) {
   if (!canTrade()) return;
   const px = marketPrice();
   if (px === null) return;
-  if (pos && pos.dir !== dir) { closePos(px, marketTime(), 'manual flat (reverse click)'); updateAll(); return; }
+  if (pos && pos.dir !== dir) {
+    // opposite side while in a trade = take a partial (or flatten if qty covers it)
+    const fill = Math.round((px + dir * SLIP_TICKS * TICK) / TICK) * TICK;
+    if (qty >= pos.qty) closePos(fill, marketTime(), 'manual flat (reverse click)');
+    else closePartial(fill, marketTime(), qty, 'partial close');
+    updateAll();
+    return;
+  }
   const useQty = Math.min(qty, acct.maxCts - (pos ? pos.qty : 0));
   if (useQty <= 0) { flog('err', `scaling plan: max ${acct.maxCts} contracts`); return; }
   const fill = Math.round((px + dir * SLIP_TICKS * TICK) / TICK) * TICK;
@@ -4284,7 +4393,16 @@ function syncIndButtons() {
   btnFLOW.classList.toggle('active', flowOn);
   btnDOM.classList.toggle('active', domOpen);
   btnLVLS.classList.toggle('active', lvlsOn);
+  const nOn = [fvgOn, smtOn, liqOn, lvlsOn, emaOn].filter(Boolean).length;
+  $('btnInd').textContent = nOn ? `IND (${nOn}) ▾` : 'IND ▾';
+  $('btnInd').classList.toggle('active', nOn > 0);
 }
+$('btnInd').addEventListener('click', e => {
+  e.stopPropagation();
+  $('indPop').classList.toggle('open');
+});
+$('indPop').addEventListener('click', e => e.stopPropagation());
+document.addEventListener('click', () => $('indPop').classList.remove('open'));
 btnLVLS.addEventListener('click', () => {
   lvlsOn = !lvlsOn; localStorage.setItem('sdt.lvls', lvlsOn ? '1' : '0');
   syncIndButtons(); if (feed) refreshAll();
