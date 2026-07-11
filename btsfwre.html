@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Matrix // @SeanDayTrades</title>
+<title>AOT Paper Trading // @SeanDayTrades</title>
 <style>
   :root {
     --bg: #07090d;
@@ -46,12 +46,13 @@
   }
   #btnExit:hover { color:var(--dn); border-color:rgba(255,61,113,.5); background:rgba(255,61,113,.1); }
 
-  #btnHelp {
+  #btnHelp, #btnSnd {
     font-family:var(--mono); font-size:10px; letter-spacing:1px;
     background:none; border:1px solid var(--edge); border-radius:3px;
     color:var(--dim); padding:2px 8px; cursor:pointer;
   }
-  #btnHelp:hover { color:var(--ink); }
+  #btnHelp:hover, #btnSnd:hover { color:var(--ink); }
+  #btnSnd.off { color:rgba(92,107,125,.5); text-decoration:line-through; }
 
   #helpOverlay {
     position:fixed; inset:0; z-index:80; display:none;
@@ -579,7 +580,7 @@
 <header>
   <a id="btnExit" href="index.html" title="Back to ProfitHub" aria-label="Back to ProfitHub">×</a>
   <div class="brand">
-    The Matrix<span class="slash">//</span>@SeanDayTrades
+    AOT Paper Trader<span class="slash">//</span>@SeanDayTrades
   </div>
 
   <div class="ctl-group push" role="group" aria-label="Chart controls">
@@ -599,6 +600,7 @@
     <button class="ctl-btn ind" id="btnFVG">FVG</button>
     <button class="ctl-btn ind" id="btnSMT">SMT</button>
     <button class="ctl-btn ind" id="btnLIQ" title="External highs/lows — unswept liquidity draws">LIQ</button>
+    <button class="ctl-btn ind" id="btnLVLS" title="Session levels: PDH/PDL, overnight H/L, day H/L">LVLS</button>
     <button class="ctl-btn ind" id="btnFLOW" title="Order flow: large resting DOM levels + big trade prints (live only)">FLOW</button>
     <button class="ctl-btn" id="btnDOM" title="Toggle live depth-of-market ladder">DOM</button>
     <button class="ctl-btn ind" id="btnEMA" title="9-period EMA">EMA 9</button>
@@ -790,6 +792,7 @@
   <button id="btnRestore" title="Restore app data from a backup file">RESTORE</button>
   <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
   <span id="replayFooterTime"></span>
+  <button id="btnSnd" title="Trade sounds on/off">SND ON</button>
   <button id="btnHelp" title="How everything works">? HELP</button>
 </footer>
 
@@ -1803,6 +1806,50 @@ function computeEMA(bars, len) {
 
 /* large resting DOM levels: filter the live book down to levels whose
    size is a multiple of the current book median — "the big walls" */
+/* session levels: previous day high/low, overnight (Globex 18:00–09:30 ET)
+   high/low, and current day high/low — computed from 1m bars so they're
+   historically correct at any replay position */
+function computeSessionLevels(m1) {
+  if (!m1 || m1.length < 2) return [];
+  const days = new Map();   // trading day -> {h,l,ht,lt,first}
+  for (const b of m1) {
+    const d = tradingDay(b.t);
+    let r = days.get(d);
+    if (!r) { r = { h:-Infinity, l:Infinity, ht:b.t, lt:b.t, first:b.t }; days.set(d, r); }
+    if (b.h > r.h) { r.h = b.h; r.ht = b.t; }
+    if (b.l < r.l) { r.l = b.l; r.lt = b.t; }
+  }
+  const keys = [...days.keys()];
+  const cur = keys[keys.length - 1];
+  const prev = keys.length > 1 ? keys[keys.length - 2] : null;
+  const out = [];
+  const c = days.get(cur);
+  if (prev) {
+    const p = days.get(prev);
+    out.push({ label:'PDH', p:p.h, t:c.first, col:'#ffb020', dash:[] });
+    out.push({ label:'PDL', p:p.l, t:c.first, col:'#ffb020', dash:[] });
+  }
+  // overnight session of the current trading day: 18:00 ET -> 09:30 ET
+  let onh = -Infinity, onl = Infinity, onhT = null, onlT = null;
+  for (const b of m1) {
+    if (tradingDay(b.t) !== cur) continue;
+    const { h, m } = nyHM(b.t);
+    const inON = h >= 18 || h < 9 || (h === 9 && m < 30);
+    if (!inON) continue;
+    if (b.h > onh) { onh = b.h; onhT = b.t; }
+    if (b.l < onl) { onl = b.l; onlT = b.t; }
+  }
+  if (onhT !== null) {
+    out.push({ label:'ONH', p:onh, t:onhT, col:'#37d6ff', dash:[6,4] });
+    out.push({ label:'ONL', p:onl, t:onlT, col:'#37d6ff', dash:[6,4] });
+  }
+  if (c && Number.isFinite(c.h)) {
+    out.push({ label:'HOD', p:c.h, t:c.ht, col:'#d7dee8', dash:[2,4] });
+    out.push({ label:'LOD', p:c.l, t:c.lt, col:'#d7dee8', dash:[2,4] });
+  }
+  return out;
+}
+
 function computeDomLevels(book, bid, ask) {
   if (!book || !book.size) return null;
   const entries = [...book.entries()].filter(e => e[1] > 0);
@@ -1886,6 +1933,8 @@ function closePos(price, t, reason) {
   if (acct.trades.length > 400) acct.trades.shift();
   flog(net >= 0 ? 'ok' : 'err',
     `CLOSED ${pos.dir>0?'LONG':'SHORT'} ${pos.qty} @ ${price.toFixed(2)} (${reason}) net ${fmt$(net)}`);
+  if (/^TP/.test(reason)) playSound('tp');
+  else if (/^SL/.test(reason) || /MLL|DLL/.test(reason)) playSound('sl');
   pos = null;
   saveAcct();
 }
@@ -2072,6 +2121,7 @@ class Chart {
     this.fvgs = [];
     this.smtSegs = [];
     this.extLevels = [];
+    this.sessionLevels = [];
     this.ema = null;
     this.bigPrints = [];
     this.flowTopBook = null;
@@ -2079,6 +2129,7 @@ class Chart {
     this.showFVG = false;
     this.showSMT = false;
     this.showLIQ = false;
+    this.showLVLS = false;
     this.showEMA = false;
     this.showFLOW = false;
     this.barW = 8;
@@ -2218,6 +2269,7 @@ class Chart {
     this.drawings.splice(this.selectedDrawingIndex, 1);
     this.selectedDrawingIndex = -1;
     this._drawingDeleteBox = null;
+    saveDrawings();
     this.draw();
     return true;
   }
@@ -2632,6 +2684,7 @@ class Chart {
         this.drawingDraft = null;
         this.selectedDrawingIndex = this.drawings.length ? this.drawings.length - 1 : -1;
         clearActiveDrawingTool();
+        saveDrawings();
         this.draw();
       }
       drag = null;
@@ -2898,6 +2951,28 @@ class Chart {
       }
       ctx.setLineDash([]);
       ctx.lineWidth = 1;
+    }
+
+    /* session levels: PDH/PDL (amber), ONH/ONL (cyan dashed), HOD/LOD (dotted) */
+    if (this.showLVLS && this.sessionLevels && this.sessionLevels.length) {
+      ctx.font = '9px "Space Mono", monospace';
+      for (const L of this.sessionLevels) {
+        const yy = Math.round(y(L.p)) + .5;
+        if (yy < -10 || yy > plotH + 10) continue;
+        const startI = this._timeToIndex(L.t);
+        const x1 = Math.max(0, x(startI));
+        if (x1 > plotW) continue;
+        ctx.strokeStyle = L.col;
+        ctx.globalAlpha = .8;
+        ctx.setLineDash(L.dash);
+        ctx.beginPath(); ctx.moveTo(x1, yy); ctx.lineTo(plotW, yy); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = L.col;
+        ctx.textAlign = 'right';
+        ctx.fillText(L.label + ' ' + L.p.toFixed(2), plotW - 6, yy - 6);
+        ctx.textAlign = 'left';
+        ctx.globalAlpha = 1;
+      }
     }
 
     /* 9 EMA */
@@ -3326,6 +3401,7 @@ if (!TFS[currentTF]) currentTF = '5';
 let fvgOn = localStorage.getItem('sdt.fvg') === '1';
 let smtOn = localStorage.getItem('sdt.smt') === '1';
 let liqOn = localStorage.getItem('sdt.liq') === '1';
+let lvlsOn = localStorage.getItem('sdt.lvls') === '1';
 let emaOn = localStorage.getItem('sdt.ema') === '1';
 let flowOn = localStorage.getItem('sdt.flow') === '1';
 let domOpen = localStorage.getItem('sdt.domOpen') === '1';
@@ -3505,10 +3581,33 @@ $('dcYes').addEventListener('click', () => {
     p.chart._drawingDeleteBox = null;
     p.chart.draw();
   });
+  saveDrawings();
   $('drawClearConfirm').classList.remove('open');
   flog('info', `cleared ${n} drawing${n === 1 ? '' : 's'} from both charts`);
 });
 document.addEventListener('click', () => $('drawClearConfirm').classList.remove('open'));
+
+/* ── drawing persistence: survive refreshes like TradingView ──── */
+function saveDrawings() {
+  try {
+    const data = {};
+    panes.forEach(p => data[p.ins.tag] = p.chart.drawings.slice(-400));
+    localStorage.setItem('sdt.drawings', JSON.stringify(data));
+  } catch (_) {}
+}
+function loadDrawings() {
+  try {
+    const data = JSON.parse(localStorage.getItem('sdt.drawings') || '{}');
+    panes.forEach(p => {
+      const arr = data[p.ins.tag];
+      if (Array.isArray(arr)) {
+        p.chart.drawings = arr.filter(d => d && d.type && d.a && Number.isFinite(d.a.t) && Number.isFinite(d.a.p));
+        p.chart.draw();
+      }
+    });
+  } catch (_) {}
+}
+loadDrawings();
 
 /* ── backup / restore: survive file moves, renames, and machine changes ──
    All app state (login, sim account, theme, settings) lives in
@@ -3622,10 +3721,12 @@ function refresh(p) {
   p.chart.showFVG = fvgOn;
   p.chart.showSMT = smtOn;
   p.chart.showLIQ = liqOn;
+  p.chart.showLVLS = lvlsOn;
   p.chart.showEMA = emaOn;
   p.chart.showFLOW = flowOn;
   if (fvgOn) p.chart.fvgs = computeFVGs(bars);
   p.chart.extLevels = liqOn ? computeExternals(bars) : [];
+  p.chart.sessionLevels = lvlsOn ? computeSessionLevels(visible1m(p.ins.tag)) : [];
   p.chart.ema = emaOn ? computeEMA(bars, EMA_LEN) : null;
   p.chart.bigPrints = (flowOn && feed.bigPrints) ? feed.bigPrints[p.ins.tag] : [];
   p.chart.flowTopBook = (flowOn && domMode === 'L1' && !replay.on) ? {
@@ -3735,6 +3836,7 @@ function enter(dir) {
     };
   }
   flog('info', `${dir>0?'BUY':'SELL'} ${useQty} NQ @ ${fill.toFixed(2)} (slip ${SLIP_TICKS}t)`);
+  playSound('entry');
   updateAll();
 }
 
@@ -4173,7 +4275,7 @@ document.querySelectorAll('.ctl-btn.tf').forEach(b => b.addEventListener('click'
 setTF(currentTF);
 
 /* indicator toggles */
-const btnFVG = $('btnFVG'), btnSMT = $('btnSMT'), btnLIQ = $('btnLIQ'), btnEMA = $('btnEMA'), btnFLOW = $('btnFLOW'), btnDOM = $('btnDOM');
+const btnFVG = $('btnFVG'), btnSMT = $('btnSMT'), btnLIQ = $('btnLIQ'), btnEMA = $('btnEMA'), btnFLOW = $('btnFLOW'), btnDOM = $('btnDOM'), btnLVLS = $('btnLVLS');
 function syncIndButtons() {
   btnFVG.classList.toggle('active', fvgOn);
   btnSMT.classList.toggle('active', smtOn);
@@ -4181,7 +4283,12 @@ function syncIndButtons() {
   btnEMA.classList.toggle('active', emaOn);
   btnFLOW.classList.toggle('active', flowOn);
   btnDOM.classList.toggle('active', domOpen);
+  btnLVLS.classList.toggle('active', lvlsOn);
 }
+btnLVLS.addEventListener('click', () => {
+  lvlsOn = !lvlsOn; localStorage.setItem('sdt.lvls', lvlsOn ? '1' : '0');
+  syncIndButtons(); if (feed) refreshAll();
+});
 function syncDepthSubscription() {
   if (!feed || typeof feed.setDepth !== 'function') return;
   // FLOW walls and the ladder's top-of-book sizes both come from
@@ -4545,6 +4652,42 @@ $('thUp').addEventListener('input', e => { THEME.up = e.target.value; saveTheme(
 $('thDn').addEventListener('input', e => { THEME.dn = e.target.value; saveTheme(); });
 $('thReset').addEventListener('click', () => { THEME = { ...THEME_DEF }; saveTheme(); });
 applyTheme();
+
+/* ── trade sounds (WebAudio, no files) ────────────────────────── */
+const SND = { on: localStorage.getItem('sdt.sound') !== '0', ctx: null };
+function playSound(kind) {
+  if (!SND.on) return;
+  try {
+    SND.ctx = SND.ctx || new (window.AudioContext || window.webkitAudioContext)();
+    if (SND.ctx.state === 'suspended') SND.ctx.resume();
+    const c = SND.ctx, t0 = c.currentTime;
+    const tone = (f, t, dur, type = 'sine', gain = 0.12) => {
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(f, t);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(gain, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(c.destination);
+      o.start(t); o.stop(t + dur + 0.03);
+    };
+    if (kind === 'entry')   { tone(660, t0, .09, 'triangle'); tone(880, t0 + .09, .12, 'triangle'); }
+    else if (kind === 'tp') { tone(740, t0, .10); tone(988, t0 + .10, .12); tone(1319, t0 + .21, .22); }
+    else if (kind === 'sl') { tone(330, t0, .12, 'sawtooth', .08); tone(220, t0 + .12, .26, 'sawtooth', .08); }
+  } catch (_) {}
+}
+function syncSndBtn() {
+  const b = $('btnSnd');
+  b.textContent = SND.on ? 'SND ON' : 'SND OFF';
+  b.classList.toggle('off', !SND.on);
+}
+$('btnSnd').addEventListener('click', () => {
+  SND.on = !SND.on;
+  localStorage.setItem('sdt.sound', SND.on ? '1' : '0');
+  if (SND.on) playSound('entry');   // audible confirmation
+  syncSndBtn();
+});
+syncSndBtn();
 
 /* ── help overlay ─────────────────────────────────────────────── */
 $('btnHelp').addEventListener('click', () => $('helpOverlay').classList.add('open'));
