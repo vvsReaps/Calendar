@@ -186,7 +186,22 @@
   }
   .feed-key-input:focus { border-color:var(--cyan); }
   .feed-key-input::placeholder { color:var(--dim); }
-  #btnFeedConnect.connected { color:var(--bg); background:var(--nq); border-color:var(--nq); }
+  #btnFeedConnect.ready:not(.connected) {
+    color:var(--bg); background:var(--nq); border-color:var(--nq); font-weight:800;
+    box-shadow:0 0 12px rgba(0,229,160,.28);
+  }
+  #btnFeedConnect.ready:not(.connected):hover {
+    color:var(--bg); filter:brightness(1.1);
+    box-shadow:0 0 18px rgba(0,229,160,.42);
+  }
+  #btnFeedConnect.connected {
+    color:#fff; background:var(--dn); border-color:var(--dn); font-weight:800;
+    box-shadow:0 0 12px rgba(255,61,113,.28);
+  }
+  #btnFeedConnect.connected:hover {
+    color:#fff; background:#ff245f; border-color:#ff245f;
+    box-shadow:0 0 18px rgba(255,61,113,.42);
+  }
   .api-help-btn {
     text-decoration:none; color:var(--cyan); border-color:rgba(55,214,255,.45);
     white-space:nowrap;
@@ -222,7 +237,25 @@
     box-shadow:0 0 7px rgba(77,163,255,.9);
     transform:translate(-50%,-50%);
   }
-  #repTime { color:var(--cyan); min-width:170px; }
+  #repTime { color:var(--cyan); min-width:205px; }
+  .rep-granularity {
+    display:flex; align-items:center; gap:3px; padding:2px;
+    border:1px solid var(--edge); border-radius:4px; background:rgba(7,9,13,.7);
+  }
+  .rep-unit {
+    min-width:38px; padding:4px 7px; border:0; border-radius:3px;
+    background:transparent; color:var(--dim); cursor:pointer;
+    font:800 9px var(--mono); letter-spacing:1px;
+  }
+  .rep-unit:hover { color:var(--cyan); }
+  .rep-unit.active { color:var(--bg); background:var(--cyan); }
+  .rep-unit:disabled { opacity:.4; cursor:not-allowed; }
+  #repLoadState {
+    min-width:92px; color:var(--dim); font-size:8px; letter-spacing:1px;
+    white-space:nowrap;
+  }
+  #repLoadState.loading { color:var(--warn); }
+  #repLoadState.ready { color:var(--nq); }
   #repSpeed {
     font-family:var(--mono); font-size:10px; background:var(--bg);
     color:var(--ink); border:1px solid var(--edge); border-radius:3px; padding:3px 5px;
@@ -392,7 +425,7 @@
 
   /* trade bar (NQ only) */
   .trade-bar {
-    display:flex; align-items:center; gap:8px;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
     padding:6px 12px; border-bottom:1px solid var(--edge); flex-shrink:0;
     font-family:var(--mono); font-size:11px;
   }
@@ -411,8 +444,31 @@
   #btnSell { color:#fff; background:var(--dn); border-color:var(--dn); }
   #btnFlat { color:var(--dim); background:none; border-color:var(--edge); }
   #btnFlat:hover { color:var(--ink); }
+  #btnCancelAll {
+    color:var(--warn); background:rgba(255,176,32,.06); border-color:rgba(255,176,32,.45);
+    padding-left:10px; padding-right:10px;
+  }
+  #btnCancelAll:hover:not(:disabled) { color:var(--bg); background:var(--warn); border-color:var(--warn); }
+  .risk-controls {
+    display:flex; align-items:center; gap:4px; min-height:29px;
+    padding:2px 5px; border:1px solid var(--edge); border-radius:4px;
+    background:rgba(7,9,13,.5);
+  }
+  .risk-controls .risk-title { font-size:8px; letter-spacing:1px; color:var(--dim); margin-right:2px; }
+  .risk-controls label { font-size:9px; font-weight:800; letter-spacing:.8px; color:var(--dim); }
+  .risk-controls label[for=slAmount] { color:var(--dn); }
+  .risk-controls label[for=tpAmount] { color:var(--up); }
+  .risk-input, #riskUnit {
+    height:23px; font:800 10px var(--mono); color:var(--ink); background:var(--bg);
+    border:1px solid var(--edge); border-radius:3px; outline:none;
+  }
+  .risk-input { width:62px; padding:2px 5px; }
+  #riskUnit { width:54px; padding:2px 3px; cursor:pointer; }
+  .risk-input:focus, #riskUnit:focus { border-color:var(--cyan); }
+  .risk-input.invalid { border-color:var(--dn); box-shadow:0 0 0 1px rgba(255,61,113,.15); }
+  #riskPreview { min-width:152px; font-size:8px; letter-spacing:.4px; color:var(--dim); white-space:nowrap; }
   .t-btn:disabled { opacity:.3; cursor:not-allowed; }
-  #posInfo { margin-left:auto; font-size:10px; letter-spacing:.5px; color:var(--dim); }
+  #posInfo { margin-left:auto; min-width:220px; font-size:10px; letter-spacing:.5px; color:var(--dim); }
   #posInfo .up { color:var(--up); } #posInfo .dn { color:var(--dn); }
 
   .chart-wrap { flex:1; min-height:0; position:relative; cursor:crosshair; }
@@ -516,7 +572,66 @@
     color:var(--dim); padding:2px 8px; cursor:pointer;
   }
   #btnAcctReset:hover, #btnTrades:hover { color:var(--ink); }
+  #btnAccountMode {
+    font-family:var(--mono); font-size:10px; font-weight:800; letter-spacing:1.2px;
+    color:var(--cyan); background:rgba(55,214,255,.08);
+    border:1px solid rgba(55,214,255,.5); border-radius:4px;
+    padding:7px 10px; cursor:pointer; white-space:nowrap;
+    box-shadow:0 0 12px rgba(55,214,255,.10);
+  }
+  #btnAccountMode:hover { background:rgba(55,214,255,.15); border-color:var(--cyan); }
+  #btnAccountMode.live {
+    color:var(--bg); background:var(--warn); border-color:var(--warn);
+    box-shadow:0 0 16px rgba(255,176,32,.28);
+  }
   #btnPayout:disabled { opacity:.4; cursor:not-allowed; }
+
+  /* ── account picker / live routing ── */
+  #accountPickerOverlay {
+    position:fixed; inset:0; z-index:95; display:none;
+    align-items:center; justify-content:center; padding:20px;
+    background:rgba(0,0,0,.72); backdrop-filter:blur(4px);
+  }
+  #accountPickerOverlay.open { display:flex; }
+  #accountPickerBox {
+    width:min(660px, 100%); max-height:min(82vh, 760px);
+    display:flex; flex-direction:column; overflow:hidden;
+    background:rgba(7,9,13,.99); border:1px solid rgba(55,214,255,.35); border-radius:7px;
+    box-shadow:0 18px 56px rgba(0,0,0,.68), 0 0 22px rgba(55,214,255,.08);
+  }
+  .account-picker-head {
+    display:flex; align-items:center; gap:8px; padding:11px 14px;
+    border-bottom:1px solid var(--edge); font-family:var(--mono);
+  }
+  .account-picker-head strong { font-size:11px; letter-spacing:2px; color:var(--cyan); }
+  #accountPickerRefresh { margin-left:auto; }
+  #accountPickerClose {
+    width:26px; height:25px; padding:0; background:none; color:var(--dim);
+    border:1px solid var(--edge); border-radius:4px; cursor:pointer;
+  }
+  #accountPickerClose:hover { color:var(--dn); border-color:rgba(255,61,113,.55); }
+  .account-picker-note {
+    padding:10px 14px; border-bottom:1px solid var(--edge);
+    font-family:var(--mono); font-size:9px; line-height:1.65; letter-spacing:.5px; color:var(--dim);
+  }
+  .account-picker-note b { color:var(--warn); }
+  #accountList { overflow:auto; padding:10px; display:flex; flex-direction:column; gap:8px; }
+  .account-card {
+    width:100%; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 14px;
+    align-items:center; text-align:left; padding:11px 12px;
+    background:rgba(13,17,23,.78); border:1px solid var(--edge); border-radius:5px;
+    color:var(--ink); cursor:pointer; font-family:var(--mono);
+  }
+  .account-card:hover { border-color:rgba(55,214,255,.55); background:rgba(55,214,255,.06); }
+  .account-card.selected { border-color:var(--cyan); box-shadow:0 0 14px rgba(55,214,255,.14); }
+  .account-card.live-choice:hover { border-color:rgba(255,176,32,.75); background:rgba(255,176,32,.06); }
+  .account-card:disabled { opacity:.42; cursor:not-allowed; }
+  .account-card-name { font-size:11px; font-weight:800; letter-spacing:1px; overflow:hidden; text-overflow:ellipsis; }
+  .account-card-meta { margin-top:3px; font-size:8px; letter-spacing:1px; color:var(--dim); }
+  .account-card-balance { grid-row:1 / span 2; grid-column:2; text-align:right; font-size:15px; font-weight:800; color:var(--ink); }
+  .account-card.paper .account-card-balance { color:var(--cyan); font-size:10px; letter-spacing:1px; }
+  .account-empty { padding:18px; text-align:center; color:var(--dim); font:10px/1.7 var(--mono); }
+  .routing-live-tag { color:var(--warn); font-weight:800; }
   #btnPayout.ready {
     color:var(--bg); background:var(--nq); border-color:var(--nq); font-weight:700;
     box-shadow:0 0 14px rgba(0,229,160,.5);
@@ -590,6 +705,85 @@
   }
   #logToggle:hover, #btnBackup:hover, #btnRestore:hover { color:var(--ink); }
 
+
+
+  /* ── boot loader ── */
+  #bootOverlay {
+    position:fixed; inset:0; z-index:120;
+    display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 35%, rgba(0,229,160,.12), transparent 34%),
+               linear-gradient(180deg, #04070b 0%, #06090e 48%, #030508 100%);
+    overflow:hidden;
+    transition:opacity .65s ease, visibility .65s ease;
+  }
+  #bootOverlay.hide {
+    opacity:0; visibility:hidden; pointer-events:none;
+  }
+  #bootOverlay::before {
+    content:""; position:absolute; inset:-20%;
+    background:
+      linear-gradient(rgba(55,214,255,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(55,214,255,.04) 1px, transparent 1px);
+    background-size:56px 56px;
+    transform:perspective(900px) rotateX(72deg) translateY(18%);
+    transform-origin:center bottom;
+    opacity:.48;
+    animation:bootGridDrift 10s linear infinite;
+  }
+  #bootOverlay::after {
+    content:""; position:absolute; inset:-35%;
+    background:linear-gradient(180deg, transparent 0%, rgba(0,229,160,.12) 48%, transparent 100%);
+    filter:blur(20px); opacity:.42;
+    animation:bootScan 3.2s ease-in-out infinite;
+  }
+  .boot-shell {
+    position:relative; z-index:1;
+    display:flex; flex-direction:column; align-items:center; gap:14px;
+    text-align:center; padding:28px 34px;
+  }
+  .boot-kicker {
+    font-family:var(--mono); font-size:10px; letter-spacing:4px; color:rgba(55,214,255,.8);
+    text-transform:uppercase;
+  }
+  .boot-title {
+    font-family:var(--mono); font-size:clamp(38px, 7vw, 86px); font-weight:700;
+    letter-spacing:8px; text-transform:uppercase; color:#f2f8ff;
+    text-shadow:0 0 12px rgba(55,214,255,.24), 0 0 30px rgba(0,229,160,.18);
+  }
+  .boot-sub {
+    font-family:var(--sans); font-size:clamp(14px, 2vw, 22px); letter-spacing:1.5px;
+    color:#a6b6c8;
+  }
+  .boot-loader {
+    margin-top:10px; width:min(340px, 72vw); display:flex; flex-direction:column; gap:10px; align-items:center;
+  }
+  .boot-bar {
+    width:100%; height:4px; overflow:hidden; border-radius:999px;
+    background:rgba(255,255,255,.08); box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
+  }
+  .boot-bar span {
+    display:block; width:38%; height:100%; border-radius:999px;
+    background:linear-gradient(90deg, rgba(55,214,255,0), rgba(55,214,255,.95), rgba(0,229,160,.9), rgba(55,214,255,0));
+    filter:drop-shadow(0 0 10px rgba(55,214,255,.4));
+    animation:bootBar 1.5s ease-in-out infinite;
+  }
+  .boot-status {
+    min-height:12px; font-family:var(--mono); font-size:9px; letter-spacing:3px; color:var(--dim);
+    text-transform:uppercase;
+  }
+  @keyframes bootBar {
+    0% { transform:translateX(-140%); }
+    100% { transform:translateX(330%); }
+  }
+  @keyframes bootScan {
+    0%, 100% { transform:translateY(-26%); }
+    50% { transform:translateY(28%); }
+  }
+  @keyframes bootGridDrift {
+    0% { transform:perspective(900px) rotateX(72deg) translateY(18%) translateX(0); }
+    100% { transform:perspective(900px) rotateX(72deg) translateY(18%) translateX(-28px); }
+  }
+
   @media (max-width:900px) {
     main { flex-direction:column; }
     .seam { width:auto; height:1px;
@@ -600,6 +794,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
 </head>
 <body>
+
+
+<div id="bootOverlay" aria-label="Loading screen" aria-live="polite">
+  <div class="boot-shell">
+    <div class="boot-kicker">INITIALIZING TERMINAL</div>
+    <div class="boot-title">The Matrix</div>
+    <div class="boot-sub">by @SeanDayTrades</div>
+    <div class="boot-loader" aria-hidden="true">
+      <div class="boot-bar"><span></span></div>
+      <div class="boot-status" id="bootStatusText">LOADING MARKET ENGINE</div>
+    </div>
+  </div>
+</div>
 
 <header>
   <a id="btnExit" href="index.html" title="Back to ProfitHub" aria-label="Back to ProfitHub">×</a>
@@ -655,6 +862,11 @@
 
 <div id="replayBar">
   <span id="repTime">—</span>
+  <div class="rep-granularity" role="group" aria-label="Replay resolution">
+    <button class="rep-unit" id="repUnitMin" type="button">1m</button>
+    <button class="rep-unit active" id="repUnitSec" type="button" title="Load true ProjectX one-second historical bars around the replay cursor">1s</button>
+  </div>
+  <span id="repLoadState">MINUTE DATA</span>
   <div class="replay-slider-wrap">
     <input type="range" id="repSlider" min="0" max="0" value="0">
     <div id="repSessionDots" aria-hidden="true"></div>
@@ -667,6 +879,7 @@
     <option value="5">5×</option>
     <option value="10">10×</option>
     <option value="30">30×</option>
+    <option value="60">60×</option>
   </select>
 </div>
 
@@ -752,10 +965,11 @@
 </main>
 
 <div id="acctBar">
+  <button id="btnAccountMode" title="Switch between the paper simulator and an actual Topstep account">ACCOUNT: PAPER ▾</button>
   <span class="chip" id="acctStatus">50K EVAL SIMULATOR</span>
-  <div class="stat"><span class="stat-l">BALANCE</span><span class="stat-v" id="roBal">$50,000</span></div>
-  <div class="stat"><span class="stat-l">OPEN P&amp;L</span><span class="stat-v" id="roOpen">—</span></div>
-  <div class="stat"><span class="stat-l">REALIZED DAY</span><span class="stat-v" id="roReal">$0</span></div>
+  <div class="stat"><span class="stat-l" id="balLabel">BALANCE</span><span class="stat-v" id="roBal">$50,000</span></div>
+  <div class="stat"><span class="stat-l" id="openLabel">OPEN P&amp;L</span><span class="stat-v" id="roOpen">—</span></div>
+  <div class="stat"><span class="stat-l" id="realLabel">REALIZED DAY</span><span class="stat-v" id="roReal">$0</span></div>
   <span class="mini">EQUITY <b id="roEq">$50,000</b></span>
   <span class="mini">DAY TOTAL <b id="roDay">$0</b></span>
   <span class="mini">MLL <b id="roMll">$48,000</b> (<b id="roBuf">$2,000</b> buffer)</span>
@@ -767,24 +981,38 @@
   <button id="btnAcctReset">RESET</button>
 </div>
 
+<div id="accountPickerOverlay" aria-label="Topstep account selection">
+  <div id="accountPickerBox">
+    <div class="account-picker-head">
+      <strong>SELECT TRADING ACCOUNT</strong>
+      <button class="ctl-btn" id="accountPickerRefresh">REFRESH</button>
+      <button id="accountPickerClose" aria-label="Close account selector">×</button>
+    </div>
+    <div class="account-picker-note">
+      Paper orders stay inside this browser. Selecting an Eval or XFA enables <b>actual TopstepX order routing</b> for BUY, SELL, FLAT, SL and TP. Live Funded accounts are intentionally not enabled here.
+    </div>
+    <div id="accountList"><div class="account-empty">CONNECT TOPSTEPX TO LOAD YOUR ACTIVE ACCOUNTS</div></div>
+  </div>
+</div>
+
 <div id="helpOverlay">
   <div id="helpBox">
     <div class="help-h">
-      <span>AOT PAPER TRADING — HELP</span>
+      <span>THE MATRIX — HELP</span>
       <button id="helpClose" aria-label="Close help">×</button>
     </div>
     <div class="help-body">
       <h3>GETTING STARTED</h3>
-      <p>Enter your TopstepX username and API key in the top bar and press CONNECT. Both fields are masked and saved locally on this device only — nothing is ever sent anywhere except directly to TopstepX. The API key comes from TopstepX Settings → API (requires a ProjectX API subscription). Once connected, live NQ and ES data streams into both charts.</p>
+      <p>Enter your TopstepX username and API key in the top bar and press CONNECT. Both fields are masked and saved locally on this device only — nothing is ever sent anywhere except directly to TopstepX. The API key comes from TopstepX Settings → API (requires a ProjectX API subscription). Once connected, live NQ and ES data streams into both charts and the ACCOUNT button can load your active Evals/XFAs.</p>
 
       <h3>CHARTS</h3>
-      <p>NQ on the left, ES on the right. Scroll to zoom, drag to pan, double-click to snap back to live. TF buttons sync the timeframe on both charts. Hover any candle for its stats (range, body, delta) — the crosshair syncs across both charts by time. RESET VIEW restores default zoom. THEME lets you change the background and candle colors.</p>
+      <p>NQ on the left, ES on the right. Scroll to zoom, drag to pan, double-click to snap back to live. TF buttons sync the timeframe on both charts. The 15m, 1H, 4H, and Daily charts keep the deeper archive in compact aggregated form, while raw 1-minute data is limited to the latest two weeks. The footer shows the available candle count. Hover any candle for its stats (range, body, delta) — the crosshair syncs across both charts by time. RESET VIEW restores default zoom. THEME lets you change the background and candle colors.</p>
 
       <h3>REPLAY &amp; BACKTESTING</h3>
-      <p>Press REPLAY to enter backtest mode. Scrub the slider to any point in the loaded history, then PLAY (1×–30×) or step +1m bar by bar. All trading, rules, and day rolls run on the replay clock, so you can pass the eval, earn winning days, and reach payouts entirely inside replay. The slider locks while a position is open.</p>
+      <p>Press REPLAY to enter backtest mode. Replay keeps only a rolling 14 calendar days of raw 1-minute NQ and ES history for smoother navigation; older data is retained only as compact higher-timeframe candles. Use the 1m/1s switch to load true ProjectX one-second historical bars around the selected replay time. In 1s mode the current candle forms second by second without exposing the completed minute early; PLAY supports 1×–60× and STEP advances +1s. The wider slider remains minute-based for quickly choosing a date/time and reloads the surrounding second window after you release it. All trading, rules, and day rolls run on the replay clock. The slider locks while a position is open.</p>
 
       <h3>TRADING &amp; TOPSTEP RULES</h3>
-      <p>BUY/SELL work on the NQ chart (set contracts with −/+, FLAT closes). Drag the SL and TP lines directly on the chart. Fills include 1 tick of slippage and simulated commissions.</p>
+      <p>BUY/SELL work on the NQ chart (set contracts with −/+, FLAT closes). The NEXT ORDER controls let you set SL and TP in points or total dollars across the selected quantity; the converted values are shown beside the inputs. In PAPER mode, fills use simulated slippage and commissions. Use the ACCOUNT button to select an actual Topstep Eval/XFA; live-mode entries are sent as market orders with attached stop-loss and take-profit brackets. Dragging SL/TP updates the corresponding TopstepX order. CANCEL ALL cancels every working order on the selected actual account across all contracts, but it does not flatten positions.</p>
       <p>You start on the 50K EVAL: reach $53,000 with best-day consistency at or under 50% to pass. Passing unlocks the 50K FUNDED account: balance starts at $0, the Maximum Loss Limit starts at −$2,000, trails your end-of-day balance, and locks at $0. Contracts scale 2 → 3 (at +$1,500) → 5 (at +$2,000), updating at session roll. Positions auto-flatten at 4:10 PM ET. Hitting the MLL permanently closes the account.</p>
       <p>On the funded account, each day closing at +$150 or better is a winning day. At 5 winning days, REQUEST PAYOUT withdraws 50% of your balance and the counter resets for the next payout cycle.</p>
 
@@ -803,7 +1031,7 @@
       <p>Floating toolbar (draggable): rectangle with midline, horizontal line, horizontal ray, and trendline. Drawings can extend into future space to the right of price. Click a drawing to select, Delete/Backspace removes it, Escape deselects. The trash button clears all drawings from both charts (with confirmation). Shift-drag measures price and time between two points.</p>
 
       <h3>DATA &amp; BACKUP</h3>
-      <p>Everything (login, sim account, theme, settings) is stored in your browser tied to this page's location. Use BACKUP to download it all as a file and RESTORE to load it — do this before moving or renaming the file, and keep backups private since they include your API key. RESET in the account bar starts a fresh 50K Eval.</p>
+      <p>Settings, the paper account, theme, drawings, and your last account selection are stored in your browser tied to this page's location. BACKUP intentionally excludes the TopstepX username and API key. RESTORE also ignores credentials contained in older backup files. RESET in the account bar starts a fresh 50K paper Eval.</p>
 
       <h3>QUICK KEYS</h3>
       <p>Escape — cancel drawing tool / close popups · Delete — remove selected drawing · Double-click chart — snap to live · Shift-drag — measure.</p>
@@ -816,7 +1044,7 @@
   <span id="feedStatus" class="warn">FEED: CONNECTING…</span>
   <span id="tfReadout">TF —</span>
   <button id="logToggle">LOG</button>
-  <button id="btnBackup" title="Download all app data (login, account, theme, settings) as a file">BACKUP</button>
+  <button id="btnBackup" title="Download app settings and paper-account data (TopstepX credentials excluded)">BACKUP</button>
   <button id="btnRestore" title="Restore app data from a backup file">RESTORE</button>
   <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
   <span id="replayFooterTime"></span>
@@ -827,10 +1055,47 @@
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
+
+const BOOT_LOADER = {
+  shownAt: performance.now(),
+  minMs: 2400,
+  maxMs: 8000,
+  ready: false,
+  hidden: false,
+  reasons: new Set(),
+};
+function setBootStatus(msg) {
+  const el = $('bootStatusText');
+  if (el && msg) el.textContent = String(msg).toUpperCase();
+}
+function markBootReady(reason = 'ready') {
+  if (reason) BOOT_LOADER.reasons.add(reason);
+  BOOT_LOADER.ready = true;
+  maybeHideBootOverlay();
+}
+function maybeHideBootOverlay(force = false) {
+  if (BOOT_LOADER.hidden) return;
+  const elapsed = performance.now() - BOOT_LOADER.shownAt;
+  if (!force) {
+    if (!BOOT_LOADER.ready || elapsed < BOOT_LOADER.minMs) return;
+  }
+  BOOT_LOADER.hidden = true;
+  const el = $('bootOverlay');
+  if (!el) return;
+  el.classList.add('hide');
+  setTimeout(() => { try { el.remove(); } catch (_) {} }, 800);
+}
+window.addEventListener('load', () => {
+  setTimeout(() => maybeHideBootOverlay(), Math.max(0, BOOT_LOADER.minMs - (performance.now() - BOOT_LOADER.shownAt)));
+});
+// belt-and-suspenders: recheck at minMs even if the load event is delayed by slow CDNs
+setTimeout(() => maybeHideBootOverlay(), BOOT_LOADER.minMs + 50);
+setTimeout(() => markBootReady('max-timeout'), BOOT_LOADER.maxMs);
+
 /* ════════════════════════════════════════════════════════════════
-   SEANDAYTRADES TERMINAL v1.1 — Topstep 50K XFA backtest simulator
+   SEANDAYTRADES TERMINAL v1.3 — Account routing + SL/TP presets + cancel all
    · Own canvas charts. TopstepX historical REST + live SignalR market stream, with TopstepX REST partial-bar polling if browser realtime transport is blocked.
-   · REPLAY engine: scrub anywhere in the loaded 1m history, play
+   · REPLAY engine: scrub through a rolling two-week 1m archive, play
      forward at 1×–30×, and trade it. All fills & rules run on 1m bars.
    · Trading (NQ only): BUY/SELL/FLAT + draggable SL/TP lines.
    · Topstep 50K Express Funded Account rules enforced:
@@ -851,6 +1116,30 @@ const RECONCILE_MS = 60000;
 const LIVE_POLL_MS = 1000; // fallback cadence: NQ every 1s, ES every 2s
 const FETCH_TIMEOUT = 15000;
 const UI_EMIT_MS = 30;      // stream→UI throttle: ~33fps, leading+trailing edge
+/* ProjectX history strategy:
+   - Replay/raw 1-minute arrays retain only a rolling 14 calendar days.
+   - A compact 180-day higher-timeframe cache preserves the expanded 15m,
+     1H, 4H and Daily charts without keeping months of minute candles alive. */
+const HISTORY_REQUEST_LIMIT = 20000;
+const DEEP_HISTORY_TARGET_DAYS = 180;
+const M1_HISTORY_TARGET_DAYS = 14;
+const M1_HISTORY_KEEP_MS = M1_HISTORY_TARGET_DAYS * 24 * 60 * 60 * 1000;
+const HISTORY_FETCH_MAX_BARS = 200000;
+const HISTORY_MAX_BARS = 25000;
+const LIVE_CHART_LOOKBACK_BARS = HISTORY_MAX_BARS;
+const TF_SOURCE_1M_LIMIT = {
+  '1': HISTORY_MAX_BARS,
+  '5': HISTORY_MAX_BARS,
+  '15': HISTORY_MAX_BARS,
+  '60': HISTORY_MAX_BARS,
+  '240': HISTORY_MAX_BARS,
+  '1440': HISTORY_MAX_BARS,
+};
+const SESSION_LEVEL_LOOKBACK_BARS = HISTORY_MAX_BARS;
+const HISTORY_ROLL_OVERLAP_DAYS = 3;
+const REPLAY_SECOND_WINDOW_MS = 4 * 60 * 60 * 1000; // 4h = 14,400 possible 1s bars, below 20k/request
+const REPLAY_SECOND_CACHE_WINDOWS = 4;
+const REPLAY_SECOND_CACHE_MARGIN_MS = 5 * 60 * 1000;
 const TOPSTEP_API = 'https://api.topstepx.com';
 const TOPSTEP_RTC = 'https://rtc.topstepx.com/hubs/market';
 const SMT_LOOKBACK = 400;
@@ -937,6 +1226,38 @@ function inClosedWindow(t) {         // 4:10 PM – 6:00 PM ET: forced flat, no 
   return (h > RULES.flattenH || (h === RULES.flattenH && m >= RULES.flattenM)) && h < RULES.reopenH;
 }
 
+/* Equity-index futures use quarterly H/M/U/Z contracts. The practical
+   front-month roll is the Thursday eight days before the third Friday.
+   These helpers build a continuous replay archive from active + expired
+   ProjectX contracts, with a small overlap chosen by daily traded volume. */
+const QUARTER_CODES = ['H','M','U','Z'];
+const QUARTER_MONTH_UTC = { H:2, M:5, U:8, Z:11 };
+function thirdFridayUTC(year, monthIndex) {
+  const first = new Date(Date.UTC(year, monthIndex, 1));
+  const firstFriday = 1 + ((5 - first.getUTCDay() + 7) % 7);
+  return Date.UTC(year, monthIndex, firstFriday + 14);
+}
+function contractRollUTC(year, code) {
+  return thirdFridayUTC(year, QUARTER_MONTH_UTC[code]) - 8*24*3600e3;
+}
+function previousQuarter(year, code) {
+  const i = QUARTER_CODES.indexOf(code);
+  if (i > 0) return { year, code:QUARTER_CODES[i-1] };
+  return { year:year-1, code:'Z' };
+}
+function parseQuarterContractId(contractId) {
+  const m = String(contractId || '').match(/^(.*)\.([HMUZ])(\d{2})$/);
+  if (!m) return null;
+  return { root:m[1], code:m[2], year:2000 + Number(m[3]) };
+}
+function quarterContractId(root, year, code) {
+  return `${root}.${code}${String(year).slice(-2)}`;
+}
+function quarterWindow(year, code) {
+  const prev = previousQuarter(year, code);
+  return { start:contractRollUTC(prev.year, prev.code), end:contractRollUTC(year, code) };
+}
+
 const fmt$ = v => (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
 /* ── feed log ─────────────────────────────────────────────────── */
@@ -975,7 +1296,9 @@ class TopstepXFeed {
     this.userName = userName;
     this.apiKey = apiKey;
     this.token = null;
+    this.accounts = [];
     this.m1 = {};
+    this.htf = {};
     this.lastPrice = {};
     this.lastPriceTime = {};
     this.cbs = [];
@@ -985,8 +1308,12 @@ class TopstepXFeed {
     this.marketConnection = null;
     this.realtimeMode = 'NONE';
     this.contracts = {};
+    this.contractMeta = {};
     this.contractToTag = new Map();
     this.emitTimers = {};
+    this.historyQueue = Promise.resolve();
+    this.historyNextAt = 0;
+    this.secondReplayCache = {};
     /* order flow (FLOW indicator) */
     this.depthOn = false;
     this.book = {};          // tag -> Map(price -> resting volume)
@@ -1005,6 +1332,7 @@ class TopstepXFeed {
     };
     instruments.forEach(i => {
       this.m1[i.tag] = [];
+      this.htf[i.tag] = { '15':[], '60':[], '240':[], '1440':[] };
       this.lastPrice[i.tag] = null;
       this.lastPriceTime[i.tag] = 0;
       this.book[i.tag] = new Map();
@@ -1014,11 +1342,13 @@ class TopstepXFeed {
       this.printAvg[i.tag] = 0;
       this.volProf[i.tag] = { seed: new Map(), live: new Map(), seedUntil: 0, day: null };
       this.tickOf[i.tag] = i.tick || 0.25;
+      this.secondReplayCache[i.tag] = [];
     });
   }
 
   onUpdate(cb) { this.cbs.push(cb); }
   bars1m(tag) { return this.m1[tag] || []; }
+  barsTF(tag, tf) { return (this.htf[tag] && this.htf[tag][String(tf)]) || []; }
 
   async stop() {
     this.stopped = true;
@@ -1042,8 +1372,13 @@ class TopstepXFeed {
   _scheduleEmit(tag) {
     const now = performance.now();
     if (!this.lastEmitAt) this.lastEmitAt = {};
+    // Higher-timeframe charts contain far more candles now, so redraw them at
+    // a still-live but lighter cadence while preserving fast 1m/5m updates.
+    const emitWindow = currentTF === '15' ? 80
+      : (currentTF === '60' || currentTF === '240' || currentTF === '1440') ? 140
+      : UI_EMIT_MS;
     const since = now - (this.lastEmitAt[tag] || 0);
-    if (since >= UI_EMIT_MS) {
+    if (since >= emitWindow) {
       // leading edge: quiet tape → render this tick immediately
       this.lastEmitAt[tag] = now;
       this._emit(tag);
@@ -1055,7 +1390,7 @@ class TopstepXFeed {
       delete this.emitTimers[tag];
       this.lastEmitAt[tag] = performance.now();
       this._emit(tag);
-    }, Math.max(1, UI_EMIT_MS - since));
+    }, Math.max(1, emitWindow - since));
   }
 
   async _post(path, body, auth = true) {
@@ -1096,6 +1431,91 @@ class TopstepXFeed {
     flog('ok', 'TopstepX authentication successful');
   }
 
+  async refreshAccounts() {
+    const json = await this._post('/api/Account/search', { onlyActiveAccounts:true });
+    const accounts = Array.isArray(json.accounts) ? json.accounts : [];
+    this.accounts = accounts.filter(a => a && a.isVisible !== false);
+    return this.accounts;
+  }
+
+  async placeMarketBracket(accountId, tag, dir, size, slTicks, tpTicks) {
+    const contractId = this.contracts[tag];
+    if (!contractId) throw new Error(`${tag}: contract is not loaded`);
+    return this._post('/api/Order/place', {
+      accountId:Number(accountId),
+      contractId,
+      type:2,
+      side:dir > 0 ? 0 : 1,
+      size:Number(size),
+      limitPrice:null,
+      stopPrice:null,
+      trailPrice:null,
+      customTag:`matrix-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+      stopLossBracket:{ ticks:Number(slTicks), type:4 },
+      takeProfitBracket:{ ticks:Number(tpTicks), type:1 },
+    });
+  }
+
+  async searchOpenPosition(accountId, tag) {
+    const json = await this._post('/api/Position/searchOpen', { accountId:Number(accountId) });
+    const positions = Array.isArray(json.positions) ? json.positions : [];
+    return positions.find(p => String(p.contractId) === String(this.contracts[tag])) || null;
+  }
+
+  async searchAllOpenOrders(accountId) {
+    const json = await this._post('/api/Order/searchOpen', { accountId:Number(accountId) });
+    return Array.isArray(json.orders) ? json.orders : [];
+  }
+
+  async searchOpenOrders(accountId, tag) {
+    const orders = await this.searchAllOpenOrders(accountId);
+    return orders.filter(o => String(o.contractId) === String(this.contracts[tag]));
+  }
+
+  async closePosition(accountId, tag, size = null) {
+    const body = { accountId:Number(accountId), contractId:this.contracts[tag] };
+    if (size == null) return this._post('/api/Position/closeContract', body);
+    body.size = Number(size);
+    return this._post('/api/Position/partialCloseContract', body);
+  }
+
+  async modifyOrder(accountId, orderId, fields) {
+    return this._post('/api/Order/modify', {
+      accountId:Number(accountId), orderId:Number(orderId),
+      size:fields.size == null ? null : Number(fields.size),
+      limitPrice:fields.limitPrice == null ? null : Number(fields.limitPrice),
+      stopPrice:fields.stopPrice == null ? null : Number(fields.stopPrice),
+      trailPrice:fields.trailPrice == null ? null : Number(fields.trailPrice),
+    });
+  }
+
+  async cancelOrder(accountId, orderId) {
+    return this._post('/api/Order/cancel', { accountId:Number(accountId), orderId:Number(orderId) });
+  }
+
+  async cancelOpenOrdersForContract(accountId, tag) {
+    const orders = await this.searchOpenOrders(accountId, tag);
+    for (const o of orders) {
+      try { await this.cancelOrder(accountId, o.id); } catch (_) {}
+    }
+  }
+
+  async cancelAllOpenOrders(accountId) {
+    const orders = await this.searchAllOpenOrders(accountId);
+    let cancelled = 0;
+    const failures = [];
+    // Cancel sequentially to avoid bursting the Gateway rate limit.
+    for (const o of orders) {
+      try {
+        await this.cancelOrder(accountId, o.id);
+        cancelled++;
+      } catch (e) {
+        failures.push({ orderId:o.id, message:e && e.message ? e.message : String(e) });
+      }
+    }
+    return { found:orders.length, cancelled, failed:failures.length, failures };
+  }
+
   async _findContract(ins) {
     const json = await this._post('/api/Contract/search', {
       live:false, searchText:ins.product
@@ -1106,6 +1526,7 @@ class TopstepXFeed {
       || contracts.find(c => c.symbolId === ins.symbolId);
     if (!exact) throw new Error(`${ins.tag}: active TopstepX contract not found`);
     this.contracts[ins.tag] = exact.id;
+    this.contractMeta[ins.tag] = exact;
     this.contractToTag.set(String(exact.id), ins.tag);
     flog('ok', `${ins.tag}: ${exact.name} · ${exact.id}`);
   }
@@ -1123,13 +1544,40 @@ class TopstepXFeed {
     return out;
   }
 
+  _trimMinuteHistory(tag) {
+    const bars = this.m1[tag] || [];
+    if (!bars.length) return;
+    const newestTime = bars[bars.length - 1].t;
+    const cutoff = newestTime - M1_HISTORY_KEEP_MS;
+    let first = 0;
+    while (first < bars.length && bars[first].t < cutoff) first++;
+    if (first > 0) bars.splice(0, first);
+    if (bars.length > HISTORY_MAX_BARS)
+      bars.splice(0, bars.length - HISTORY_MAX_BARS);
+  }
+
+  _buildHigherTimeframes(tag, sourceBars) {
+    const target = this.htf[tag] || (this.htf[tag] = {});
+    for (const tf of ['15','60','240','1440'])
+      target[tf] = aggregate(sourceBars, Number(tf));
+  }
+
+  _updateHigherTimeframes(tag, incoming) {
+    if (!incoming || !incoming.length || !this.htf[tag]) return;
+    const sorted = incoming.slice().sort((a,b) => a.t - b.t);
+    for (const b of sorted) {
+      for (const tf of ['15','60','240','1440'])
+        updateAggregatedWithBar(this.htf[tag][tf], b, Number(tf));
+    }
+  }
+
   _merge(tag, incoming) {
     if (!incoming.length) return;
     const map = new Map(this.m1[tag].map(b => [b.t, b]));
-    for (const b of incoming) map.set(b.t, b);
+    for (const b of incoming) map.set(b.t, { ...b, contractId:b.contractId || this.contracts[tag] });
     this.m1[tag] = Array.from(map.values()).sort((a,b) => a.t - b.t);
-    if (this.m1[tag].length > 20000)
-      this.m1[tag].splice(0, this.m1[tag].length - 20000);
+    this._updateHigherTimeframes(tag, incoming);
+    this._trimMinuteHistory(tag);
   }
 
   _setLiveStatus(mode = this.realtimeMode || 'SIGNALR') {
@@ -1240,26 +1688,31 @@ class TopstepXFeed {
     const bucket = Math.floor(t / 60000) * 60000;
     const bars = this.m1[tag];
     let last = bars[bars.length - 1];
+    let changedBar = null;
 
     if (!last || bucket > last.t) {
-      bars.push({ t:bucket, o:price, h:price, l:price, c:price });
+      changedBar = { t:bucket, o:price, h:price, l:price, c:price };
+      bars.push(changedBar);
     } else if (bucket === last.t) {
       last.h = Math.max(last.h, price);
       last.l = Math.min(last.l, price);
       last.c = price;
+      changedBar = last;
     } else {
       for (let i = bars.length - 2; i >= Math.max(0, bars.length - 20); i--) {
         if (bars[i].t === bucket) {
           bars[i].h = Math.max(bars[i].h, price);
           bars[i].l = Math.min(bars[i].l, price);
           bars[i].c = price;
+          changedBar = bars[i];
           break;
         }
         if (bars[i].t < bucket) break;
       }
     }
 
-    if (bars.length > 20000) bars.splice(0, bars.length - 20000);
+    if (changedBar) this._updateHigherTimeframes(tag, [changedBar]);
+    this._trimMinuteHistory(tag);
     this._setLiveStatus(this.realtimeMode || 'SIGNALR-AUTO');
     this._scheduleEmit(tag);
   }
@@ -1542,39 +1995,260 @@ class TopstepXFeed {
     flog('ok', 'TopstepX live polling active: NQ 1s · ES 2s');
   }
 
-  async _retrieve(tag, startTime, endTime, limit) {
+  async _retrieveContract(contractId, startTime, endTime, limit = HISTORY_REQUEST_LIMIT, includePartialBar = false, unit = 2, unitNumber = 1) {
     const json = await this._post('/api/History/retrieveBars', {
-      contractId:this.contracts[tag],
+      contractId,
       live:false,
       startTime:new Date(startTime).toISOString(),
       endTime:new Date(endTime).toISOString(),
-      unit:2,
-      unitNumber:1,
-      limit,
-      includePartialBar:true
+      unit:Number(unit) || 2,
+      unitNumber:Math.max(1, Number(unitNumber) || 1),
+      limit:Math.min(HISTORY_REQUEST_LIMIT, Math.max(1, Number(limit) || HISTORY_REQUEST_LIMIT)),
+      includePartialBar:!!includePartialBar
     });
     return this._parseBars(json);
   }
 
+  async _retrieve(tag, startTime, endTime, limit) {
+    const contractId = this.contracts[tag];
+    const bars = await this._retrieveContract(contractId, startTime, endTime, limit, true);
+    return bars.map(b => ({ ...b, contractId }));
+  }
+
+  async _retrieveHistoricalPage(contractId, startTime, endTime) {
+    // Serialize deep-history pages at a safe pace beneath ProjectX's
+    // 50 retrieveBars requests / 30 seconds limit. Live reconciliation and
+    // REST fallback calls do not use this queue after startup is complete.
+    const run = this.historyQueue.then(async () => {
+      const wait = Math.max(0, this.historyNextAt - Date.now());
+      if (wait) await new Promise(resolve => setTimeout(resolve, wait));
+      try {
+        return await this._retrieveContract(
+          contractId, startTime, endTime, HISTORY_REQUEST_LIMIT, false
+        );
+      } finally {
+        this.historyNextAt = Date.now() + 625;
+      }
+    });
+    this.historyQueue = run.catch(() => {});
+    return run;
+  }
+
+  _contractIdAt(tag, t) {
+    const bars = this.m1[tag] || [];
+    if (!bars.length) return this.contracts[tag];
+    let lo = 0, hi = bars.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (bars[mid].t <= t) lo = mid + 1;
+      else hi = mid;
+    }
+    const b = bars[Math.max(0, lo - 1)] || bars[0];
+    return b.contractId || this.contracts[tag];
+  }
+
+  async _retrieveReplaySecondBars(contractId, startTime, endTime) {
+    const run = this.historyQueue.then(async () => {
+      const wait = Math.max(0, this.historyNextAt - Date.now());
+      if (wait) await new Promise(resolve => setTimeout(resolve, wait));
+      try {
+        const bars = await this._retrieveContract(
+          contractId, startTime, endTime, HISTORY_REQUEST_LIMIT, false, 1, 1
+        );
+        return bars.map(b => ({ ...b, contractId }));
+      } finally {
+        this.historyNextAt = Date.now() + 625;
+      }
+    });
+    this.historyQueue = run.catch(() => {});
+    return run;
+  }
+
+  async loadReplaySecondWindow(centerTime) {
+    const center = Math.floor(Number(centerTime) / 1000) * 1000;
+    if (!Number.isFinite(center) || center <= 0) throw new Error('invalid replay time');
+    const half = REPLAY_SECOND_WINDOW_MS / 2;
+    const start = center - half;
+    const end = center + half;
+
+    const loadOne = async ins => {
+      const cache = this.secondReplayCache[ins.tag] || (this.secondReplayCache[ins.tag] = []);
+      const cached = cache.find(w => center >= w.start + REPLAY_SECOND_CACHE_MARGIN_MS && center <= w.end - REPLAY_SECOND_CACHE_MARGIN_MS);
+      if (cached) return cached;
+
+      const contractId = this._contractIdAt(ins.tag, center);
+      const bars = await this._retrieveReplaySecondBars(contractId, start, end);
+      if (!bars.length) throw new Error(`${ins.tag}: no 1-second bars returned near ${new Date(center).toISOString()}`);
+      const window = { tag:ins.tag, contractId, start, end, bars };
+      cache.push(window);
+      cache.sort((a,b) => b.start - a.start);
+      if (cache.length > REPLAY_SECOND_CACHE_WINDOWS) cache.length = REPLAY_SECOND_CACHE_WINDOWS;
+      return window;
+    };
+
+    const entries = await Promise.all(this.instruments.map(loadOne));
+    return Object.fromEntries(entries.map(w => [w.tag, w]));
+  }
+
+  async _searchContractById(contractId) {
+    try {
+      const json = await this._post('/api/Contract/searchById', { contractId });
+      return json && json.contract ? json.contract : null;
+    } catch (e) {
+      // Older/unsupported contracts should not prevent the current feed loading.
+      flog('info', `history contract unavailable: ${contractId}`);
+      return null;
+    }
+  }
+
+  _historyPlan(ins, targetStart, end) {
+    const activeId = this.contracts[ins.tag];
+    const parsed = parseQuarterContractId(activeId);
+    if (!parsed) {
+      return [{
+        id:activeId,
+        meta:this.contractMeta[ins.tag] || null,
+        frontStart:targetStart,
+        frontEnd:end,
+        fetchStart:targetStart,
+        fetchEnd:end,
+      }];
+    }
+
+    const overlap = HISTORY_ROLL_OVERLAP_DAYS * 24*3600e3;
+    const plan = [];
+    let q = { year:parsed.year, code:parsed.code };
+    for (let guard = 0; guard < 8; guard++) {
+      const win = quarterWindow(q.year, q.code);
+      if (win.end < targetStart - overlap) break;
+      if (win.start <= end + overlap && win.end >= targetStart - overlap) {
+        const id = quarterContractId(parsed.root, q.year, q.code);
+        plan.push({
+          id,
+          meta:id === activeId ? (this.contractMeta[ins.tag] || null) : null,
+          frontStart:win.start,
+          frontEnd:win.end,
+          fetchStart:Math.max(targetStart, win.start - overlap),
+          fetchEnd:Math.min(end, win.end + overlap),
+        });
+      }
+      q = previousQuarter(q.year, q.code);
+    }
+    return plan;
+  }
+
+  async _pageContractBars(contractId, startTime, endTime) {
+    const map = new Map();
+    let cursor = endTime;
+    let lastOldest = Infinity;
+    let requests = 0;
+
+    while (cursor > startTime && requests < 16 && map.size < HISTORY_FETCH_MAX_BARS) {
+      const bars = await this._retrieveHistoricalPage(contractId, startTime, cursor);
+      requests++;
+      if (!bars.length) break;
+
+      for (const b of bars) {
+        if (b.t >= startTime && b.t <= endTime) map.set(b.t, { ...b, contractId });
+      }
+
+      const oldest = bars[0].t;
+      if (!Number.isFinite(oldest) || oldest <= startTime || oldest >= lastOldest) break;
+      lastOldest = oldest;
+      cursor = oldest - 1;
+    }
+
+    return Array.from(map.values()).sort((a,b) => a.t - b.t);
+  }
+
+  _stitchQuarterlyHistory(series, targetStart, end) {
+    // Pick one contract for each CME trading day. During the overlap around
+    // rollover, the contract with greater total daily volume wins.
+    const dayContractStats = new Map();
+    for (const item of series) {
+      for (const b of item.bars) {
+        if (b.t < targetStart || b.t > end) continue;
+        const day = tradingDay(b.t);
+        let byContract = dayContractStats.get(day);
+        if (!byContract) dayContractStats.set(day, byContract = new Map());
+        let stat = byContract.get(item.id);
+        if (!stat) byContract.set(item.id, stat = {
+          id:item.id, volume:0, count:0, frontStart:item.frontStart
+        });
+        stat.volume += Number.isFinite(b.v) ? b.v : 0;
+        stat.count++;
+      }
+    }
+
+    const winner = new Map();
+    for (const [day, byContract] of dayContractStats) {
+      const ranked = Array.from(byContract.values()).sort((a,b) =>
+        (b.volume - a.volume) || (b.count - a.count) || (b.frontStart - a.frontStart)
+      );
+      if (ranked[0]) winner.set(day, ranked[0].id);
+    }
+
+    const merged = new Map();
+    for (const item of series) {
+      for (const b of item.bars) {
+        if (b.t < targetStart || b.t > end) continue;
+        if (winner.get(tradingDay(b.t)) === item.id) merged.set(b.t, { ...b, contractId:item.id });
+      }
+    }
+    return Array.from(merged.values()).sort((a,b) => a.t - b.t).slice(-HISTORY_FETCH_MAX_BARS);
+  }
+
   async _loadInstrument(ins) {
     const end = Date.now();
-    // 18 calendar days stays under the 20k 1-minute-bar API limit for normal CME sessions.
-    const start = end - 18*24*3600e3;
-    flog('info', `${ins.tag}: loading recent 1m history from TopstepX…`);
-    const bars = await this._retrieve(ins.tag, start, end, 20000);
+    const targetStart = end - DEEP_HISTORY_TARGET_DAYS*24*3600e3;
+    const replayStart = end - M1_HISTORY_KEEP_MS;
+    const plan = this._historyPlan(ins, targetStart, end);
+    const series = [];
+
+    flog('info', `${ins.tag}: loading compact higher-timeframe history + ${M1_HISTORY_TARGET_DAYS} days for replay…`);
+    for (const item of plan) {
+      let meta = item.meta;
+      if (!meta) meta = await this._searchContractById(item.id);
+      if (!meta || meta.symbolId !== ins.symbolId) continue;
+      try {
+        const bars = await this._pageContractBars(item.id, item.fetchStart, item.fetchEnd);
+        if (bars.length) {
+          series.push({ ...item, meta, bars });
+          flog('info', `${ins.tag}: ${meta.name || item.id} · ${bars.length.toLocaleString()} bars`);
+        }
+      } catch (e) {
+        flog('err', `${ins.tag}: ${meta.name || item.id} history skipped · ${e.message}`);
+      }
+    }
+
+    let bars = this._stitchQuarterlyHistory(series, targetStart, end);
+    // Fallback: if contract-chain discovery failed, at least page the active
+    // contract instead of dropping the usable live connection.
+    if (!bars.length) {
+      bars = await this._pageContractBars(this.contracts[ins.tag], targetStart, end);
+    }
     if (!bars.length) throw new Error(`${ins.tag}: no bars returned`);
-    this.m1[ins.tag] = bars.slice(-20000);
+
+    // Preserve months of higher-timeframe candles in compact form, then
+    // discard raw minute candles older than the replay window.
+    this._buildHigherTimeframes(ins.tag, bars);
+    this.m1[ins.tag] = bars.filter(b => b.t >= replayStart).slice(-HISTORY_MAX_BARS);
+    this._trimMinuteHistory(ins.tag);
     const newest = this.m1[ins.tag][this.m1[ins.tag].length - 1];
     if (newest) {
       this.lastPrice[ins.tag] = newest.c;
       this.lastPriceTime[ins.tag] = newest.t;
     }
-    flog('ok', `${ins.tag}: ${bars.length} 1m bars loaded`);
+    const oldest = this.m1[ins.tag][0];
+    const contractCount = series.length || 1;
+    const dailyCount = this.barsTF(ins.tag, '1440').length;
+    flog('ok', `${ins.tag}: ${this.m1[ins.tag].length.toLocaleString()} recent 1m bars retained (${M1_HISTORY_TARGET_DAYS}d replay) · ${dailyCount.toLocaleString()} compressed daily candles · ${nyDateF.format(oldest.t)} → ${nyDateF.format(newest.t)}`);
   }
 
   async start() {
     this.stopped = false;
     await this._login();
+    await this.refreshAccounts();
     for (const ins of this.instruments) await this._findContract(ins);
     await Promise.all(this.instruments.map(ins => this._loadInstrument(ins)));
     // History is usable immediately. Realtime startup is resilient and will not
@@ -2069,32 +2743,207 @@ function processBar(b) {
 }
 
 /* ── replay engine ────────────────────────────────────────────── */
+function lowerBoundTime(bars, t) {
+  let lo = 0, hi = bars.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (bars[mid].t < t) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+function upperBoundTime(bars, t) {
+  let lo = 0, hi = bars.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (bars[mid].t <= t) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+function fillSecondTimeline(rawBars, requestedStart, requestedEnd) {
+  if (!rawBars || !rawBars.length) return [];
+  const map = new Map();
+  for (const b of rawBars) map.set(Math.floor(b.t / 1000) * 1000, b);
+  const first = Math.max(Math.ceil(requestedStart / 1000) * 1000, Math.floor(rawBars[0].t / 1000) * 1000);
+  const last = Math.min(Math.floor(requestedEnd / 1000) * 1000, Math.floor(rawBars[rawBars.length - 1].t / 1000) * 1000);
+  if (last < first) return [];
+  const out = [];
+  let prev = rawBars[0].o;
+  for (let t = first; t <= last; t += 1000) {
+    const b = map.get(t);
+    if (b) {
+      prev = b.c;
+      out.push({ ...b, t });
+    } else {
+      out.push({ t, o:prev, h:prev, l:prev, c:prev, v:0, syntheticIdle:true });
+    }
+  }
+  return out;
+}
+
 const replay = {
-  on: false, idx: 0, playing: false, timer: null,
+  on:false, idx:0, playing:false, timer:null,
+  granularity:'minute', secondLoading:false, seconds:{ NQ:[], ES:[] }, secIdx:0,
   bars() { return feed ? feed.bars1m('NQ') : []; },
-  t() { const b = this.bars()[this.idx]; return b ? b.t : 0; },
-  price() { const b = this.bars()[this.idx]; return b ? b.c : null; },
+  isSecond() { return this.granularity === 'second'; },
+  secondReady() { return this.isSecond() && !this.secondLoading && this.seconds.NQ.length > 0; },
+  minuteIndexAt(t, tag = 'NQ') {
+    const bars = feed ? feed.bars1m(tag) : [];
+    if (!bars.length) return 0;
+    const i = upperBoundTime(bars, t) - 1;
+    return Math.max(0, Math.min(bars.length - 1, i));
+  },
+  t() {
+    if (this.secondReady()) {
+      const b = this.seconds.NQ[this.secIdx];
+      if (b) return b.t;
+    }
+    const b = this.bars()[this.idx];
+    return b ? b.t : 0;
+  },
+  price() {
+    if (this.secondReady()) {
+      const b = this.seconds.NQ[this.secIdx];
+      if (b) return b.c;
+    }
+    const b = this.bars()[this.idx];
+    return b ? b.c : null;
+  },
+  partialMinute(tag) {
+    if (!this.secondReady()) return null;
+    const bars = this.seconds[tag] || [];
+    if (!bars.length) return null;
+    const now = this.t();
+    const minuteStart = Math.floor(now / 60000) * 60000;
+    const lo = lowerBoundTime(bars, minuteStart);
+    const hi = upperBoundTime(bars, now);
+    if (hi <= lo) return null;
+    let o = bars[lo].o, h = -Infinity, l = Infinity, c = bars[lo].c, v = 0;
+    for (let i = lo; i < hi; i++) {
+      const b = bars[i];
+      if (b.h > h) h = b.h;
+      if (b.l < l) l = b.l;
+      c = b.c;
+      v += Number.isFinite(b.v) ? b.v : 0;
+    }
+    return { t:minuteStart, o, h, l, c, v, partialSecond:true };
+  },
   setIdx(i, process) {
     const bars = this.bars();
     i = Math.max(0, Math.min(bars.length - 1, i));
-    if (process && i > this.idx) {
+    if (process && !this.isSecond() && i > this.idx) {
       for (let j = this.idx + 1; j <= i; j++) processBar(bars[j]);
     }
+    if (this.isSecond() && i !== this.idx && !process) {
+      this.seconds = { NQ:[], ES:[] };
+      this.secIdx = 0;
+    }
     this.idx = i;
+    aggregateViewCache.clear();
+    sessionOpenViewCache.clear();
     refreshAll();
     updateReplayUI();
     updateAcctUI();
   },
-  step(n = 1) { this.setIdx(this.idx + n, true); },
+  async loadSeconds(centerTime, desiredTime = null) {
+    if (!feed || !feed.status.loaded || this.secondLoading) return false;
+    this.pause();
+    this.secondLoading = true;
+    updateReplayUI();
+    try {
+      const windows = await feed.loadReplaySecondWindow(centerTime);
+      const next = { NQ:[], ES:[] };
+      for (const tag of ['NQ','ES']) {
+        const w = windows[tag];
+        next[tag] = fillSecondTimeline(w.bars, w.start, w.end);
+      }
+      if (!next.NQ.length) throw new Error('NQ returned no usable one-second bars');
+      this.seconds = next;
+      const wanted = Number.isFinite(desiredTime) ? desiredTime : Math.floor(centerTime / 60000) * 60000;
+      this.secIdx = Math.min(next.NQ.length - 1, lowerBoundTime(next.NQ, wanted));
+      this.idx = this.minuteIndexAt(next.NQ[this.secIdx].t, 'NQ');
+      aggregateViewCache.clear();
+      sessionOpenViewCache.clear();
+      flog('ok', `Replay 1s loaded · ${next.NQ.length.toLocaleString()} NQ seconds · ${next.ES.length.toLocaleString()} ES seconds`);
+      return true;
+    } catch (e) {
+      this.seconds = { NQ:[], ES:[] };
+      this.secIdx = 0;
+      flog('err', 'Replay 1s load failed: ' + e.message);
+      alert('Could not load one-second replay data for this time. ProjectX may not retain second bars that far back.\n\n' + e.message);
+      this.granularity = 'minute';
+      return false;
+    } finally {
+      this.secondLoading = false;
+      updateReplayGranularityUI();
+      refreshAll();
+      updateReplayUI();
+      updateAcctUI();
+    }
+  },
+  async setGranularity(unit) {
+    unit = unit === 'second' ? 'second' : 'minute';
+    if (unit === this.granularity && !(unit === 'second' && !this.secondReady())) return;
+    if (pos) {
+      alert('Flatten the replay position before changing replay resolution.');
+      return;
+    }
+    this.pause();
+    const currentTime = this.t() || (this.bars()[this.idx] && this.bars()[this.idx].t) || 0;
+    if (unit === 'minute') {
+      this.idx = this.minuteIndexAt(currentTime, 'NQ');
+      this.granularity = 'minute';
+      this.seconds = { NQ:[], ES:[] };
+      this.secIdx = 0;
+      aggregateViewCache.clear();
+      sessionOpenViewCache.clear();
+      updateReplayGranularityUI();
+      refreshAll(); updateReplayUI(); updateAcctUI();
+      return;
+    }
+    this.granularity = 'second';
+    updateReplayGranularityUI();
+    await this.loadSeconds(currentTime, Math.floor(currentTime / 60000) * 60000);
+  },
+  async stepSecond(n = 1) {
+    if (this.secondLoading) return false;
+    if (!this.secondReady()) {
+      const center = (this.bars()[this.idx] && this.bars()[this.idx].t) || this.t();
+      return this.loadSeconds(center, center);
+    }
+    let target = this.secIdx + n;
+    if (target >= this.seconds.NQ.length) {
+      const desired = this.seconds.NQ[this.seconds.NQ.length - 1].t + 1000;
+      const loaded = await this.loadSeconds(desired + REPLAY_SECOND_WINDOW_MS / 3, desired);
+      return loaded;
+    }
+    target = Math.max(0, target);
+    if (target > this.secIdx) {
+      for (let j = this.secIdx + 1; j <= target; j++) processBar(this.seconds.NQ[j]);
+    }
+    this.secIdx = target;
+    this.idx = this.minuteIndexAt(this.seconds.NQ[this.secIdx].t, 'NQ');
+    refreshAll();
+    updateReplayUI();
+    updateAcctUI();
+    return true;
+  },
+  step(n = 1) {
+    if (this.isSecond()) return this.stepSecond(n);
+    this.setIdx(this.idx + n, true);
+    return Promise.resolve(true);
+  },
   play() {
-    if (this.playing) return;
+    if (this.playing || this.secondLoading) return;
     this.playing = true;
-    const tick = () => {
+    const tick = async () => {
       if (!this.playing) return;
       const speed = +document.getElementById('repSpeed').value;
-      this.step(1);
-      if (this.idx >= this.bars().length - 1) this.pause();
-      else this.timer = setTimeout(tick, Math.max(20, 1000/speed));
+      const advanced = await this.step(1);
+      if (!this.playing) return;
+      if (!advanced || (!this.isSecond() && this.idx >= this.bars().length - 1)) this.pause();
+      else this.timer = setTimeout(tick, Math.max(16, 1000/speed));
     };
     tick();
     const playBtn = document.getElementById('btnPlay');
@@ -2108,29 +2957,61 @@ const replay = {
     playBtn.textContent = '▶ PLAY';
     playBtn.classList.remove('playing');
   },
-  enter() {
+  async enter() {
     if (!feed || !feed.status.loaded) return;
     this.on = true;
+    // Start from the minute archive for fast positioning, then automatically
+    // load true ProjectX one-second data around the default replay cursor.
+    this.granularity = 'minute';
+    this.seconds = { NQ:[], ES:[] };
+    this.secIdx = 0;
     const speedSelect = document.getElementById('repSpeed');
     if (speedSelect) speedSelect.value = '1';
     this.idx = Math.max(0, this.bars().length - 400);
     document.getElementById('replayBar').classList.add('on');
     document.getElementById('btnReplay').classList.add('active');
+    updateReplayGranularityUI();
     setBadges();
     this.setIdx(this.idx, false);
+    await this.setGranularity('second');
   },
   exit() {
     this.pause();
     if (pos) { closePos(this.price(), this.t(), 'manual flat (exit replay)'); }
     this.on = false;
+    this.granularity = 'minute';
+    this.seconds = { NQ:[], ES:[] };
+    this.secIdx = 0;
     document.getElementById('replayBar').classList.remove('on');
     document.getElementById('btnReplay').classList.remove('active');
     const replayFoot = document.getElementById('replayFooterTime');
     if (replayFoot) replayFoot.classList.remove('on');
+    aggregateViewCache.clear();
+    sessionOpenViewCache.clear();
+    updateReplayGranularityUI();
     setBadges();
     refreshAll(); updateAcctUI();
   },
 };
+
+function updateReplayGranularityUI() {
+  const isSec = replay.isSecond();
+  const minBtn = $('repUnitMin'), secBtn = $('repUnitSec');
+  if (minBtn) minBtn.classList.toggle('active', !isSec);
+  if (secBtn) secBtn.classList.toggle('active', isSec);
+  if (minBtn) minBtn.disabled = replay.secondLoading;
+  if (secBtn) secBtn.disabled = replay.secondLoading;
+  const step = $('btnStep');
+  if (step) step.textContent = isSec ? '+1s' : '+1m';
+  const state = $('repLoadState');
+  if (state) {
+    state.className = replay.secondLoading ? 'loading' : (isSec && replay.secondReady() ? 'ready' : '');
+    state.textContent = replay.secondLoading ? 'LOADING 1S…' : (isSec && replay.secondReady() ? 'TRUE 1S DATA' : 'MINUTE DATA');
+  }
+  const play = $('btnPlay');
+  if (play) play.disabled = replay.secondLoading;
+  if (step) step.disabled = replay.secondLoading;
+}
 
 /* ── drawing tools ───────────────────────────────────────────── */
 let activeDrawingTool = null; // rect | hline | hray | trend | null
@@ -2195,7 +3076,8 @@ class Chart {
     this.cross = null;
     this.syncT = null;
     this.onHover = null;
-    this.onLineDrag = null;      // cb(id, price)
+    this.onLineDrag = null;      // cb(id, price) while dragging
+    this.onLineDragEnd = null;   // cb(id, price) once released
     this.onClosePosition = null; // cb() from chart position close button
     this.axisW = 78;
     this.axisH = 24;
@@ -2751,7 +3633,10 @@ class Chart {
       }
       drag = null;
       axisDrag = null;
+      const finishedLine = this.dragLine;
       this.dragLine = null;
+      if (finishedLine && this.onLineDragEnd && pos && Number.isFinite(pos[finishedLine]))
+        this.onLineDragEnd(finishedLine, pos[finishedLine]);
       if (this.autoLock) { this.autoLock = null; this.draw(); }   // gentle one-time re-fit
       c.style.cursor = '';
     });
@@ -2879,8 +3764,8 @@ class Chart {
     // currently being dragged, or the scale chases the cursor in a feedback
     // loop and the chart zooms out uncontrollably
     if (this.tradable && pos) {
-      if (this.dragLine !== 'sl') { lo = Math.min(lo, pos.sl); hi = Math.max(hi, pos.sl); }
-      if (this.dragLine !== 'tp') { lo = Math.min(lo, pos.tp); hi = Math.max(hi, pos.tp); }
+      if (this.dragLine !== 'sl' && Number.isFinite(pos.sl)) { lo = Math.min(lo, pos.sl); hi = Math.max(hi, pos.sl); }
+      if (this.dragLine !== 'tp' && Number.isFinite(pos.tp)) { lo = Math.min(lo, pos.tp); hi = Math.max(hi, pos.tp); }
     }
     // While the user is dragging (pan or SL/TP), freeze the autoscale so the
     // vertical range doesn't re-fit every frame under the cursor.
@@ -3207,10 +4092,16 @@ class Chart {
         ? this.realtimePrice
         : (this.bars[this.bars.length-1] ? this.bars[this.bars.length-1].c : pos.entry);
       const lines = [
-        { id:'entry', p:pos.entry, col:'#d7dee8', dash:[],    lbl:(pos.dir>0?'LONG':'SHORT')+' '+pos.qty+' @ '+pos.entry.toFixed(2) },
-        { id:'sl',    p:pos.sl,    col:'#ff3d71', dash:[7,4], lbl:'SL  '+pos.sl.toFixed(2)+'   '+fmt$(-((pos.entry-pos.sl)*pos.dir*PT_VALUE*pos.qty)) },
-        { id:'tp',    p:pos.tp,    col:'#00e5a0', dash:[7,4], lbl:'TP  '+pos.tp.toFixed(2)+'   '+fmt$((pos.tp-pos.entry)*pos.dir*PT_VALUE*pos.qty) },
+        { id:'entry', p:pos.entry, col:'#d7dee8', dash:[], lbl:(pos.dir>0?'LONG':'SHORT')+' '+pos.qty+' @ '+pos.entry.toFixed(2) },
       ];
+      if (Number.isFinite(pos.sl)) lines.push({
+        id:'sl', p:pos.sl, col:'#ff3d71', dash:[7,4],
+        lbl:'SL  '+pos.sl.toFixed(2)+'   '+fmt$(-((pos.entry-pos.sl)*pos.dir*PT_VALUE*pos.qty))
+      });
+      if (Number.isFinite(pos.tp)) lines.push({
+        id:'tp', p:pos.tp, col:'#00e5a0', dash:[7,4],
+        lbl:'TP  '+pos.tp.toFixed(2)+'   '+fmt$((pos.tp-pos.entry)*pos.dir*PT_VALUE*pos.qty)
+      });
 
       ctx.font = 'bold 12px "Space Mono", monospace';
       ctx.textBaseline = 'middle';
@@ -3468,6 +4359,13 @@ class Chart {
 const deck = document.getElementById('deck');
 const panes = [];
 let feed = null;
+const LIVE_QTY_CAP = 15;
+let tradeMode = 'PAPER';                 // safety: every reload starts in PAPER
+let liveAccounts = [];
+let selectedLiveAccount = null;
+let liveOrders = { slId:null, tpId:null };
+let liveOrderBusy = false;
+let liveSyncBusy = false;
 let currentTF = localStorage.getItem('sdt.tf') || '5';
 if (!TFS[currentTF]) currentTF = '5';
 let fvgOn = localStorage.getItem('sdt.fvg') === '1';
@@ -3482,6 +4380,12 @@ if (!INSTRUMENTS.some(i => i.tag === domSymbol)) domSymbol = 'NQ';
 let domMode = localStorage.getItem('sdt.domMode') || 'L1';
 if (!['L1','L2'].includes(domMode)) domMode = 'L1';
 let qty = 1;
+let riskUnit = localStorage.getItem('sdt.riskUnit') || 'POINTS';
+if (!['POINTS','DOLLARS'].includes(riskUnit)) riskUnit = 'POINTS';
+const savedSlAmount = Number(localStorage.getItem('sdt.slAmount'));
+const savedTpAmount = Number(localStorage.getItem('sdt.tpAmount'));
+let slAmount = Number.isFinite(savedSlAmount) && savedSlAmount > 0 ? savedSlAmount : DEF_SL_PTS;
+let tpAmount = Number.isFinite(savedTpAmount) && savedTpAmount > 0 ? savedTpAmount : DEF_TP_PTS;
 
 INSTRUMENTS.forEach((ins, i) => {
   if (i > 0) {
@@ -3508,6 +4412,14 @@ INSTRUMENTS.forEach((ins, i) => {
       <button class="t-btn" id="btnBuy">BUY</button>
       <button class="t-btn" id="btnSell">SELL</button>
       <button class="t-btn" id="btnFlat">FLAT</button>
+      <button class="t-btn" id="btnCancelAll" title="Cancel every working order on the selected actual Topstep account">CANCEL ALL</button>
+      <div class="risk-controls" title="SL/TP preset for the next NQ entry. Dollar mode is total dollars across the selected quantity.">
+        <span class="risk-title">NEXT ORDER</span>
+        <label for="slAmount">SL</label><input class="risk-input" id="slAmount" type="number" min="0.01" step="0.25" inputmode="decimal" aria-label="Stop loss amount">
+        <label for="tpAmount">TP</label><input class="risk-input" id="tpAmount" type="number" min="0.01" step="0.25" inputmode="decimal" aria-label="Take profit amount">
+        <select id="riskUnit" aria-label="Stop loss and take profit unit"><option value="POINTS">PTS</option><option value="DOLLARS">$</option></select>
+        <span id="riskPreview">—</span>
+      </div>
       <span id="posInfo">flat · enter REPLAY to trade</span>
     </div>` : ''}
     <div class="chart-wrap">
@@ -3528,8 +4440,15 @@ INSTRUMENTS.forEach((ins, i) => {
       }
       chart.draw(); updatePosInfo();
     };
+    chart.onLineDragEnd = (id, price) => {
+      if (tradeMode === 'LIVE') commitLiveBracketMove(id, price);
+    };
     chart.onClosePosition = () => {
       if (!pos) return;
+      if (tradeMode === 'LIVE') {
+        flattenLivePosition();
+        return;
+      }
       const px = marketPrice();
       const t = marketTime();
       if (px !== null && t) {
@@ -3682,14 +4601,14 @@ function loadDrawings() {
 loadDrawings();
 
 /* ── backup / restore: survive file moves, renames, and machine changes ──
-   All app state (login, sim account, theme, settings) lives in
-   localStorage, which is tied to WHERE the file runs from. These
-   buttons make that portable. */
+   App settings remain portable, but TopstepX credentials are deliberately
+   excluded from export and ignored during restore. */
+const BACKUP_EXCLUDED_KEYS = new Set(['sdt.topstepUser', 'sdt.topstepApiKey']);
 function backupData() {
-  const data = { app: 'AOT-Paper-Trader', exported: new Date().toISOString(), keys: {} };
+  const data = { app: 'AOT-Paper-Trader', exported: new Date().toISOString(), credentialsExcluded:true, keys: {} };
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && k.startsWith('sdt.')) data.keys[k] = localStorage.getItem(k);
+    if (k && k.startsWith('sdt.') && !BACKUP_EXCLUDED_KEYS.has(k)) data.keys[k] = localStorage.getItem(k);
   }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
@@ -3697,7 +4616,7 @@ function backupData() {
   a.download = 'aot-paper-trader-backup-' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
   URL.revokeObjectURL(a.href);
-  flog('ok', 'backup downloaded (' + Object.keys(data.keys).length + ' keys) — includes your API key, keep the file private');
+  flog('ok', 'backup downloaded (' + Object.keys(data.keys).length + ' keys) — TopstepX username and API key excluded');
 }
 function restoreData(file) {
   const reader = new FileReader();
@@ -3708,7 +4627,7 @@ function restoreData(file) {
       const n = Object.keys(data.keys).length;
       if (!confirm(`Restore ${n} settings from backup? This overwrites current data and reloads.`)) return;
       for (const [k, v] of Object.entries(data.keys)) {
-        if (k.startsWith('sdt.') && typeof v === 'string') localStorage.setItem(k, v);
+        if (k.startsWith('sdt.') && !BACKUP_EXCLUDED_KEYS.has(k) && typeof v === 'string') localStorage.setItem(k, v);
       }
       location.reload();
     } catch (e) {
@@ -3747,23 +4666,226 @@ document.addEventListener('keydown', e => {
   }
 });
 
-/* visible 1m slice respecting replay cursor */
-function visible1m(tag) {
+/* Visible source window respecting the replay cursor. Higher timeframes use
+   the full loaded archive; 1m and 5m retain smaller windows for responsiveness. */
+function visible1mBounds(tag, limitOverride = null) {
   const all = feed ? feed.bars1m(tag) : [];
-  if (!replay.on) return all;
+  if (!all.length) return { all, lo:0, hi:0 };
+
+  let hi;
+  if (!replay.on) hi = all.length;
+  else if (replay.secondReady()) {
+    const minuteStart = Math.floor(replay.t() / 60000) * 60000;
+    let loSearch = 0, hiSearch = all.length;
+    while (loSearch < hiSearch) {
+      const mid = (loSearch + hiSearch) >> 1;
+      if (all[mid].t < minuteStart) loSearch = mid + 1;
+      else hiSearch = mid;
+    }
+    hi = loSearch; // completed minutes only; current minute is appended from 1s bars
+  } else if (tag === 'NQ') hi = Math.min(all.length, replay.idx + 1);
+  else {
+    const cutoff = replay.t();
+    let loSearch = 0, hiSearch = all.length;
+    while (loSearch < hiSearch) {
+      const mid = (loSearch + hiSearch) >> 1;
+      if (all[mid].t <= cutoff) loSearch = mid + 1;
+      else hiSearch = mid;
+    }
+    hi = loSearch;
+  }
+
+  const configured = TF_SOURCE_1M_LIMIT[currentTF] || LIVE_CHART_LOOKBACK_BARS;
+  const limit = Math.max(1, Number(limitOverride || configured));
+  return { all, lo:Math.max(0, hi - limit), hi };
+}
+
+function visible1m(tag, limitOverride = null) {
+  const { all, lo, hi } = visible1mBounds(tag, limitOverride);
+  const out = all.slice(lo, hi);
+  const partial = replay.secondReady() ? replay.partialMinute(tag) : null;
+  if (partial) out.push(partial);
+  return out;
+}
+
+/* Aggregation cache: the full archive is aggregated once, then only the newest
+   timeframe candle is rebuilt as live ticks update. This keeps 15m/1H/4H/1D
+   responsive even when they contain months of candles. */
+const aggregateViewCache = new Map();
+
+function updateAggregatedWithBar(out, b, tfMin) {
+  if (tfMin === 1) {
+    out.push(b);
+    return;
+  }
+  if (tfMin === 1440) {
+    const last = out[out.length - 1];
+    if (last && tradingDay(last.t) === tradingDay(b.t)) {
+      last.c = b.c;
+      if (b.h > last.h) last.h = b.h;
+      if (b.l < last.l) last.l = b.l;
+    } else out.push({ t:b.t, o:b.o, h:b.h, l:b.l, c:b.c });
+    return;
+  }
+  const bucket = Math.floor(b.t / (tfMin * 60000)) * (tfMin * 60000);
+  const last = out[out.length - 1];
+  if (last && last.t === bucket) {
+    last.c = b.c;
+    if (b.h > last.h) last.h = b.h;
+    if (b.l < last.l) last.l = b.l;
+  } else out.push({ t:bucket, o:b.o, h:b.h, l:b.l, c:b.c });
+}
+
+function rebuildLastAggregatedCandle(cache, all, hi, tfMin) {
+  if (!cache.bars.length || hi <= cache.lo) return;
+  const newest = all[hi - 1];
+  let from = hi - 1;
+  if (tfMin === 1440) {
+    const key = tradingDay(newest.t);
+    while (from > cache.lo && tradingDay(all[from - 1].t) === key) from--;
+  } else {
+    const span = tfMin * 60000;
+    const bucket = Math.floor(newest.t / span) * span;
+    while (from > cache.lo && Math.floor(all[from - 1].t / span) * span === bucket) from--;
+  }
+  const last = aggregate(all.slice(from, hi), tfMin)[0];
+  if (last) cache.bars[cache.bars.length - 1] = last;
+}
+
+function appendPartialAggregated(baseBars, partial, tfMin) {
+  if (!partial) return baseBars;
+  const out = baseBars.slice();
+  if (tfMin === 1) {
+    out.push(partial);
+    return out;
+  }
+  if (tfMin === 1440) {
+    const last = out[out.length - 1];
+    if (last && tradingDay(last.t) === tradingDay(partial.t)) {
+      out[out.length - 1] = {
+        ...last, c:partial.c, h:Math.max(last.h, partial.h), l:Math.min(last.l, partial.l)
+      };
+    } else out.push({ ...partial });
+    return out;
+  }
+  const bucket = Math.floor(partial.t / (tfMin * 60000)) * (tfMin * 60000);
+  const last = out[out.length - 1];
+  if (last && last.t === bucket) {
+    out[out.length - 1] = {
+      ...last, c:partial.c, h:Math.max(last.h, partial.h), l:Math.min(last.l, partial.l)
+    };
+  } else out.push({ ...partial, t:bucket });
+  return out;
+}
+
+function compactHigherTimeframeVisible(tag, tfMin) {
+  const source = feed && typeof feed.barsTF === 'function' ? feed.barsTF(tag, String(tfMin)) : [];
+  if (!source.length) return null;
+  if (!replay.on) return source;
+
   const cutoff = replay.t();
-  // NQ: slice by index; ES: slice by time
-  if (tag === 'NQ') return all.slice(0, replay.idx + 1);
-  let hi = all.length;
-  while (hi > 0 && all[hi-1].t > cutoff) hi--;
-  return all.slice(0, hi);
+  if (!Number.isFinite(cutoff)) return [];
+  const completed = [];
+  let currentSource = [];
+
+  if (tfMin === 1440) {
+    const activeDay = tradingDay(cutoff);
+    for (const b of source) {
+      if (tradingDay(b.t) === activeDay) break;
+      if (b.t <= cutoff) completed.push(b);
+    }
+    currentSource = visible1m(tag).filter(b => tradingDay(b.t) === activeDay && b.t <= cutoff);
+  } else {
+    const span = tfMin * 60000;
+    const activeBucket = Math.floor(cutoff / span) * span;
+    for (const b of source) {
+      if (b.t >= activeBucket) break;
+      completed.push(b);
+    }
+    currentSource = visible1m(tag).filter(b => b.t >= activeBucket && b.t <= cutoff);
+  }
+
+  if (currentSource.length) completed.push(...aggregate(currentSource, tfMin));
+  return completed;
+}
+
+function aggregatedVisible(tag) {
+  const tfMin = TFS[currentTF] || 1;
+  if (tfMin >= 15) {
+    const compact = compactHigherTimeframeVisible(tag, tfMin);
+    if (compact) return compact;
+  }
+
+  const { all, lo, hi } = visible1mBounds(tag);
+  const partial = replay.secondReady() ? replay.partialMinute(tag) : null;
+  if (hi <= lo && !partial) return [];
+  const key = `${tag}:${currentTF}:${replay.on ? 'R' : 'L'}`;
+  let cache = aggregateViewCache.get(key);
+  const firstT = all[lo] ? all[lo].t : 0;
+
+  const mustRebuild = !cache || cache.feedRef !== feed || cache.tfMin !== tfMin || cache.lo !== lo ||
+    cache.firstT !== firstT || hi < cache.hi || hi > cache.hi + 1;
+
+  if (mustRebuild) {
+    cache = {
+      feedRef:feed, tfMin, lo, hi, firstT,
+      bars:aggregate(all.slice(lo, hi), tfMin)
+    };
+    aggregateViewCache.set(key, cache);
+    return appendPartialAggregated(cache.bars, partial, tfMin);
+  }
+
+  if (hi === cache.hi + 1) {
+    updateAggregatedWithBar(cache.bars, all[hi - 1], tfMin);
+    cache.hi = hi;
+    return appendPartialAggregated(cache.bars, partial, tfMin);
+  }
+
+  if (hi === cache.hi) {
+    rebuildLastAggregatedCandle(cache, all, hi, tfMin);
+    return appendPartialAggregated(cache.bars, partial, tfMin);
+  }
+
+  cache = {
+    feedRef:feed, tfMin, lo, hi, firstT,
+    bars:aggregate(all.slice(lo, hi), tfMin)
+  };
+  aggregateViewCache.set(key, cache);
+  return appendPartialAggregated(cache.bars, partial, tfMin);
+}
+
+const sessionOpenViewCache = new Map();
+function visibleSessionOpenTimes(tag) {
+  const { all, lo, hi } = visible1mBounds(tag);
+  if (hi <= lo) return [];
+  const key = `${tag}:${currentTF}:${replay.on ? 'R' : 'L'}`;
+  let cache = sessionOpenViewCache.get(key);
+  const firstT = all[lo] ? all[lo].t : 0;
+  const mustRebuild = !cache || cache.feedRef !== feed || cache.lo !== lo ||
+    cache.firstT !== firstT || hi < cache.hi || hi > cache.hi + 1;
+  if (mustRebuild) {
+    const times = [];
+    for (let i = lo; i < hi; i++) {
+      const hm = nyHM(all[i].t);
+      if (hm.h === 9 && hm.m === 30) times.push(all[i].t);
+    }
+    cache = { feedRef:feed, lo, hi, firstT, times };
+    sessionOpenViewCache.set(key, cache);
+    return times;
+  }
+  if (hi === cache.hi + 1) {
+    const hm = nyHM(all[hi - 1].t);
+    if (hm.h === 9 && hm.m === 30) cache.times.push(all[hi - 1].t);
+    cache.hi = hi;
+  }
+  return cache.times;
 }
 
 const smtSeen = new Set();
 function recomputeSMT() {
   if (!smtOn || !feed) return;
-  const a = aggregate(visible1m('NQ'), TFS[currentTF]);
-  const b = aggregate(visible1m('ES'), TFS[currentTF]);
+  const a = aggregatedVisible('NQ');
+  const b = aggregatedVisible('ES');
   const segs = computeSMT(a, b, TFS[currentTF]);
   // forming divergence in real time — streams last tick prices when live
   const liveA = (!replay.on && feed.lastPrice && Number.isFinite(feed.lastPrice.NQ)) ? feed.lastPrice.NQ : null;
@@ -3783,14 +4905,8 @@ function recomputeSMT() {
 
 function refresh(p) {
   if (!feed || !feed.status.loaded) return;
-  const source1m = visible1m(p.ins.tag);
-  const bars = aggregate(source1m, TFS[currentTF]);
-  p.chart.sessionOpenTimes = replay.on
-    ? source1m.filter(b => {
-        const hm = nyHM(b.t);
-        return hm.h === 9 && hm.m === 30;
-      }).map(b => b.t)
-    : [];
+  const bars = aggregatedVisible(p.ins.tag);
+  p.chart.sessionOpenTimes = replay.on ? visibleSessionOpenTimes(p.ins.tag) : [];
   p.chart.showFVG = fvgOn;
   p.chart.showSMT = smtOn;
   p.chart.showLIQ = liqOn;
@@ -3799,7 +4915,7 @@ function refresh(p) {
   p.chart.showFLOW = flowOn;
   if (fvgOn) p.chart.fvgs = computeFVGs(bars);
   p.chart.extLevels = liqOn ? computeExternals(bars) : [];
-  p.chart.sessionLevels = lvlsOn ? computeSessionLevels(visible1m(p.ins.tag)) : [];
+  p.chart.sessionLevels = lvlsOn ? computeSessionLevels(visible1m(p.ins.tag, SESSION_LEVEL_LOOKBACK_BARS)) : [];
   p.chart.ema = emaOn ? computeEMA(bars, EMA_LEN) : null;
   p.chart.bigPrints = (flowOn && feed.bigPrints) ? feed.bigPrints[p.ins.tag] : [];
   p.chart.flowTopBook = (flowOn && domMode === 'L1' && !replay.on) ? {
@@ -3818,6 +4934,10 @@ function refresh(p) {
   const b = p.chart.hoverBar || bars[bars.length-1];
   if (b) p.ohlcEl.textContent =
     `O ${b.o.toFixed(2)}  H ${b.h.toFixed(2)}  L ${b.l.toFixed(2)}  C ${b.c.toFixed(2)}`;
+  if (p.ins.tag === 'NQ') {
+    const tfLabel = ({'1':'1m','5':'5m','15':'15m','60':'1H','240':'4H','1440':'1D'}[currentTF] || currentTF);
+    $('tfReadout').textContent = `TF ${tfLabel} · ${bars.length.toLocaleString()} CANDLES`;
+  }
   const lastBar = bars[bars.length-1];
   if (lastBar) {
     p.lastEl.textContent = lastBar.c.toFixed(2);
@@ -3846,6 +4966,393 @@ function setBadges() {
   });
 }
 
+
+/* ── paper / actual Topstep account routing ───────────────────── */
+function escHtml(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function liveAccountKind(a) {
+  const n = String(a && a.name || '').toUpperCase();
+  if (a && a.simulated === false) return 'LIVE FUNDED · DISABLED';
+  if (n.includes('PRACTICE')) return 'PRACTICE';
+  if (n.includes('XFA') || n.includes('EXPRESS')) return 'EXPRESS FUNDED';
+  if (n.includes('EVAL') || n.includes('COMBINE')) return 'EVALUATION';
+  return 'ACTIVE TOPSTEP ACCOUNT';
+}
+function setPaperStatsVisible(show) {
+  ['roDay','roMll','roCts','roWins','roBest'].forEach(id => {
+    const el = $(id);
+    const wrap = el && el.closest('.mini');
+    if (wrap) wrap.style.display = show ? '' : 'none';
+  });
+  $('btnTrades').style.display = show ? '' : 'none';
+  $('btnAcctReset').style.display = show ? '' : 'none';
+  if (!show) $('btnPayout').style.display = 'none';
+}
+function renderAccountPicker() {
+  const list = $('accountList');
+  if (!list) return;
+  const paperSelected = tradeMode === 'PAPER';
+  let html = `
+    <button class="account-card paper ${paperSelected?'selected':''}" data-account-action="paper">
+      <span><span class="account-card-name">PAPER ACCOUNT</span><span class="account-card-meta">50K EVAL / FUNDED SIMULATOR · BROWSER ONLY</span></span>
+      <span class="account-card-balance">${paperSelected?'SELECTED':'USE PAPER'}</span>
+    </button>`;
+  if (!feed || !feed.status.loaded) {
+    html += '<div class="account-empty">CONNECT TOPSTEPX ABOVE TO LOAD YOUR ACTIVE EVALS AND XFAS.</div>';
+    list.innerHTML = html;
+    return;
+  }
+  const available = liveAccounts.filter(a => a && a.isVisible !== false);
+  if (!available.length) {
+    html += '<div class="account-empty">NO ACTIVE VISIBLE TOPSTEP ACCOUNTS WERE RETURNED.</div>';
+  } else {
+    html += available.map(a => {
+      const selected = tradeMode === 'LIVE' && selectedLiveAccount && Number(selectedLiveAccount.id) === Number(a.id);
+      const disabled = a.canTrade === false || a.simulated === false;
+      const bal = Number(a.balance);
+      return `
+        <button class="account-card live-choice ${selected?'selected':''}" data-account-action="live" data-account-id="${Number(a.id)}" ${disabled?'disabled':''}>
+          <span><span class="account-card-name">${escHtml(a.name || ('ACCOUNT '+a.id))}</span><span class="account-card-meta">${escHtml(liveAccountKind(a))} · ID ${Number(a.id)}${a.canTrade===false?' · TRADING DISABLED':''}</span></span>
+          <span class="account-card-balance">${Number.isFinite(bal)?fmt$(bal):'—'}</span>
+        </button>`;
+    }).join('');
+  }
+  list.innerHTML = html;
+}
+async function refreshAccountChoices(showError = true) {
+  if (!feed || !feed.status.loaded) { renderAccountPicker(); return; }
+  try {
+    liveAccounts = await feed.refreshAccounts();
+    if (selectedLiveAccount) {
+      const fresh = liveAccounts.find(a => Number(a.id) === Number(selectedLiveAccount.id));
+      if (fresh) selectedLiveAccount = fresh;
+    }
+    renderAccountPicker();
+    updateAcctUI();
+  } catch (e) {
+    if (showError) alert('Could not load Topstep accounts: ' + e.message);
+    flog('err', 'account refresh failed: ' + e.message);
+  }
+}
+function openAccountPicker() {
+  renderAccountPicker();
+  $('accountPickerOverlay').classList.add('open');
+  if (feed && feed.status.loaded) refreshAccountChoices(false);
+}
+function closeAccountPicker() { $('accountPickerOverlay').classList.remove('open'); }
+async function choosePaperAccount() {
+  if (tradeMode === 'LIVE' && pos) {
+    alert('Flatten the open Topstep position before switching back to Paper.');
+    return;
+  }
+  tradeMode = 'PAPER';
+  selectedLiveAccount = null;
+  liveOrders = { slId:null, tpId:null };
+  pos = null;
+  closeAccountPicker();
+  flog('info', 'order routing switched to PAPER simulator');
+  updateAll();
+}
+async function chooseLiveAccount(accountId) {
+  const a = liveAccounts.find(x => Number(x.id) === Number(accountId));
+  if (!a) return;
+  if (!feed || !feed.status.loaded) { alert('Connect TopstepX first.'); return; }
+  if (a.canTrade === false) { alert('Topstep reports that this account cannot trade.'); return; }
+  if (a.simulated === false) { alert('Live Funded accounts are not enabled in this terminal. Select an Eval or XFA.'); return; }
+  if (pos) {
+    alert(tradeMode === 'LIVE'
+      ? 'Flatten the current Topstep position before switching accounts.'
+      : 'Flatten the Paper position before switching to an actual Topstep account.');
+    return;
+  }
+  const ok = confirm(
+    `Enable ACTUAL TOPSTEPX ORDER ROUTING?\n\nAccount: ${a.name || a.id}\nBalance: ${Number.isFinite(Number(a.balance)) ? fmt$(Number(a.balance)) : '—'}\n\nBUY, SELL, FLAT, SL and TP will affect this account.`
+  );
+  if (!ok) return;
+  selectedLiveAccount = a;
+  tradeMode = 'LIVE';
+  localStorage.setItem('sdt.lastLiveAccountId', String(a.id));
+  closeAccountPicker();
+  if (replay.on) replay.exit();
+  pos = null;
+  liveOrders = { slId:null, tpId:null };
+  flog('ok', `actual Topstep routing enabled: ${a.name || a.id}`);
+  await syncLiveTradingState(true);
+  updateAll();
+}
+$('btnAccountMode').addEventListener('click', openAccountPicker);
+$('accountPickerClose').addEventListener('click', closeAccountPicker);
+$('accountPickerRefresh').addEventListener('click', () => refreshAccountChoices(true));
+$('accountPickerOverlay').addEventListener('click', e => { if (e.target === $('accountPickerOverlay')) closeAccountPicker(); });
+$('accountList').addEventListener('click', e => {
+  const b = e.target.closest('[data-account-action]');
+  if (!b || b.disabled) return;
+  if (b.dataset.accountAction === 'paper') choosePaperAccount();
+  else chooseLiveAccount(Number(b.dataset.accountId));
+});
+
+async function syncLiveTradingState(force = false) {
+  if (tradeMode !== 'LIVE' || !selectedLiveAccount || !feed || !feed.status.loaded || liveSyncBusy) return;
+  liveSyncBusy = true;
+  try {
+    const [accounts, p, orders] = await Promise.all([
+      feed.refreshAccounts(),
+      feed.searchOpenPosition(selectedLiveAccount.id, 'NQ'),
+      feed.searchOpenOrders(selectedLiveAccount.id, 'NQ'),
+    ]);
+    liveAccounts = accounts;
+    const fresh = accounts.find(a => Number(a.id) === Number(selectedLiveAccount.id));
+    if (fresh) selectedLiveAccount = fresh;
+    if (p) {
+      const dir = Number(p.type) === 1 ? 1 : -1;
+      const protectSide = dir > 0 ? 1 : 0;
+      const protective = orders.filter(o => Number(o.side) === protectSide);
+      const slOrder = protective.find(o => Number(o.type) === 4 && Number.isFinite(Number(o.stopPrice))) || null;
+      const tpOrder = protective.find(o => Number(o.type) === 1 && Number.isFinite(Number(o.limitPrice))) || null;
+      const entry = Number(p.averagePrice);
+      pos = {
+        real:true,
+        dir,
+        qty:Number(p.size),
+        entry,
+        t:Date.parse(p.creationTimestamp) || marketTime() || Date.now(),
+        sl:slOrder ? Number(slOrder.stopPrice) : null,
+        tp:tpOrder ? Number(tpOrder.limitPrice) : null,
+      };
+      liveOrders = { slId:slOrder && Number(slOrder.id), tpId:tpOrder && Number(tpOrder.id) };
+    } else {
+      pos = null;
+      liveOrders = { slId:null, tpId:null };
+    }
+    if (force) flog('info', `synced ${selectedLiveAccount.name || selectedLiveAccount.id}: ${pos ? `${pos.dir>0?'LONG':'SHORT'} ${pos.qty} NQ` : 'flat'}`);
+  } catch (e) {
+    flog('err', 'live account sync failed: ' + e.message);
+  } finally {
+    liveSyncBusy = false;
+    updateAcctUI();
+    panes.forEach(p => { if (p.tradable) p.chart.draw(); });
+  }
+}
+setInterval(() => syncLiveTradingState(false), 2500);
+
+function cleanRiskNumber(v, fallback) {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+function bracketForQty(orderQty, showAlert = false) {
+  const q = Math.max(1, Number(orderQty) || 1);
+  const rawSl = Number($('slAmount').value);
+  const rawTp = Number($('tpAmount').value);
+  if (!(rawSl > 0) || !(rawTp > 0)) {
+    if (showAlert) alert('Enter an SL and TP greater than zero.');
+    return null;
+  }
+  const slRawPts = riskUnit === 'DOLLARS' ? rawSl / (PT_VALUE * q) : rawSl;
+  const tpRawPts = riskUnit === 'DOLLARS' ? rawTp / (PT_VALUE * q) : rawTp;
+  const slTicks = Math.max(1, Math.round(slRawPts / TICK));
+  const tpTicks = Math.max(1, Math.round(tpRawPts / TICK));
+  const slPts = slTicks * TICK;
+  const tpPts = tpTicks * TICK;
+  return {
+    slTicks, tpTicks, slPts, tpPts,
+    slDollars:slPts * PT_VALUE * q,
+    tpDollars:tpPts * PT_VALUE * q,
+  };
+}
+function formatRiskInput(v) {
+  const digits = riskUnit === 'POINTS' ? 2 : 0;
+  return Number(v).toLocaleString('en-US', { useGrouping:false, maximumFractionDigits:digits });
+}
+function updateRiskPreview() {
+  const slEl = $('slAmount'), tpEl = $('tpAmount'), preview = $('riskPreview');
+  if (!slEl || !tpEl || !preview) return;
+  const cfg = bracketForQty(qty, false);
+  const valid = !!cfg;
+  slEl.classList.toggle('invalid', !(Number(slEl.value) > 0));
+  tpEl.classList.toggle('invalid', !(Number(tpEl.value) > 0));
+  if (!valid) { preview.textContent = 'ENTER VALID SL / TP'; return; }
+  preview.textContent = riskUnit === 'POINTS'
+    ? `SL ${fmt$(cfg.slDollars)} · TP ${fmt$(cfg.tpDollars)}`
+    : `SL ${cfg.slPts.toFixed(2)}pt · TP ${cfg.tpPts.toFixed(2)}pt`;
+}
+function saveRiskControls() {
+  slAmount = cleanRiskNumber($('slAmount').value, slAmount);
+  tpAmount = cleanRiskNumber($('tpAmount').value, tpAmount);
+  localStorage.setItem('sdt.riskUnit', riskUnit);
+  localStorage.setItem('sdt.slAmount', String(slAmount));
+  localStorage.setItem('sdt.tpAmount', String(tpAmount));
+}
+function switchRiskUnit(nextUnit) {
+  if (!['POINTS','DOLLARS'].includes(nextUnit) || nextUnit === riskUnit) return;
+  const q = Math.max(1, qty);
+  const oldSl = cleanRiskNumber($('slAmount').value, slAmount);
+  const oldTp = cleanRiskNumber($('tpAmount').value, tpAmount);
+  if (riskUnit === 'POINTS' && nextUnit === 'DOLLARS') {
+    $('slAmount').value = formatRiskInput(oldSl * PT_VALUE * q);
+    $('tpAmount').value = formatRiskInput(oldTp * PT_VALUE * q);
+  } else if (riskUnit === 'DOLLARS' && nextUnit === 'POINTS') {
+    $('slAmount').value = (oldSl / (PT_VALUE * q)).toFixed(2).replace(/\.00$/,'');
+    $('tpAmount').value = (oldTp / (PT_VALUE * q)).toFixed(2).replace(/\.00$/,'');
+  }
+  riskUnit = nextUnit;
+  $('riskUnit').value = riskUnit;
+  $('slAmount').step = riskUnit === 'POINTS' ? String(TICK) : '1';
+  $('tpAmount').step = riskUnit === 'POINTS' ? String(TICK) : '1';
+  saveRiskControls();
+  updateRiskPreview();
+  updateTradeButtons();
+}
+function initRiskControls() {
+  $('riskUnit').value = riskUnit;
+  $('slAmount').value = String(slAmount);
+  $('tpAmount').value = String(tpAmount);
+  $('slAmount').step = riskUnit === 'POINTS' ? String(TICK) : '1';
+  $('tpAmount').step = riskUnit === 'POINTS' ? String(TICK) : '1';
+  $('riskUnit').addEventListener('change', e => switchRiskUnit(e.target.value));
+  for (const id of ['slAmount','tpAmount']) {
+    $(id).addEventListener('input', () => { saveRiskControls(); updateRiskPreview(); updateTradeButtons(); });
+    $(id).addEventListener('blur', () => {
+      const fallbackPts = id === 'slAmount' ? DEF_SL_PTS : DEF_TP_PTS;
+      const fallback = riskUnit === 'DOLLARS' ? fallbackPts * PT_VALUE * Math.max(1, qty) : fallbackPts;
+      if (!(Number($(id).value) > 0)) $(id).value = String(fallback);
+      saveRiskControls(); updateRiskPreview(); updateTradeButtons();
+    });
+  }
+  updateRiskPreview();
+}
+initRiskControls();
+
+async function placeLiveEntry(dir) {
+  if (liveOrderBusy || !canTrade() || !selectedLiveAccount || !feed) return;
+  if (pos) {
+    if (pos.dir === dir) {
+      flog('err', 'live add-ons are disabled in this terminal; flatten before re-entering');
+      return;
+    }
+    await flattenLivePosition(qty);
+    return;
+  }
+  const useQty = Math.max(1, Math.min(LIVE_QTY_CAP, qty));
+  liveOrderBusy = true;
+  updateTradeButtons();
+  try {
+    const bracket = bracketForQty(useQty, true);
+    if (!bracket) return;
+    const r = await feed.placeMarketBracket(selectedLiveAccount.id, 'NQ', dir, useQty, bracket.slTicks, bracket.tpTicks);
+    flog('ok', `LIVE ${dir>0?'BUY':'SELL'} ${useQty} NQ sent to ${selectedLiveAccount.name || selectedLiveAccount.id} · SL ${bracket.slPts.toFixed(2)}pt / TP ${bracket.tpPts.toFixed(2)}pt · order ${r.orderId || 'accepted'}`);
+    playSound('entry');
+    await new Promise(resolve => setTimeout(resolve, 650));
+    await syncLiveTradingState(true);
+  } catch (e) {
+    flog('err', 'live order rejected: ' + e.message);
+    alert('TopstepX order failed: ' + e.message);
+  } finally {
+    liveOrderBusy = false;
+    updateAll();
+  }
+}
+async function flattenLivePosition(closeQty = null) {
+  if (tradeMode !== 'LIVE' || !pos || liveOrderBusy || !selectedLiveAccount || !feed) return;
+  const currentQty = Number(pos.qty);
+  const q = closeQty == null ? currentQty : Math.max(1, Math.min(currentQty, Number(closeQty)));
+  const partial = q < currentQty;
+  liveOrderBusy = true;
+  updateTradeButtons();
+  try {
+    await feed.closePosition(selectedLiveAccount.id, 'NQ', partial ? q : null);
+    flog('ok', `LIVE ${partial?'PARTIAL '+q:'FLAT'} sent to ${selectedLiveAccount.name || selectedLiveAccount.id}`);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    await syncLiveTradingState(true);
+    if (!pos) await feed.cancelOpenOrdersForContract(selectedLiveAccount.id, 'NQ');
+    else {
+      // Keep protective bracket quantities aligned after a partial close.
+      const tasks = [];
+      if (liveOrders.slId) tasks.push(feed.modifyOrder(selectedLiveAccount.id, liveOrders.slId, { size:pos.qty, stopPrice:pos.sl }));
+      if (liveOrders.tpId) tasks.push(feed.modifyOrder(selectedLiveAccount.id, liveOrders.tpId, { size:pos.qty, limitPrice:pos.tp }));
+      await Promise.allSettled(tasks);
+    }
+  } catch (e) {
+    flog('err', 'live close failed: ' + e.message);
+    alert('TopstepX close failed: ' + e.message);
+  } finally {
+    liveOrderBusy = false;
+    await syncLiveTradingState(false);
+    updateAll();
+  }
+}
+async function cancelAllLiveOrders() {
+  if (tradeMode !== 'LIVE' || liveOrderBusy || !selectedLiveAccount || !feed || !feed.status.loaded) return;
+  const accountName = selectedLiveAccount.name || selectedLiveAccount.id;
+  const ok = confirm(
+    `CANCEL ALL WORKING ORDERS?\n\nAccount: ${accountName}\n\nThis cancels orders across ALL contracts on this account, including protective SL/TP orders. Open positions will NOT be flattened and may be left unprotected.`
+  );
+  if (!ok) return;
+  liveOrderBusy = true;
+  updateTradeButtons();
+  try {
+    const result = await feed.cancelAllOpenOrders(selectedLiveAccount.id);
+    if (!result.found) {
+      flog('info', `CANCEL ALL: no working orders found on ${accountName}`);
+    } else {
+      flog(result.failed ? 'err' : 'ok', `CANCEL ALL: ${result.cancelled}/${result.found} orders cancelled on ${accountName}${result.failed ? ` · ${result.failed} failed` : ''}`);
+    }
+    if (result.failed) alert(`${result.cancelled} orders were cancelled, but ${result.failed} could not be cancelled. Check TopstepX immediately.`);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    await syncLiveTradingState(true);
+  } catch (e) {
+    flog('err', 'cancel all failed: ' + e.message);
+    alert('TopstepX CANCEL ALL failed: ' + e.message);
+  } finally {
+    liveOrderBusy = false;
+    await syncLiveTradingState(false);
+    updateAll();
+  }
+}
+
+async function commitLiveBracketMove(id, price) {
+  if (tradeMode !== 'LIVE' || !pos || !selectedLiveAccount || !feed || liveOrderBusy || !Number.isFinite(price)) return;
+  // Refuse commits on the instant-trigger side of the current market: a
+  // long's stop above price (or a short's below) would execute the moment
+  // it lands, silently market-closing the position on an accidental drag.
+  const mkt = marketPrice();
+  if (Number.isFinite(mkt)) {
+    const bad =
+      (id === 'sl' && (pos.dir > 0 ? price >= mkt : price <= mkt)) ||
+      (id === 'tp' && (pos.dir > 0 ? price <= mkt : price >= mkt));
+    if (bad) {
+      flog('err', `live ${id.toUpperCase()} at ${price.toFixed(2)} would trigger instantly (market ${mkt.toFixed(2)}) — not sent`);
+      await syncLiveTradingState(true);   // snap the line back to the working order
+      updateAll();
+      return;
+    }
+  }
+  const orderId = id === 'sl' ? liveOrders.slId : liveOrders.tpId;
+  if (!orderId) {
+    flog('err', `cannot modify live ${id.toUpperCase()}: protective order was not found`);
+    await syncLiveTradingState(true);
+    return;
+  }
+  liveOrderBusy = true;
+  updateTradeButtons();
+  try {
+    const fields = id === 'sl'
+      ? { size:pos.qty, stopPrice:price }
+      : { size:pos.qty, limitPrice:price };
+    await feed.modifyOrder(selectedLiveAccount.id, orderId, fields);
+    flog('ok', `LIVE ${id.toUpperCase()} moved to ${price.toFixed(2)}`);
+  } catch (e) {
+    flog('err', `live ${id.toUpperCase()} modify failed: ${e.message}`);
+    alert(`TopstepX ${id.toUpperCase()} update failed: ${e.message}`);
+  } finally {
+    liveOrderBusy = false;
+    await syncLiveTradingState(false);
+    updateAll();
+  }
+}
+
 /* ── trading UI ───────────────────────────────────────────────── */
 $('feeRO').textContent = FEE_RT.toFixed(2);
 
@@ -3866,31 +5373,64 @@ function marketTime() {
 function canTrade() {
   const t = marketTime();
   const px = marketPrice();
-  return feed && feed.status.loaded && Number.isFinite(px) && t > 0
-    && acct.status === 'OK' && !acct.dllLocked
-    && !inClosedWindow(t);
+  if (!(feed && feed.status.loaded && Number.isFinite(px) && t > 0) || inClosedWindow(t)) return false;
+  if (tradeMode === 'LIVE')
+    return !replay.on && !!selectedLiveAccount && selectedLiveAccount.canTrade !== false && !liveOrderBusy;
+  return acct.status === 'OK' && !acct.dllLocked;
 }
 function updateTradeButtons() {
   const ok = canTrade();
+  const bracketValid = !!bracketForQty(qty, false);
+  updateRiskPreview();
+  if (tradeMode === 'LIVE') {
+    $('btnBuy').disabled = !ok || (!!pos && pos.dir > 0) || (!pos && !bracketValid);
+    $('btnSell').disabled = !ok || (!!pos && pos.dir < 0) || (!pos && !bracketValid);
+    $('btnBuy').title = pos && pos.dir < 0 ? `Buy ${Math.min(qty,pos.qty)} to close all or part of the short` : (pos ? 'Live add-ons disabled' : 'Send live NQ buy with SL/TP brackets');
+    $('btnSell').title = pos && pos.dir > 0 ? `Sell ${Math.min(qty,pos.qty)} to close all or part of the long` : (pos ? 'Live add-ons disabled' : 'Send live NQ sell with SL/TP brackets');
+    $('btnFlat').disabled = !pos || liveOrderBusy;
+    $('btnCancelAll').disabled = !selectedLiveAccount || !feed || !feed.status.loaded || liveOrderBusy;
+    $('btnCancelAll').title = 'Cancel every working order across all contracts on the selected actual Topstep account. Does not flatten positions.';
+    $('qtyVal').textContent = qty;
+    return;
+  }
   // both sides stay enabled while in a trade: same direction adds (up to the
   // scaling cap), opposite direction takes a partial — or flattens if the
   // selected qty covers the whole position
-  $('btnBuy').disabled = !ok;
-  $('btnSell').disabled = !ok;
+  const buyNeedsBracket = !pos || pos.dir > 0;
+  const sellNeedsBracket = !pos || pos.dir < 0;
+  $('btnBuy').disabled = !ok || (buyNeedsBracket && !bracketValid);
+  $('btnSell').disabled = !ok || (sellNeedsBracket && !bracketValid);
   $('btnBuy').title = pos && pos.dir < 0
     ? (qty >= pos.qty ? 'Buy to flatten the short' : `Buy ${qty} to partial the short (${pos.qty} held)`) : '';
   $('btnSell').title = pos && pos.dir > 0
     ? (qty >= pos.qty ? 'Sell to flatten the long' : `Sell ${qty} to partial the long (${pos.qty} held)`) : '';
   $('btnFlat').disabled = !pos;
+  $('btnCancelAll').disabled = true;
+  $('btnCancelAll').title = 'CANCEL ALL is available after selecting an actual Topstep Eval or XFA.';
   $('qtyVal').textContent = qty;
 }
 function updatePosInfo() {
   const el = $('posInfo');
+  if (tradeMode === 'LIVE') {
+    if (!selectedLiveAccount) { el.textContent = 'select a Topstep account'; return; }
+    if (liveOrderBusy) { el.textContent = 'sending live order…'; return; }
+    if (!pos) { el.innerHTML = `<span class="routing-live-tag">LIVE</span> · flat · ${escHtml(selectedLiveAccount.name || selectedLiveAccount.id)}`; return; }
+    const px = marketPrice();
+    const upnl = Number.isFinite(px) ? openPnL(px) : 0;
+    const missing = [];
+    if (!liveOrders.slId) missing.push('NO SL');
+    if (!liveOrders.tpId) missing.push('NO TP');
+    el.innerHTML = `<span class="routing-live-tag">LIVE</span> · ${pos.dir>0?'LONG':'SHORT'} ${pos.qty} @ ${pos.entry.toFixed(2)} · ` +
+      `<span class="${upnl>=0?'up':'dn'}">${(upnl>=0?'+':'')}${fmt$(upnl).replace('$-','-$')}</span>` +
+      (missing.length ? ` · <span class="dn">${missing.join(' / ')}</span>` : '');
+    return;
+  }
   if (acct.status === 'BLOWN') { el.textContent = 'ACCOUNT CLOSED'; return; }
   if (acct.status === 'PASSED') { el.textContent = 'ACCOUNT PASSED'; return; }
   if (acct.dllLocked) { el.textContent = 'DLL hit — locked until next session'; return; }
   if (!pos) { el.textContent = `flat · max ${acct.maxCts} cts`; return; }
-  const upnl = openPnL(replay.price());
+  const px = marketPrice();
+  const upnl = Number.isFinite(px) ? openPnL(px) : 0;
   el.innerHTML = `${pos.dir>0?'LONG':'SHORT'} ${pos.qty} @ ${pos.entry.toFixed(2)} · ` +
     `<span class="${upnl>=0?'up':'dn'}">${(upnl>=0?'+':'')}${fmt$(upnl).replace('$-','-$')}</span>`;
 }
@@ -3918,6 +5458,7 @@ function closePartial(price, t, closeQty, reason) {
 }
 
 function enter(dir) {
+  if (tradeMode === 'LIVE') { placeLiveEntry(dir); return; }
   if (!canTrade()) return;
   const px = marketPrice();
   if (px === null) return;
@@ -3932,19 +5473,25 @@ function enter(dir) {
   const useQty = Math.min(qty, acct.maxCts - (pos ? pos.qty : 0));
   if (useQty <= 0) { flog('err', `scaling plan: max ${acct.maxCts} contracts`); return; }
   const fill = Math.round((px + dir * SLIP_TICKS * TICK) / TICK) * TICK;
+  const resultingQty = pos ? pos.qty + useQty : useQty;
+  const bracket = bracketForQty(resultingQty, true);
+  if (!bracket) return;
   if (pos) {
-    // add to position: average entry
-    const totQ = pos.qty + useQty;
+    // Add to the paper position, average the entry, then re-arm the configured
+    // bracket around the new average for the full resulting quantity.
+    const totQ = resultingQty;
     pos.entry = Math.round(((pos.entry * pos.qty + fill * useQty) / totQ) / TICK) * TICK;
     pos.qty = totQ;
+    pos.sl = Math.round((pos.entry - dir * bracket.slPts) / TICK) * TICK;
+    pos.tp = Math.round((pos.entry + dir * bracket.tpPts) / TICK) * TICK;
   } else {
     pos = {
       dir, qty: useQty, entry: fill, t: marketTime(),
-      sl: Math.round((fill - dir * DEF_SL_PTS) / TICK) * TICK,
-      tp: Math.round((fill + dir * DEF_TP_PTS) / TICK) * TICK,
+      sl: Math.round((fill - dir * bracket.slPts) / TICK) * TICK,
+      tp: Math.round((fill + dir * bracket.tpPts) / TICK) * TICK,
     };
   }
-  flog('info', `${dir>0?'BUY':'SELL'} ${useQty} NQ @ ${fill.toFixed(2)} (slip ${SLIP_TICKS}t)`);
+  flog('info', `${dir>0?'BUY':'SELL'} ${useQty} NQ @ ${fill.toFixed(2)} · SL ${bracket.slPts.toFixed(2)}pt / TP ${bracket.tpPts.toFixed(2)}pt (slip ${SLIP_TICKS}t)`);
   playSound('entry');
   updateAll();
 }
@@ -3952,12 +5499,16 @@ function enter(dir) {
 $('btnBuy').addEventListener('click', () => enter(+1));
 $('btnSell').addEventListener('click', () => enter(-1));
 $('btnFlat').addEventListener('click', () => {
-  if (pos) { closePos(marketPrice(), marketTime(), 'manual flat'); updateAll(); }
+  if (!pos) return;
+  if (tradeMode === 'LIVE') { flattenLivePosition(); return; }
+  closePos(marketPrice(), marketTime(), 'manual flat'); updateAll();
 });
-$('qtyUp').addEventListener('click', () => { qty = Math.min(acct.maxCts, qty+1); updateTradeButtons(); });
-$('qtyDn').addEventListener('click', () => { qty = Math.max(1, qty-1); updateTradeButtons(); });
+$('btnCancelAll').addEventListener('click', cancelAllLiveOrders);
+$('qtyUp').addEventListener('click', () => { qty = Math.min(tradeMode === 'LIVE' ? LIVE_QTY_CAP : acct.maxCts, qty+1); updateRiskPreview(); updateTradeButtons(); });
+$('qtyDn').addEventListener('click', () => { qty = Math.max(1, qty-1); updateRiskPreview(); updateTradeButtons(); });
 
 function processLivePrice(price, t) {
+  if (tradeMode === 'LIVE') return;
   if (!pos || replay.on || acct.status === 'BLOWN' || !Number.isFinite(price) || !t) return;
   const dk = tradingDay(t);
   if (dk !== acct.dayKey) rollDay(dk);
@@ -3979,7 +5530,40 @@ function processLivePrice(price, t) {
 }
 
 /* ── account UI ───────────────────────────────────────────────── */
+function updateLiveAcctUI() {
+  setPaperStatsVisible(false);
+  $('balLabel').textContent = 'ACCOUNT BALANCE';
+  $('openLabel').textContent = 'OPEN P&L';
+  $('realLabel').textContent = 'ROUTING';
+  const btn = $('btnAccountMode');
+  btn.classList.add('live');
+  btn.textContent = `ACCOUNT: ${selectedLiveAccount ? selectedLiveAccount.name : 'SELECT'} ▾`;
+  const st = $('acctStatus');
+  if (!selectedLiveAccount) {
+    st.textContent = 'TOPSTEP ACCOUNT NOT SELECTED'; st.className = 'chip bad';
+    $('roBal').textContent = '—'; $('roOpen').textContent = '—'; $('roReal').textContent = 'OFF'; $('roEq').textContent = '—';
+  } else {
+    const bal = Number(selectedLiveAccount.balance);
+    const px = marketPrice();
+    const upnl = pos && Number.isFinite(px) ? openPnL(px) : 0;
+    st.textContent = `ACTUAL TOPSTEP · ${selectedLiveAccount.name || selectedLiveAccount.id}`;
+    st.className = selectedLiveAccount.canTrade === false ? 'chip bad' : 'chip good';
+    $('roBal').textContent = Number.isFinite(bal) ? fmt$(bal) : '—';
+    $('roOpen').innerHTML = pos ? `<span class="${upnl>=0?'up':'dn'}">${upnl>=0?'+':''}${fmt$(upnl).replace('$-','-$')}</span>` : '—';
+    $('roReal').innerHTML = liveOrderBusy ? '<span class="warn">SENDING</span>' : '<span class="up">LIVE</span>';
+    $('roEq').textContent = Number.isFinite(bal) ? fmt$(bal + upnl) : '—';
+  }
+  updateTradeButtons();
+  updatePosInfo();
+}
 function updateAcctUI() {
+  if (tradeMode === 'LIVE') { updateLiveAcctUI(); return; }
+  setPaperStatsVisible(true);
+  $('balLabel').textContent = 'BALANCE';
+  $('openLabel').textContent = 'OPEN P&L';
+  $('realLabel').textContent = 'REALIZED DAY';
+  $('btnAccountMode').classList.remove('live');
+  $('btnAccountMode').textContent = 'ACCOUNT: PAPER ▾';
   const px = marketPrice();
   const eq = px !== null ? equity(px) : acct.bal;
   const upnl = px !== null ? openPnL(px) : 0;
@@ -4188,22 +5772,33 @@ function updateReplayUI() {
   const slider = $('repSlider');
   slider.max = Math.max(0, bars.length - 1);
   slider.value = replay.idx;
-  slider.disabled = !!pos;   // no scrubbing with an open position
+  slider.disabled = !!pos || replay.secondLoading;   // no scrubbing with an open position/loading
   updateReplaySessionDots(bars);
   const t = replay.t();
-  $('repTime').textContent = t ? nyFullF.format(t) + ' NY' : '—';
+  $('repTime').textContent = replay.secondLoading
+    ? 'LOADING TRUE 1S DATA…'
+    : (t ? replayFooterTimeF.format(t) + ' NY' : '—');
   const foot = $('replayFooterTime');
   if (foot) {
-    foot.textContent = t ? `REPLAY · ${replayFooterTimeF.format(t)} NY` : 'REPLAY · —';
+    foot.textContent = t ? `REPLAY ${replay.isSecond() ? '1S' : '1M'} · ${replayFooterTimeF.format(t)} NY` : 'REPLAY · —';
     foot.classList.toggle('on', replay.on);
   }
+  updateReplayGranularityUI();
 }
 $('btnResetView').addEventListener('click', () => {
   panes.forEach(p => p.chart.resetView());
 });
-$('btnReplay').addEventListener('click', () => replay.on ? replay.exit() : replay.enter());
+$('btnReplay').addEventListener('click', () => {
+  if (tradeMode === 'LIVE') {
+    alert('Switch to the Paper account before entering Replay.');
+    return;
+  }
+  replay.on ? replay.exit() : replay.enter();
+});
 $('btnPlay').addEventListener('click', () => replay.playing ? replay.pause() : replay.play());
 $('btnStep').addEventListener('click', () => replay.step(1));
+$('repUnitMin').addEventListener('click', () => replay.setGranularity('minute'));
+$('repUnitSec').addEventListener('click', () => replay.setGranularity('second'));
 $('repSlider').addEventListener('pointerdown', e => {
   replayScrubRawPrev = +e.currentTarget.value;
   replaySnapLockedIdx = null;
@@ -4260,6 +5855,10 @@ $('repSlider').addEventListener('input', e => {
 $('repSlider').addEventListener('pointerup', () => {
   replayScrubRawPrev = null;
   replaySnapLockedIdx = null;
+  if (replay.isSecond()) {
+    const b = replay.bars()[replay.idx];
+    if (b) replay.loadSeconds(b.t, b.t);
+  }
 });
 $('repSlider').addEventListener('pointercancel', () => {
   replayScrubRawPrev = null;
@@ -4296,7 +5895,7 @@ function attachFeedCallbacks(activeFeed) {
   activeFeed.onUpdate(tag => {
     if (feed !== activeFeed) return;
     if (!replay.on) {
-      if (tag === 'NQ' && pos) processLivePrice(marketPrice(), marketTime());
+      if (tag === 'NQ' && pos && tradeMode === 'PAPER') processLivePrice(marketPrice(), marketTime());
       const p = panes.find(p => p.ins.tag === tag);
       recomputeSMT();
       if (p) refresh(p);
@@ -4308,6 +5907,11 @@ function attachFeedCallbacks(activeFeed) {
 }
 
 let feedConnecting = false;
+function syncFeedConnectReady() {
+  const btn = $('btnFeedConnect');
+  const hasCredentials = !!$('topstepUser').value.trim() && !!$('topstepApiKey').value.trim();
+  btn.classList.toggle('ready', hasCredentials && !btn.classList.contains('connected'));
+}
 async function connectTopstepX() {
   if (feedConnecting) return;
   const user = $('topstepUser').value.trim();
@@ -4319,6 +5923,7 @@ async function connectTopstepX() {
   }
 
   feedConnecting = true;
+  setBootStatus('CONNECTING TO TOPSTEPX');
   $('btnFeedConnect').disabled = true;
   $('btnFeedConnect').textContent = 'CONNECTING…';
   localStorage.setItem('sdt.topstepUser', user);
@@ -4329,44 +5934,120 @@ async function connectTopstepX() {
 
   try {
     const ts = new TopstepXFeed(INSTRUMENTS, user, key);
+    setBootStatus('PULLING CHART DATA');
     ts.depthOn = flowOn || domOpen;   // depth stays active while FLOW or DOM ladder needs it
     await ts.start();
     feed = ts;
+    liveAccounts = ts.accounts.slice();
     attachFeedCallbacks(feed);
     $('btnFeedConnect').classList.add('connected');
-    $('btnFeedConnect').textContent = 'CONNECTED';
-    setBadges(); refreshAll(); updateAcctUI(); footerStatus();
+    syncFeedConnectReady();
+    setBootStatus('FINALIZING CHARTS');
+    $('btnFeedConnect').textContent = 'DISCONNECT';
+    $('btnFeedConnect').title = 'Disconnect TopstepX market data';
+    setBadges(); refreshAll(); updateAcctUI(); footerStatus(); renderAccountPicker();
+    markBootReady('topstep-connected');
     flog('ok', `TopstepX NQ/ES feed connected via ${ts.status.transport} and is rendering on SeanDayTrades custom canvas charts`);
   } catch (e) {
     feed = null;
+    if (tradeMode === 'LIVE') {
+      tradeMode = 'PAPER'; selectedLiveAccount = null; liveOrders = { slId:null, tpId:null }; pos = null;
+    }
     $('btnFeedConnect').classList.remove('connected');
+    syncFeedConnectReady();
     $('btnFeedConnect').textContent = 'CONNECT';
+    $('btnFeedConnect').title = 'Connect to TopstepX';
     setBadges(); footerStatus();
     flog('err', 'TopstepX connection failed: ' + e.message);
+    setBootStatus('STARTING OFFLINE');
+    markBootReady('topstep-failed');
   } finally {
     feedConnecting = false;
     $('btnFeedConnect').disabled = false;
   }
 }
 
-$('btnFeedConnect').addEventListener('click', connectTopstepX);
+async function disconnectTopstepX() {
+  if (feedConnecting || !feed || feed.stopped) return;
+
+  if (tradeMode === 'LIVE') {
+    const ok = confirm(
+      'Disconnect from TopstepX?\n\nThis does NOT close actual positions or cancel working orders. Any live position or order will remain active on TopstepX.'
+    );
+    if (!ok) return;
+  }
+
+  feedConnecting = true;
+  const btn = $('btnFeedConnect');
+  btn.disabled = true;
+  btn.textContent = 'DISCONNECTING…';
+
+  try {
+    await feed.stop();
+    feed.status.ok = false;
+    feed.status.transport = 'OFFLINE';
+    feed.status.label = 'TOPSTEPX · DISCONNECTED';
+    feed.status.lastTick = 0;
+    feed.status.lastPoll = Date.now();
+    feed.token = null;
+
+    liveAccounts = [];
+    if (tradeMode === 'LIVE') {
+      tradeMode = 'PAPER';
+      selectedLiveAccount = null;
+      liveOrders = { slId:null, tpId:null };
+      pos = null;
+    }
+
+    btn.classList.remove('connected');
+    syncFeedConnectReady();
+    btn.textContent = 'CONNECT';
+    btn.title = 'Connect to TopstepX';
+    setBadges();
+    footerStatus();
+    updateAcctUI();
+    renderAccountPicker();
+    if (domOpen) updateDOM();
+    flog('info', 'TopstepX disconnected — loaded candles remain available for chart viewing and replay');
+  } catch (e) {
+    flog('err', 'TopstepX disconnect failed: ' + e.message);
+    btn.classList.add('connected');
+    syncFeedConnectReady();
+    btn.textContent = 'DISCONNECT';
+    btn.title = 'Disconnect TopstepX market data';
+  } finally {
+    feedConnecting = false;
+    btn.disabled = false;
+  }
+}
+
+$('btnFeedConnect').addEventListener('click', () => {
+  if (feed && !feed.stopped) disconnectTopstepX();
+  else connectTopstepX();
+});
 $('topstepApiKey').addEventListener('keydown', e => {
   if (e.key === 'Enter') connectTopstepX();
 });
 $('topstepUser').addEventListener('keydown', e => {
   if (e.key === 'Enter') $('topstepApiKey').focus();
 });
+$('topstepUser').addEventListener('input', syncFeedConnectReady);
+$('topstepApiKey').addEventListener('input', syncFeedConnectReady);
 
 (function boot() {
   const savedUser = localStorage.getItem('sdt.topstepUser') || '';
   const savedKey = localStorage.getItem('sdt.topstepApiKey') || '';
   $('topstepUser').value = savedUser;
   $('topstepApiKey').value = savedKey;
+  syncFeedConnectReady();
   if (savedUser && savedKey) {
     flog('info', 'saved TopstepX credentials found — reconnecting market data');
+    setBootStatus('RESTORING CONNECTION');
     connectTopstepX();
   } else {
     flog('info', 'feed waiting: enter TopstepX username + API key and press CONNECT');
+    setBootStatus('READY');
+    markBootReady('no-saved-credentials');
     flog('info', 'feed source is TopstepX only — live SignalR stream + REST history; no Yahoo, TradingView scraping, proxy relays, or fake candles');
     setBadges(); footerStatus(); updateAcctUI();
   }
@@ -4375,6 +6056,8 @@ $('topstepUser').addEventListener('keydown', e => {
 /* TF sync */
 function setTF(tf) {
   currentTF = tf;
+  aggregateViewCache.clear();
+  sessionOpenViewCache.clear();
   localStorage.setItem('sdt.tf', tf);
   $('tfReadout').textContent = 'TF ' + ({'1':'1m','5':'5m','15':'15m','60':'1H','240':'4H','1440':'1D'}[tf] || tf);
   document.querySelectorAll('.ctl-btn.tf').forEach(b => b.classList.toggle('active', b.dataset.tf === tf));
