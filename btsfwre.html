@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Matrix // @SeanDayTrades</title>
+<title>Edge Lab // @SeanDayTrades</title>
 <style>
   :root {
     --bg: #07090d;
@@ -799,8 +799,8 @@
 <div id="bootOverlay" aria-label="Loading screen" aria-live="polite">
   <div class="boot-shell">
     <div class="boot-kicker">INITIALIZING TERMINAL</div>
-    <div class="boot-title">The Matrix</div>
-    <div class="boot-sub">by @SeanDayTrades</div>
+    <div class="boot-title">Edge Lab</div>
+    <div class="boot-sub">Build Your Edge · by @SeanDayTrades</div>
     <div class="boot-loader" aria-hidden="true">
       <div class="boot-bar"><span></span></div>
       <div class="boot-status" id="bootStatusText">LOADING MARKET ENGINE</div>
@@ -811,7 +811,7 @@
 <header>
   <a id="btnExit" href="index.html" title="Back to ProfitHub" aria-label="Back to ProfitHub">×</a>
   <div class="brand">
-    The Matrix<span class="slash">//</span>@SeanDayTrades
+    Edge Lab<span class="slash">//</span>@SeanDayTrades
   </div>
 
   <div class="ctl-group push" role="group" aria-label="Chart controls">
@@ -998,7 +998,7 @@
 <div id="helpOverlay">
   <div id="helpBox">
     <div class="help-h">
-      <span>THE MATRIX — HELP</span>
+      <span>EDGE LAB — HELP</span>
       <button id="helpClose" aria-label="Close help">×</button>
     </div>
     <div class="help-body">
@@ -1450,7 +1450,7 @@ class TopstepXFeed {
       limitPrice:null,
       stopPrice:null,
       trailPrice:null,
-      customTag:`matrix-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+      customTag:`edgelab-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
       stopLossBracket:{ ticks:Number(slTicks), type:4 },
       takeProfitBracket:{ ticks:Number(tpTicks), type:1 },
     });
@@ -2462,8 +2462,13 @@ function computeLiveSMT(barsA, barsB, tfMin, liveA, liveB) {
       const sweptA = kind === 'high' ? eA.m > ref.a.p : eA.m < ref.a.p;
       const sweptB = kind === 'high' ? eB.m > ref.b.p : eB.m < ref.b.p;
       if (sweptA === sweptB) continue;     // both swept or both held — no divergence
-      out.A.push({ t1:ref.a.t, p1:ref.a.p, t2:eA.mt, p2:eA.m, kind, live:true, swept:sweptA });
-      out.B.push({ t1:ref.b.t, p1:ref.b.p, t2:eB.mt, p2:eB.m, kind, live:true, swept:sweptB });
+      // Anchor BOTH sides to the live edge so the pair reads together:
+      // the swept side slopes through its sweep, the held side visibly
+      // holds under (over) its level all the way to the current bar.
+      const endA = barsA[barsA.length - 1].t;
+      const endB = barsB[barsB.length - 1].t;
+      out.A.push({ t1:ref.a.t, p1:ref.a.p, t2:endA, p2:eA.m, kind, live:true, swept:sweptA });
+      out.B.push({ t1:ref.b.t, p1:ref.b.p, t2:endB, p2:eB.m, kind, live:true, swept:sweptB });
       return;                              // one live segment per kind
     }
   };
@@ -4046,9 +4051,21 @@ class Chart {
     if (this.showSMT) {
       ctx.font = '9px "Space Mono", monospace';
       for (const s of this.smtSegs) {
-        const i1 = this.timeIdx.get(s.t1), i2 = this.timeIdx.get(s.t2);
-        if (i1 === undefined || i2 === undefined) continue;
+        // exact bucket first; nearest-bar fallback covers 1s-replay bucket drift
+        const i1 = this.timeIdx.has(s.t1) ? this.timeIdx.get(s.t1) : Math.round(this._timeToIndex(s.t1));
+        const i2 = this.timeIdx.has(s.t2) ? this.timeIdx.get(s.t2) : Math.round(this._timeToIndex(s.t2));
+        if (!Number.isFinite(i1) || !Number.isFinite(i2)) continue;
         if (i2 < first || i1 > last) continue;
+        // Snap endpoints to the RENDERED bar's wick: 1s-built and quote-painted
+        // candles can differ a touch from the 1m series the pivots came from,
+        // which left lines floating just off the wicks.
+        const snapWick = (bar, p) => {
+          if (!bar) return p;
+          const wick = s.kind === 'high' ? bar.h : bar.l;
+          return Math.abs(wick - p) <= this.ins.tick * 20 ? wick : p;
+        };
+        const p1 = snapWick(this.bars[i1], s.p1);
+        const p2 = s.live && s.swept === false ? s.p2 : snapWick(this.bars[i2], s.p2);
         const col = s.kind === 'high' ? '#ff3d71' : '#00e5a0';
         ctx.strokeStyle = col;
         if (s.live) {
@@ -4061,15 +4078,15 @@ class Chart {
           ctx.setLineDash([5,4]); ctx.lineWidth = 1.5;
         }
         ctx.beginPath();
-        ctx.moveTo(x(i1)+this.barW/2, y(s.p1));
-        ctx.lineTo(x(i2)+this.barW/2, y(s.p2));
+        ctx.moveTo(x(i1)+this.barW/2, y(p1));
+        ctx.lineTo(x(i2)+this.barW/2, y(p2));
         ctx.stroke();
         ctx.setLineDash([]); ctx.lineWidth = 1;
         ctx.fillStyle = col; ctx.textAlign = 'center';
         const lbl = s.live
           ? 'SMT LIVE · ' + (s.swept ? 'SWEPT' : 'HELD')
           : 'SMT';
-        ctx.fillText(lbl, x(i2)+this.barW/2, s.kind === 'high' ? y(s.p2) - 10 : y(s.p2) + 12);
+        ctx.fillText(lbl, x(i2)+this.barW/2, s.kind === 'high' ? y(p2) - 10 : y(p2) + 12);
         ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
         ctx.textAlign = 'left';
