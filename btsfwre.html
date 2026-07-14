@@ -1441,6 +1441,11 @@ class TopstepXFeed {
   async placeMarketBracket(accountId, tag, dir, size, slTicks, tpTicks) {
     const contractId = this.contracts[tag];
     if (!contractId) throw new Error(`${tag}: contract is not loaded`);
+    // ProjectX bracket ticks are SIGNED offsets from the entry price:
+    // long  -> SL below entry (negative), TP above entry (positive)
+    // short -> SL above entry (positive), TP below entry (negative)
+    const sl = dir > 0 ? -Math.abs(Number(slTicks)) : Math.abs(Number(slTicks));
+    const tp = dir > 0 ?  Math.abs(Number(tpTicks)) : -Math.abs(Number(tpTicks));
     return this._post('/api/Order/place', {
       accountId:Number(accountId),
       contractId,
@@ -1451,8 +1456,8 @@ class TopstepXFeed {
       stopPrice:null,
       trailPrice:null,
       customTag:`edgelab-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
-      stopLossBracket:{ ticks:Number(slTicks), type:4 },
-      takeProfitBracket:{ ticks:Number(tpTicks), type:1 },
+      stopLossBracket:{ ticks:sl, type:4 },
+      takeProfitBracket:{ ticks:tp, type:1 },
     });
   }
 
@@ -4901,8 +4906,13 @@ function visibleSessionOpenTimes(tag) {
 const smtSeen = new Set();
 function recomputeSMT() {
   if (!smtOn || !feed) return;
-  const a = aggregatedVisible('NQ');
-  const b = aggregatedVisible('ES');
+  // Compute on the EXACT bars each chart is displaying (1s-rebuilt candles in
+  // replay, quote-painted candles live) so pivot anchors land on rendered
+  // wicks by construction — not on a parallel 1m aggregation that can differ
+  // by a tick or two. Falls back to fresh aggregation before first refresh.
+  const ca = panes[0].chart.bars, cb = panes[1].chart.bars;
+  const a = (ca && ca.length) ? ca : aggregatedVisible('NQ');
+  const b = (cb && cb.length) ? cb : aggregatedVisible('ES');
   const segs = computeSMT(a, b, TFS[currentTF]);
   // forming divergence in real time — streams last tick prices when live
   const liveA = (!replay.on && feed.lastPrice && Number.isFinite(feed.lastPrice.NQ)) ? feed.lastPrice.NQ : null;
@@ -4918,6 +4928,8 @@ function recomputeSMT() {
       flog('ok', `LIVE SMT ${s.kind === 'high' ? '(bearish — highs)' : '(bullish — lows)'} forming on ${currentTF === '60' ? '1H' : currentTF + 'm'}`);
     }
   }
+  // charts were drawn before segments were assigned — repaint with them
+  panes.forEach(p => p.chart.draw());
 }
 
 function refresh(p) {
@@ -4963,7 +4975,7 @@ function refresh(p) {
     p.prevClose = lastBar.c;
   }
 }
-function refreshAll() { recomputeSMT(); panes.forEach(refresh); }
+function refreshAll() { panes.forEach(refresh); recomputeSMT(); }
 
 function setBadges() {
   panes.forEach(p => {
@@ -5265,7 +5277,20 @@ async function placeLiveEntry(dir) {
     await syncLiveTradingState(true);
   } catch (e) {
     flog('err', 'live order rejected: ' + e.message);
-    alert('TopstepX order failed: ' + e.message);
+    if (/position brackets/i.test(e.message || '')) {
+      alert(
+        'TopstepX account setting needed:\n\n' +
+        'Your account is set to the older "Position Brackets" mode, which blocks the ' +
+        'per-order SL/TP brackets Edge Lab sends.\n\n' +
+        'Fix (takes 30 seconds):\n' +
+        '1. Make sure you are COMPLETELY FLAT on this account\n' +
+        '2. In TopstepX: Settings -> Risk Settings\n' +
+        '3. Switch bracket type to "Auto OCO Brackets" and save\n\n' +
+        'Then place the order again from Edge Lab.'
+      );
+    } else {
+      alert('TopstepX order failed: ' + e.message);
+    }
   } finally {
     liveOrderBusy = false;
     updateAll();
@@ -5914,8 +5939,8 @@ function attachFeedCallbacks(activeFeed) {
     if (!replay.on) {
       if (tag === 'NQ' && pos && tradeMode === 'PAPER') processLivePrice(marketPrice(), marketTime());
       const p = panes.find(p => p.ins.tag === tag);
-      recomputeSMT();
       if (p) refresh(p);
+      recomputeSMT();
       if (tag === 'NQ') updateAcctUI();
     }
     if (replay.on) updateReplayUI();
