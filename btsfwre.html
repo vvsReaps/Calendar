@@ -566,6 +566,7 @@
   }
   #acctBar .chip.bad { color:var(--dn); border-color:rgba(255,61,113,.4); }
   #acctBar .chip.good { color:var(--nq); border-color:rgba(0,229,160,.35); }
+  #acctBar .chip.warn { color:var(--warn); border-color:rgba(255,176,32,.4); }
   #btnAcctReset, #btnTrades, #btnPayout {
     font-family:var(--mono); font-size:10px; letter-spacing:1px;
     background:none; border:1px solid var(--edge); border-radius:3px;
@@ -1146,7 +1147,6 @@ const SMT_LOOKBACK = 400;
 const PIVOT_K = 3;
 const SMT_MIN_PTS = 0.5;   // both legs smaller than this (in pts) → noise, skip
 const SMT_MAX_SEGS = 14;   // keep only the most recent confirmed segments on screen
-const SMT_SPAN_PAIRS = 4;  // divergences may span up to this many swing pairs back
 const EXT_K = 5;           // external swing strength (bars each side) — stronger than SMT pivots
 const EXT_LOOKBACK = 400;  // bars scanned for external highs/lows
 const EMA_LEN = 9;
@@ -1459,6 +1459,17 @@ class TopstepXFeed {
       stopLossBracket:{ ticks:sl, type:4 },
       takeProfitBracket:{ ticks:tp, type:1 },
     });
+  }
+
+  /* executed fills (half-turns) since startTimestamp — each closing fill
+     carries its realized profitAndLoss and fees */
+  async searchDayTrades(accountId, startTimestamp) {
+    const json = await this._post('/api/Trade/search', {
+      accountId:Number(accountId),
+      startTimestamp:new Date(startTimestamp).toISOString(),
+      endTimestamp:new Date(Date.now() + 60000).toISOString(),
+    });
+    return json.trades || [];
   }
 
   async searchOpenPosition(accountId, tag) {
@@ -2384,34 +2395,13 @@ function computeSMT(barsA, barsB, tfMin) {
   const tol = tfMin * 60000 * (PIVOT_K + 1);
   const scan = (sa, sb, kind) => {
     const pairs = matchPairs(sa, sb, tol);
-    const seen = new Set();
     for (let i = 1; i < pairs.length; i++) {
-      const Q = pairs[i];
-      // Candidate references: the adjacent pair (classic SMT), plus the most
-      // significant pair within the lookback window on EACH asset — the
-      // highest prior high / lowest prior low. This catches divergences that
-      // span an intermediate swing (A→C misses hidden by a B in the middle).
-      const lo = Math.max(0, i - SMT_SPAN_PAIRS);
-      let extA = null, extB = null;
-      for (let j = lo; j < i; j++) {
-        const c = pairs[j];
-        if (!extA || (kind === 'high' ? c.a.p > extA.a.p : c.a.p < extA.a.p)) extA = c;
-        if (!extB || (kind === 'high' ? c.b.p > extB.b.p : c.b.p < extB.b.p)) extB = c;
-      }
-      const candidates = [pairs[i-1]];
-      if (extA && !candidates.includes(extA)) candidates.push(extA);
-      if (extB && !candidates.includes(extB)) candidates.push(extB);
-      for (const P of candidates) {
-        const dA = Q.a.p - P.a.p, dB = Q.b.p - P.b.p;
-        if ((dA > 0) === (dB > 0)) continue;                       // markets agree — no SMT
-        if (Math.abs(dA) < SMT_MIN_PTS && Math.abs(dB) < SMT_MIN_PTS) continue; // noise floor
-        const key = kind + ':' + Q.a.t;
-        if (seen.has(key)) break;                                  // one segment per swing
-        seen.add(key);
-        out.A.push({ t1:P.a.t, p1:P.a.p, t2:Q.a.t, p2:Q.a.p, kind });
-        out.B.push({ t1:P.b.t, p1:P.b.p, t2:Q.b.t, p2:Q.b.p, kind });
-        break;
-      }
+      const P = pairs[i-1], Q = pairs[i];
+      const dA = Q.a.p - P.a.p, dB = Q.b.p - P.b.p;
+      if ((dA > 0) === (dB > 0)) continue;                       // markets agree — no SMT
+      if (Math.abs(dA) < SMT_MIN_PTS && Math.abs(dB) < SMT_MIN_PTS) continue; // noise floor
+      out.A.push({ t1:P.a.t, p1:P.a.p, t2:Q.a.t, p2:Q.a.p, kind });
+      out.B.push({ t1:P.b.t, p1:P.b.p, t2:Q.b.t, p2:Q.b.p, kind });
     }
   };
   scan(pa.highs, pb.highs, 'high');
@@ -2437,19 +2427,7 @@ function computeLiveSMT(barsA, barsB, tfMin, liveA, liveB) {
   const check = (sa, sb, kind) => {
     const pairs = matchPairs(sa, sb, tol);
     if (!pairs.length) return;
-    // Reference candidates within the recent window: the latest matched pair
-    // (classic), plus the most significant pair on each asset — so a live
-    // sweep of an OLDER, higher swing is caught even if minor swings printed
-    // in between.
-    const win = pairs.slice(-SMT_SPAN_PAIRS);
-    let extA = win[0], extB = win[0];
-    for (const c of win) {
-      if (kind === 'high' ? c.a.p > extA.a.p : c.a.p < extA.a.p) extA = c;
-      if (kind === 'high' ? c.b.p > extB.b.p : c.b.p < extB.b.p) extB = c;
-    }
-    const refs = [pairs[pairs.length - 1]];
-    if (!refs.includes(extA)) refs.push(extA);
-    if (!refs.includes(extB)) refs.push(extB);
+    const ref = pairs[pairs.length - 1];   // latest matched swing pair — simple and predictable
     const ext = (bars, t0, live) => {      // extreme since the reference swing
       let m = kind === 'high' ? -Infinity : Infinity, mt = null;
       for (let i = bars.length - 1; i >= 0 && bars[i].t > t0; i--) {
@@ -2461,21 +2439,16 @@ function computeLiveSMT(barsA, barsB, tfMin, liveA, liveB) {
       }
       return { m, mt };
     };
-    for (const ref of refs) {
-      const eA = ext(barsA, ref.a.t, liveA), eB = ext(barsB, ref.b.t, liveB);
-      if (eA.mt === null || eB.mt === null) continue;
-      const sweptA = kind === 'high' ? eA.m > ref.a.p : eA.m < ref.a.p;
-      const sweptB = kind === 'high' ? eB.m > ref.b.p : eB.m < ref.b.p;
-      if (sweptA === sweptB) continue;     // both swept or both held — no divergence
-      // Anchor BOTH sides to the live edge so the pair reads together:
-      // the swept side slopes through its sweep, the held side visibly
-      // holds under (over) its level all the way to the current bar.
-      const endA = barsA[barsA.length - 1].t;
-      const endB = barsB[barsB.length - 1].t;
-      out.A.push({ t1:ref.a.t, p1:ref.a.p, t2:endA, p2:eA.m, kind, live:true, swept:sweptA });
-      out.B.push({ t1:ref.b.t, p1:ref.b.p, t2:endB, p2:eB.m, kind, live:true, swept:sweptB });
-      return;                              // one live segment per kind
-    }
+    const eA = ext(barsA, ref.a.t, liveA), eB = ext(barsB, ref.b.t, liveB);
+    if (eA.mt === null || eB.mt === null) return;
+    const sweptA = kind === 'high' ? eA.m > ref.a.p : eA.m < ref.a.p;
+    const sweptB = kind === 'high' ? eB.m > ref.b.p : eB.m < ref.b.p;
+    if (sweptA === sweptB) return;         // both swept or both held — no divergence
+    // both sides anchor to the live edge so the pair reads together
+    const endA = barsA[barsA.length - 1].t;
+    const endB = barsB[barsB.length - 1].t;
+    out.A.push({ t1:ref.a.t, p1:ref.a.p, t2:endA, p2:eA.m, kind, live:true, swept:sweptA });
+    out.B.push({ t1:ref.b.t, p1:ref.b.p, t2:endB, p2:eB.m, kind, live:true, swept:sweptB });
   };
   check(pa.highs, pb.highs, 'high');
   check(pa.lows,  pb.lows,  'low');
@@ -4387,6 +4360,7 @@ let liveAccounts = [];
 let selectedLiveAccount = null;
 let liveOrders = { slId:null, tpId:null };
 let liveOrderBusy = false;
+let liveRealizedDay = null;   // trading day net from Trade/search fills
 let liveSyncBusy = false;
 let currentTF = localStorage.getItem('sdt.tf') || '5';
 if (!TFS[currentTF]) currentTF = '5';
@@ -4454,6 +4428,7 @@ INSTRUMENTS.forEach((ins, i) => {
   if (tradable) {
     chart.onLineDrag = (id, price) => {
       if (!pos) return;
+      price = Math.round(price / TICK) * TICK;   // ride tick-to-tick like real platforms
       if (id === 'sl') {
         // Trailing is unrestricted across breakeven, so the stop can lock in profit.
         pos.sl = price;
@@ -5080,6 +5055,7 @@ async function choosePaperAccount() {
   tradeMode = 'PAPER';
   selectedLiveAccount = null;
   liveOrders = { slId:null, tpId:null };
+  liveRealizedDay = null;
   pos = null;
   closeAccountPicker();
   flog('info', 'order routing switched to PAPER simulator');
@@ -5108,6 +5084,7 @@ async function chooseLiveAccount(accountId) {
   if (replay.on) replay.exit();
   pos = null;
   liveOrders = { slId:null, tpId:null };
+  liveRealizedDay = null;
   flog('ok', `actual Topstep routing enabled: ${a.name || a.id}`);
   await syncLiveTradingState(true);
   updateAll();
@@ -5127,11 +5104,18 @@ async function syncLiveTradingState(force = false) {
   if (tradeMode !== 'LIVE' || !selectedLiveAccount || !feed || !feed.status.loaded || liveSyncBusy) return;
   liveSyncBusy = true;
   try {
-    const [accounts, p, orders] = await Promise.all([
+    const [accounts, p, orders, fills] = await Promise.all([
       feed.refreshAccounts(),
       feed.searchOpenPosition(selectedLiveAccount.id, 'NQ'),
       feed.searchOpenOrders(selectedLiveAccount.id, 'NQ'),
+      feed.searchDayTrades(selectedLiveAccount.id, Date.now() - 26*3600e3).catch(() => null),
     ]);
+    if (Array.isArray(fills)) {
+      const today = tradingDay(Date.now());
+      liveRealizedDay = fills
+        .filter(t => t && !t.voided && tradingDay(Date.parse(t.creationTimestamp)) === today)
+        .reduce((s, t) => s + (Number(t.profitAndLoss) || 0) - (Number(t.fees) || 0), 0);
+    }
     liveAccounts = accounts;
     const fresh = accounts.find(a => Number(a.id) === Number(selectedLiveAccount.id));
     if (fresh) selectedLiveAccount = fresh;
@@ -5356,6 +5340,8 @@ async function cancelAllLiveOrders() {
 
 async function commitLiveBracketMove(id, price) {
   if (tradeMode !== 'LIVE' || !pos || !selectedLiveAccount || !feed || liveOrderBusy || !Number.isFinite(price)) return;
+  // exchange prices must be tick-aligned — raw drag prices are pixel-derived floats
+  price = Math.round(price / TICK) * TICK;
   // Refuse commits on the instant-trigger side of the current market: a
   // long's stop above price (or a short's below) would execute the moment
   // it lands, silently market-closing the position on an accidental drag.
@@ -5365,7 +5351,7 @@ async function commitLiveBracketMove(id, price) {
       (id === 'sl' && (pos.dir > 0 ? price >= mkt : price <= mkt)) ||
       (id === 'tp' && (pos.dir > 0 ? price <= mkt : price >= mkt));
     if (bad) {
-      flog('err', `live ${id.toUpperCase()} at ${price.toFixed(2)} would trigger instantly (market ${mkt.toFixed(2)}) — not sent`);
+      flog('err', `live ${id.toUpperCase()} at ${price.toFixed(2)} would trigger instantly (market ${mkt.toFixed(2)}) — snapped back`);
       await syncLiveTradingState(true);   // snap the line back to the working order
       updateAll();
       return;
@@ -5386,11 +5372,11 @@ async function commitLiveBracketMove(id, price) {
     await feed.modifyOrder(selectedLiveAccount.id, orderId, fields);
     flog('ok', `LIVE ${id.toUpperCase()} moved to ${price.toFixed(2)}`);
   } catch (e) {
-    flog('err', `live ${id.toUpperCase()} modify failed: ${e.message}`);
-    alert(`TopstepX ${id.toUpperCase()} update failed: ${e.message}`);
+    // no popup — log it and snap the line back to the actual working order
+    flog('err', `live ${id.toUpperCase()} move rejected (${e.message}) — snapped back`);
   } finally {
     liveOrderBusy = false;
-    await syncLiveTradingState(false);
+    await syncLiveTradingState(true);
     updateAll();
   }
 }
@@ -5576,23 +5562,27 @@ function updateLiveAcctUI() {
   setPaperStatsVisible(false);
   $('balLabel').textContent = 'ACCOUNT BALANCE';
   $('openLabel').textContent = 'OPEN P&L';
-  $('realLabel').textContent = 'ROUTING';
+  $('realLabel').textContent = 'REALIZED DAY';
   const btn = $('btnAccountMode');
   btn.classList.add('live');
   btn.textContent = `ACCOUNT: ${selectedLiveAccount ? selectedLiveAccount.name : 'SELECT'} ▾`;
   const st = $('acctStatus');
   if (!selectedLiveAccount) {
     st.textContent = 'TOPSTEP ACCOUNT NOT SELECTED'; st.className = 'chip bad';
-    $('roBal').textContent = '—'; $('roOpen').textContent = '—'; $('roReal').textContent = 'OFF'; $('roEq').textContent = '—';
+    $('roBal').textContent = '—'; $('roOpen').textContent = '—'; $('roReal').textContent = '—'; $('roEq').textContent = '—';
   } else {
     const bal = Number(selectedLiveAccount.balance);
     const px = marketPrice();
     const upnl = pos && Number.isFinite(px) ? openPnL(px) : 0;
-    st.textContent = `ACTUAL TOPSTEP · ${selectedLiveAccount.name || selectedLiveAccount.id}`;
-    st.className = selectedLiveAccount.canTrade === false ? 'chip bad' : 'chip good';
+    st.textContent = `ACTUAL TOPSTEP · ${selectedLiveAccount.name || selectedLiveAccount.id}`
+      + (liveOrderBusy ? ' · SENDING…' : '');
+    st.className = selectedLiveAccount.canTrade === false ? 'chip bad'
+      : liveOrderBusy ? 'chip warn' : 'chip good';
     $('roBal').textContent = Number.isFinite(bal) ? fmt$(bal) : '—';
     $('roOpen').innerHTML = pos ? `<span class="${upnl>=0?'up':'dn'}">${upnl>=0?'+':''}${fmt$(upnl).replace('$-','-$')}</span>` : '—';
-    $('roReal').innerHTML = liveOrderBusy ? '<span class="warn">SENDING</span>' : '<span class="up">LIVE</span>';
+    $('roReal').innerHTML = Number.isFinite(liveRealizedDay)
+      ? `<span class="${liveRealizedDay>=0?'up':'dn'}">${liveRealizedDay>=0?'+':''}${fmt$(liveRealizedDay).replace('$-','-$')}</span>`
+      : '—';
     $('roEq').textContent = Number.isFinite(bal) ? fmt$(bal + upnl) : '—';
   }
   updateTradeButtons();
