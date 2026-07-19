@@ -937,7 +937,7 @@
       .reveal { opacity: 1 !important; transform: none !important; }
     }
   </style>
-</head>
+<style id="phub-access-styles">.phub-access-modal{position:fixed;inset:0;z-index:2147483647;background:rgba(4,5,4,.94);display:grid;place-items:center;padding:22px;font-family:Arial,sans-serif}.phub-access-card{box-sizing:border-box;width:min(620px,100%);background:#f3f1e9;color:#0b0d0c;padding:clamp(32px,6vw,64px);border-top:8px solid #caff3d;box-shadow:0 30px 100px #000}.phub-access-tag{color:#477760;font-size:11px;font-weight:900;letter-spacing:.15em;text-transform:uppercase}.phub-access-card h2{font-size:clamp(38px,6vw,68px);line-height:.9;letter-spacing:-.06em;margin:25px 0}.phub-access-card p{font-size:17px;line-height:1.55;color:#4b504b}.phub-access-card button{width:100%;border:0;background:#0b0d0c;color:#caff3d;padding:17px 22px;margin-top:24px;text-transform:uppercase;letter-spacing:.12em;font-size:12px;font-weight:950;cursor:pointer}.phub-access-card button:hover,.phub-access-card button:focus-visible{background:#222a22;outline:3px solid #caff3d;outline-offset:3px}</style></head>
 <body>
   <div class="progress" id="progress"></div>
 
@@ -1652,5 +1652,5 @@
     window.addEventListener('scroll', updateProgress, { passive: true });
     updateProgress();
   </script>
-</body>
+<div class="phub-access-modal" role="dialog" aria-modal="true" aria-labelledby="phub-access-title" aria-describedby="phub-access-copy"><div class="phub-access-card"><div class="phub-access-tag">ProfitHub private educational material</div><h2 id="phub-access-title">Keep this inside the community.</h2><p id="phub-access-copy">Do not share, repost, copy, record, or distribute this website or its educational material outside ProfitHub. By continuing, you acknowledge that this content is for your personal use only.</p><button type="button" id="phub-accept-access">I understand and accept</button></div></div><script id="phub-access-script">(()=>{const modal=document.querySelector(".phub-access-modal"),button=document.querySelector("#phub-accept-access");document.body.style.overflow="hidden";button.focus();button.addEventListener("click",()=>{modal.remove();document.body.style.overflow=""})})();</script></body>
 </html>
