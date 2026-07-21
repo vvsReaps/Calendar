@@ -581,6 +581,143 @@
       font-size: .94rem;
     }
 
+    .scaling-guide {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 92% 8%, rgba(60,255,157,.11), transparent 34%),
+        linear-gradient(145deg, rgba(255,255,255,.035), rgba(255,255,255,.012));
+    }
+
+    .scaling-guide::before {
+      content: "SCALE WITH DISCIPLINE";
+      position: absolute;
+      right: -20px;
+      top: 18px;
+      color: rgba(255,255,255,.022);
+      font-size: clamp(3.6rem, 10vw, 8rem);
+      font-weight: 950;
+      letter-spacing: -.07em;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .scaling-intro {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 22px;
+      margin-top: 26px;
+    }
+
+    .scaling-principle,
+    .readiness-card {
+      padding: 24px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.025);
+    }
+
+    .scaling-principle h3,
+    .readiness-card h3 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
+    }
+
+    .scaling-principle p,
+    .readiness-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .readiness-card {
+      border-color: rgba(60,255,157,.22);
+      background: rgba(60,255,157,.065);
+    }
+
+    .readiness-number {
+      display: block;
+      margin: 8px 0 2px;
+      color: var(--green);
+      font-size: clamp(2.7rem, 6vw, 4.6rem);
+      font-weight: 950;
+      letter-spacing: -.06em;
+      line-height: .95;
+    }
+
+    .scale-steps {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .scale-step {
+      min-height: 220px;
+      padding: 24px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.022);
+    }
+
+    .scale-step:last-child {
+      grid-column: 1 / -1;
+      min-height: auto;
+    }
+
+    .scale-step .step-number {
+      display: inline-grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      margin-bottom: 24px;
+      border-radius: 12px;
+      color: #06130b;
+      background: var(--green);
+      font-size: .78rem;
+      font-weight: 950;
+    }
+
+    .scale-step h3 {
+      margin: 0 0 10px;
+      font-size: 1.18rem;
+    }
+
+    .scale-step p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.62;
+    }
+
+    .scale-step strong { color: #edf5ff; }
+
+    .scaling-close {
+      position: relative;
+      z-index: 1;
+      margin-top: 18px;
+      padding: 24px;
+      border-radius: 20px;
+      border: 1px solid rgba(244,201,93,.24);
+      background: rgba(244,201,93,.075);
+    }
+
+    .scaling-close strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #ffe8a1;
+      font-size: 1.08rem;
+    }
+
+    .scaling-close p {
+      margin: 0;
+      color: #d6c996;
+      line-height: 1.65;
+    }
+
     .coming-soon-section {
       position: relative;
       overflow: hidden;
@@ -741,7 +878,8 @@
     @media (max-width: 900px) {
       .hero-grid,
       .content-grid,
-      .intro-grid { grid-template-columns: 1fr; }
+      .intro-grid,
+      .scaling-intro { grid-template-columns: 1fr; }
       .chart-card { max-width: 620px; }
       .warning-grid { grid-template-columns: 1fr; }
       .firm-header { grid-template-columns: 1fr; }
@@ -756,11 +894,13 @@
       .topbar { top: 8px; }
       .hero { padding: 34px 24px; min-height: auto; }
       .pricing-grid,
-      .process-row { grid-template-columns: 1fr; }
+      .process-row,
+      .scale-steps { grid-template-columns: 1fr; }
       .section { padding: 24px 18px; }
       .firm-logo { width: 64px; height: 64px; }
       .attempt-table th, .attempt-table td { padding: 11px 9px; font-size: .82rem; }
       .coming-content { grid-template-columns: 1fr; }
+      .scale-step:last-child { grid-column: auto; }
       .coming-pill { grid-column: auto; }
       .coming-icon { width: 60px; height: 60px; }
       .access-card { padding: 30px 24px; }
@@ -785,6 +925,7 @@
         <a href="#lucid">Lucid</a>
         <a href="#tradeify">Tradeify</a>
         <a href="#rules">Before You Buy</a>
+        <a href="#scaling">Scaling</a>
       </div>
     </nav>
 
@@ -1076,15 +1217,63 @@
       </div>
     </section>
 
-    <section class="section coming-soon-section" id="scaling">
-      <div class="coming-content">
-        <div class="coming-icon" aria-hidden="true">↗</div>
-        <div class="coming-copy">
-          <div class="label">Next guide</div>
-          <h2>How to Scale Prop Firm Accounts</h2>
-          <p>A step-by-step framework for increasing account size without increasing risk too quickly.</p>
+    <section class="section scaling-guide" id="scaling">
+      <div class="section-title">
+        <div>
+          <div class="label">Scaling guide</div>
+          <h2>Earn the right to scale.</h2>
+          <p>Scaling should be the result of proven consistency—not excitement, impatience, or a desire to make more money faster.</p>
         </div>
-        <div class="coming-pill">Coming Soon</div>
+        <div class="rank-badge">↗</div>
+      </div>
+
+      <div class="scaling-intro">
+        <article class="scaling-principle">
+          <h3>Begin with one account</h3>
+          <p>Focus on getting one account funded, then take two or three payouts from it. Before adding more accounts, prove that you can protect the account and repeat your process under funded-account pressure.</p>
+        </article>
+        <aside class="readiness-card">
+          <div class="label">Your first scaling checkpoint</div>
+          <span class="readiness-number">2–3 payouts</span>
+          <p>See whether you can complete this within one month. If you can, you may be ready to begin scaling carefully.</p>
+        </aside>
+      </div>
+
+      <div class="scale-steps">
+        <article class="scale-step">
+          <span class="step-number">01</span>
+          <h3>Add one evaluation—not max allocation</h3>
+          <p>Purchase one additional evaluation at the same prop firm. This lets you use the firm's built-in free copy trader instead of immediately managing accounts across multiple platforms.</p>
+        </article>
+
+        <article class="scale-step">
+          <span class="step-number">02</span>
+          <h3>Make the evaluation a trailing account</h3>
+          <p>Keep trading your funded account exactly as you already were and let the evaluation follow it. You are not trying to force a pass—the evaluation should pass naturally as your normal, disciplined trading continues.</p>
+        </article>
+
+        <article class="scale-step">
+          <span class="step-number">03</span>
+          <h3>Stagger each new evaluation</h3>
+          <p>Buy one evaluation, wait <strong>one to two trading days</strong>, and then purchase the next. This reduces open exposure because an evaluation you have not purchased yet cannot be affected by a losing day on your current accounts.</p>
+        </article>
+
+        <article class="scale-step">
+          <span class="step-number">04</span>
+          <h3>Build to three funded accounts first</h3>
+          <p>Once you have three funded accounts, pause the expansion and focus on earning a payout from all three. After proving you can manage them together, repeat the same staggered process for the remaining two accounts.</p>
+        </article>
+
+        <article class="scale-step">
+          <span class="step-number">05</span>
+          <h3>Respect every evaluation</h3>
+          <p>Never trade carelessly because it is “just an evaluation.” You cannot say your rules matter while ignoring them when the account feels less valuable. These accounts can change your life—but only when you respect the account, respect yourself, and respect your rules.</p>
+        </article>
+      </div>
+
+      <div class="scaling-close">
+        <strong>This is not a get-rich-quick scheme.</strong>
+        <p>With patience and discipline, the effects compound and you can see a dramatic increase in income over time. Stay focused on taking excellent trades, following your process, and protecting the accounts. Do not trade while thinking about the money.</p>
       </div>
     </section>
 
