@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Profit Hub prop firm recommendations for Topstep, Lucid Trading, and Tradeify." />
+  <title>Profit Hub — Prop Firm Recommendations</title>
+  <style>
+    :root {
+      --bg: #07090d;
+      --panel: #10141c;
+      --panel-2: #141a24;
+      --line: rgba(255,255,255,.09);
+      --text: #f5f7fb;
+      --muted: #9ba6b8;
+      --green: #3cff9d;
+      --green-2: #20c779;
+      --gold: #f4c95d;
+      --blue: #6ea8ff;
+      --purple: #a77bff;
+      --danger: #ff6b7a;
+      --shadow: 0 24px 70px rgba(0,0,0,.4);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 5%, rgba(60,255,157,.10), transparent 30%),
+        radial-gradient(circle at 90% 10%, rgba(110,168,255,.10), transparent 30%),
+        linear-gradient(180deg, #07090d 0%, #090d13 45%, #07090d 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; }
+
+    .page-shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 64px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(13,17,24,.78);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 12px;
+      z-index: 20;
+      box-shadow: 0 10px 40px rgba(0,0,0,.25);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: #06110b;
+      background: linear-gradient(135deg, var(--green), #b6ffd8);
+      box-shadow: 0 0 35px rgba(60,255,157,.28);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: .9rem;
+      padding: 8px 10px;
+      border-radius: 10px;
+      transition: .2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+      background: rgba(255,255,255,.05);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      margin-top: 22px;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      min-height: 540px;
+      padding: clamp(34px, 7vw, 82px);
+      background:
+        linear-gradient(135deg, rgba(16,21,29,.97), rgba(9,13,19,.92)),
+        radial-gradient(circle at 70% 20%, rgba(60,255,157,.14), transparent 28%);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-grid {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--green);
+      font-size: .82rem;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 16px rgba(60,255,157,.9);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.7rem, 7vw, 5.8rem);
+      line-height: .92;
+      letter-spacing: -.06em;
+      max-width: 800px;
+    }
+
+    h1 span { color: var(--green); }
+
+    .hero p {
+      max-width: 660px;
+      color: #b3bdca;
+      line-height: 1.7;
+      font-size: 1.08rem;
+      margin: 24px 0 0;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 14px;
+      font-weight: 800;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    .button:hover { transform: translateY(-2px); }
+    .button.primary { background: var(--green); color: #04140b; }
+    .button.secondary { border-color: var(--line); background: rgba(255,255,255,.035); color: var(--text); }
+
+    .chart-card {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 24px;
+      padding: 18px;
+      background: rgba(5,9,14,.68);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 24px 60px rgba(0,0,0,.32);
+    }
+
+    .chart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-size: .84rem;
+    }
+
+    .chart-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--green);
+      font-weight: 800;
+    }
+
+    .chart-pill::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .section {
+      margin-top: 28px;
+      padding: clamp(26px, 5vw, 48px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(16,20,28,.95), rgba(10,14,20,.96));
+      box-shadow: 0 20px 55px rgba(0,0,0,.26);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: clamp(1.75rem, 4vw, 3rem);
+      letter-spacing: -.04em;
+    }
+
+    .section-title p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .intro-grid {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .intro-copy {
+      padding: 26px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: linear-gradient(145deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
+    }
+
+    .intro-copy h3,
+    .comparison-card h3 {
+      margin: 0 0 12px;
+      font-size: 1.18rem;
+    }
+
+    .intro-copy p,
+    .comparison-card p {
+      margin: 0;
+      color: #b5bfcd;
+      line-height: 1.7;
+    }
+
+    .process-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .process-step {
+      position: relative;
+      min-height: 138px;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: #0b1017;
+    }
+
+    .step-number {
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      margin-bottom: 16px;
+      border-radius: 10px;
+      color: #04140b;
+      background: var(--green);
+      font-size: .8rem;
+      font-weight: 900;
+    }
+
+    .process-step strong {
+      display: block;
+      margin-bottom: 7px;
+    }
+
+    .process-step span {
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.5;
+    }
+
+    .comparison-card {
+      padding: 26px;
+      border-radius: 22px;
+      border: 1px solid rgba(60,255,157,.2);
+      background:
+        radial-gradient(circle at 88% 10%, rgba(60,255,157,.13), transparent 33%),
+        rgba(60,255,157,.045);
+    }
+
+    .compare-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .compare-item {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 15px;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 16px;
+      background: rgba(5,9,14,.45);
+    }
+
+    .compare-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: rgba(60,255,157,.11);
+      font-size: 1.05rem;
+    }
+
+    .compare-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .compare-item span {
+      color: var(--muted);
+      font-size: .91rem;
+      line-height: 1.5;
+    }
+
+    .reality-check {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(244,201,93,.22);
+      background: rgba(244,201,93,.065);
+      color: #ded4b5;
+      line-height: 1.6;
+      font-size: .93rem;
+    }
+
+    .rank-badge {
+      min-width: 70px;
+      height: 70px;
+      display: grid;
+      place-items: center;
+      border-radius: 20px;
+      font-size: 1.8rem;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.035);
+    }
+
+    .firm-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .logo-box {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      min-width: 0;
+    }
+
+    .firm-logo {
+      flex: 0 0 auto;
+      width: 76px;
+      height: 76px;
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      overflow: hidden;
+      background: rgba(255,255,255,.035);
+    }
+
+    .firm-name h2 {
+      margin: 0;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      letter-spacing: -.04em;
+    }
+
+    .firm-name p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--gold);
+      font-size: .77rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 18px;
+    }
+
+    .info-card {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 22px;
+      background: linear-gradient(145deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+    }
+
+    .info-card h3 {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+    }
+
+    .info-card p,
+    .info-card li {
+      color: #b5bfcd;
+      line-height: 1.65;
+    }
+
+    .info-card ul {
+      margin: 0;
+      padding-left: 19px;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .price-box {
+      padding: 18px;
+      border-radius: 18px;
+      background: #0b1017;
+      border: 1px solid var(--line);
+    }
+
+    .price-box strong {
+      display: block;
+      font-size: 1.02rem;
+      margin-bottom: 8px;
+    }
+
+    .price {
+      font-size: 2.1rem;
+      font-weight: 900;
+      letter-spacing: -.05em;
+      color: var(--green);
+      margin: 2px 0 3px;
+    }
+
+    .price-note {
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .attempt-table {
+      margin-top: 18px;
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+    }
+
+    .attempt-table th,
+    .attempt-table td {
+      padding: 13px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      font-size: .93rem;
+    }
+
+    .attempt-table th {
+      color: #dce4ee;
+      background: rgba(255,255,255,.045);
+    }
+
+    .attempt-table td { color: #aeb8c7; }
+    .attempt-table tr:last-child td { border-bottom: 0; }
+    .winner { color: var(--green) !important; font-weight: 800; }
+
+    .callout {
+      margin-top: 18px;
+      padding: 18px 20px;
+      border-radius: 18px;
+      border: 1px solid rgba(60,255,157,.22);
+      background: rgba(60,255,157,.07);
+      color: #cdfbe1;
+      line-height: 1.6;
+    }
+
+    .firm-link {
+      white-space: nowrap;
+      text-decoration: none;
+      color: #06130b;
+      background: var(--green);
+      border-radius: 14px;
+      font-weight: 900;
+      padding: 13px 17px;
+      transition: .2s ease;
+    }
+
+    .firm-link:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(60,255,157,.18); }
+
+    .warning {
+      margin-top: 28px;
+      border: 1px solid rgba(244,201,93,.23);
+      background: rgba(244,201,93,.07);
+    }
+
+    .warning-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .warning-item {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.07);
+      background: rgba(255,255,255,.025);
+    }
+
+    .warning-item strong {
+      display: block;
+      margin-bottom: 7px;
+    }
+
+    .warning-item span {
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: .94rem;
+    }
+
+    .coming-soon-section {
+      position: relative;
+      overflow: hidden;
+      min-height: 280px;
+      display: grid;
+      align-items: center;
+      background:
+        radial-gradient(circle at 90% 15%, rgba(60,255,157,.10), transparent 32%),
+        linear-gradient(145deg, rgba(255,255,255,.035), rgba(255,255,255,.012));
+    }
+
+    .coming-soon-section::after {
+      content: "COMING SOON";
+      position: absolute;
+      right: -18px;
+      bottom: -28px;
+      color: rgba(255,255,255,.025);
+      font-size: clamp(4rem, 12vw, 9rem);
+      font-weight: 950;
+      letter-spacing: -.07em;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .coming-content {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 22px;
+      align-items: center;
+    }
+
+    .coming-icon {
+      width: 72px;
+      height: 72px;
+      display: grid;
+      place-items: center;
+      border-radius: 20px;
+      border: 1px solid rgba(60,255,157,.22);
+      background: rgba(60,255,157,.08);
+      color: var(--green);
+      font-size: 1.8rem;
+    }
+
+    .coming-copy h2 {
+      margin: 0;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      letter-spacing: -.04em;
+    }
+
+    .coming-copy p {
+      margin: 9px 0 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .coming-pill {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(60,255,157,.25);
+      background: rgba(60,255,157,.08);
+      color: var(--green);
+      font-size: .76rem;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .access-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: rgba(4,5,7,.94);
+      backdrop-filter: blur(10px);
+    }
+
+    .access-card {
+      width: min(620px, 100%);
+      padding: clamp(32px, 6vw, 64px);
+      color: #07090d;
+      background: #f5f7fb;
+      border-top: 8px solid var(--green);
+      border-radius: 0 0 24px 24px;
+      box-shadow: 0 30px 100px rgba(0,0,0,.8);
+    }
+
+    .access-card .tag {
+      color: #218a5b;
+      font-size: .76rem;
+      font-weight: 900;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .access-card h2 {
+      margin: 25px 0;
+      font-size: clamp(2.35rem, 6vw, 4.25rem);
+      line-height: .9;
+      letter-spacing: -.06em;
+    }
+
+    .access-card p {
+      margin: 0;
+      color: #4b5360;
+      font-size: 1.06rem;
+      line-height: 1.65;
+    }
+
+    .access-card button {
+      width: 100%;
+      margin-top: 24px;
+      padding: 17px 22px;
+      border: 0;
+      border-radius: 14px;
+      color: var(--green);
+      background: #07090d;
+      font: inherit;
+      font-size: .76rem;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .access-card button:hover,
+    .access-card button:focus-visible {
+      background: #151b22;
+      outline: 3px solid var(--green);
+      outline-offset: 3px;
+    }
+
+    footer {
+      text-align: center;
+      color: #778294;
+      padding: 32px 0 4px;
+      font-size: .88rem;
+    }
+
+    .topstep-accent { --firm: #f6c94c; }
+    .lucid-accent { --firm: #7e8cff; }
+    .tradeify-accent { --firm: #3cff9d; }
+
+    .firm-section { position: relative; overflow: hidden; }
+    .firm-section::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--firm), transparent 72%);
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid,
+      .content-grid,
+      .intro-grid { grid-template-columns: 1fr; }
+      .chart-card { max-width: 620px; }
+      .warning-grid { grid-template-columns: 1fr; }
+      .firm-header { grid-template-columns: 1fr; }
+      .firm-link { justify-self: start; }
+      .nav-links { display: none; }
+      .coming-content { grid-template-columns: auto 1fr; }
+      .coming-pill { grid-column: 2; justify-self: start; }
+    }
+
+    @media (max-width: 620px) {
+      .page-shell { width: min(100% - 20px, 1180px); }
+      .topbar { top: 8px; }
+      .hero { padding: 34px 24px; min-height: auto; }
+      .pricing-grid,
+      .process-row { grid-template-columns: 1fr; }
+      .section { padding: 24px 18px; }
+      .firm-logo { width: 64px; height: 64px; }
+      .attempt-table th, .attempt-table td { padding: 11px 9px; font-size: .82rem; }
+      .coming-content { grid-template-columns: 1fr; }
+      .coming-pill { grid-column: auto; }
+      .coming-icon { width: 60px; height: 60px; }
+      .access-card { padding: 30px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <nav class="topbar" aria-label="Primary navigation">
+      <a class="brand" href="#top">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M3 16.5L8 11.5L11.5 14L19 6.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 6.5H19V11.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span>PROFIT HUB</span>
+      </a>
+      <div class="nav-links">
+        <a href="#prop-firms">What Are Prop Firms?</a>
+        <a href="#topstep">Topstep</a>
+        <a href="#lucid">Lucid</a>
+        <a href="#tradeify">Tradeify</a>
+        <a href="#rules">Before You Buy</a>
+      </div>
+    </nav>
+
+    <header class="hero" id="top">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">Prop Firm Guide</div>
+          <h1>PROP FIRM<br><span>RECOMMENDATIONS</span></h1>
+          <p>A simple breakdown of the prop firms I recommend, who each one is best for, and the rules that matter most before purchasing an evaluation.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#topstep">See #1 Pick</a>
+            <a class="button secondary" href="#rules">Read Before Buying</a>
+          </div>
+        </div>
+
+        <div class="chart-card" aria-label="Decorative market chart">
+          <div class="chart-head">
+            <span>NQ • 5M</span>
+            <span class="chart-pill">Risk First</span>
+          </div>
+          <svg viewBox="0 0 520 330" width="100%" role="img" aria-label="Stylized bullish candlestick chart">
+            <defs>
+              <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#3cff9d" stop-opacity=".28"/>
+                <stop offset="1" stop-color="#3cff9d" stop-opacity="0"/>
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="5" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <g stroke="rgba(255,255,255,.08)" stroke-width="1">
+              <path d="M0 55H520M0 110H520M0 165H520M0 220H520M0 275H520"/>
+              <path d="M65 0V330M130 0V330M195 0V330M260 0V330M325 0V330M390 0V330M455 0V330"/>
+            </g>
+            <path d="M18 276 C55 265, 76 285, 105 245 S160 238, 188 198 S235 225, 267 176 S320 165, 346 122 S395 146, 425 96 S472 70, 505 42 L505 330 L18 330Z" fill="url(#area)"/>
+            <path d="M18 276 C55 265, 76 285, 105 245 S160 238, 188 198 S235 225, 267 176 S320 165, 346 122 S395 146, 425 96 S472 70, 505 42" fill="none" stroke="#3cff9d" stroke-width="3" filter="url(#glow)"/>
+            <g stroke-linecap="round">
+              <g stroke="#ff6b7a" fill="#ff6b7a"><path d="M65 235V287"/><rect x="58" y="246" width="14" height="23" rx="2"/></g>
+              <g stroke="#3cff9d" fill="#3cff9d"><path d="M112 210V267"/><rect x="105" y="223" width="14" height="26" rx="2"/></g>
+              <g stroke="#3cff9d" fill="#3cff9d"><path d="M160 185V244"/><rect x="153" y="199" width="14" height="27" rx="2"/></g>
+              <g stroke="#ff6b7a" fill="#ff6b7a"><path d="M208 176V230"/><rect x="201" y="186" width="14" height="26" rx="2"/></g>
+              <g stroke="#3cff9d" fill="#3cff9d"><path d="M256 142V209"/><rect x="249" y="158" width="14" height="34" rx="2"/></g>
+              <g stroke="#3cff9d" fill="#3cff9d"><path d="M304 116V177"/><rect x="297" y="128" width="14" height="31" rx="2"/></g>
+              <g stroke="#ff6b7a" fill="#ff6b7a"><path d="M352 108V157"/><rect x="345" y="119" width="14" height="23" rx="2"/></g>
+              <g stroke="#3cff9d" fill="#3cff9d"><path d="M400 72V139"/><rect x="393" y="86" width="14" height="36" rx="2"/></g>
+              <g stroke="#3cff9d" fill="#3cff9d"><path d="M448 44V105"/><rect x="441" y="58" width="14" height="31" rx="2"/></g>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <section class="section" id="prop-firms">
+      <div class="section-title">
+        <div>
+          <div class="label">Start here</div>
+          <h2>What is a prop firm?</h2>
+          <p>A prop firm gives traders a path to qualify for a funded account without needing to put a large personal trading balance on the line.</p>
+        </div>
+        <div class="rank-badge">🏦</div>
+      </div>
+
+      <div class="intro-grid">
+        <article class="intro-copy">
+          <h3>How the process works</h3>
+          <p>You pay for an evaluation and trade under a defined set of rules. After meeting the profit target without violating the drawdown or consistency requirements, you can qualify for a funded account and become eligible for payouts under the firm's terms.</p>
+
+          <div class="process-row">
+            <div class="process-step">
+              <span class="step-number">01</span>
+              <strong>Buy an evaluation</strong>
+              <span>Choose an account size and learn every rule before placing a trade.</span>
+            </div>
+            <div class="process-step">
+              <span class="step-number">02</span>
+              <strong>Prove consistency</strong>
+              <span>Reach the target while respecting the firm's drawdown and risk limits.</span>
+            </div>
+            <div class="process-step">
+              <span class="step-number">03</span>
+              <strong>Earn payouts</strong>
+              <span>Keep following the funded-account rules and request payouts when eligible.</span>
+            </div>
+          </div>
+        </article>
+
+        <aside class="comparison-card">
+          <h3>Why many beginners start with a prop firm</h3>
+          <p>The main advantage is controlled upfront risk. Instead of depositing thousands into a personal futures account, your immediate financial risk is generally limited to evaluation, reset, and activation fees.</p>
+
+          <div class="compare-list">
+            <div class="compare-item">
+              <span class="compare-icon">💵</span>
+              <div>
+                <strong>Less personal capital exposed</strong>
+                <span>A failed evaluation costs the fee, rather than a large personal trading balance.</span>
+              </div>
+            </div>
+            <div class="compare-item">
+              <span class="compare-icon">🛡️</span>
+              <div>
+                <strong>Built-in risk limits</strong>
+                <span>Drawdown rules, daily limits, and platform controls can force better discipline.</span>
+              </div>
+            </div>
+            <div class="compare-item">
+              <span class="compare-icon">📈</span>
+              <div>
+                <strong>A clearer path to scale</strong>
+                <span>Consistent traders can access larger account sizes without first saving the full balance themselves.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="reality-check"><strong>Important:</strong> Prop firms are not free money. Strict rules, recurring fees, payout conditions, and firm risk still matter. The smarter approach is to use one account, trade small, and treat the evaluation fee as money you can afford to lose.</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section firm-section topstep-accent" id="topstep">
+      <div class="firm-header">
+        <div class="logo-box">
+          <div class="firm-logo" aria-label="Topstep logo style graphic">
+            <svg viewBox="0 0 76 76" width="76" height="76" role="img" aria-label="Topstep">
+              <rect width="76" height="76" rx="20" fill="#111318"/>
+              <path d="M17 23H59V31H43V56H33V31H17Z" fill="#F4C95D"/>
+            </svg>
+          </div>
+          <div class="firm-name">
+            <div class="label">🥇 Best for beginners</div>
+            <h2>TOPSTEP</h2>
+            <p>My #1 recommendation for newer traders.</p>
+          </div>
+        </div>
+        <a class="firm-link" href="https://www.topstep.com/" target="_blank" rel="noopener noreferrer">Visit Topstep ↗</a>
+      </div>
+
+      <div class="content-grid">
+        <article class="info-card">
+          <h3>Why it ranks first</h3>
+          <p>TopstepX lets you set risk limits directly on the platform, including a <strong>one-trade-per-day limit</strong>. That can help prevent overtrading and revenge trading while you build discipline.</p>
+          <div class="callout"><strong>Extra safeguard:</strong> Daily Loss Limit accounts are also a strong option and currently include double payout caps.</div>
+        </article>
+
+        <article class="info-card">
+          <h3>50K pricing</h3>
+          <div class="pricing-grid">
+            <div class="price-box">
+              <strong>Standard</strong>
+              <div class="price">$49</div>
+              <div class="price-note">per attempt</div>
+              <p>$149 activation fee after passing.</p>
+            </div>
+            <div class="price-box">
+              <strong>No Activation Fee</strong>
+              <div class="price">$95</div>
+              <div class="price-note">per attempt</div>
+              <p>No activation fee after passing.</p>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <article class="info-card" style="margin-top:18px;">
+        <h3>Which option is cheaper?</h3>
+        <p>The No Activation Fee option is cheaper if you pass within <strong>three attempts</strong>. If you think it may take <strong>four or more attempts</strong>, the Standard option becomes cheaper overall.</p>
+        <div style="overflow-x:auto;">
+          <table class="attempt-table">
+            <thead>
+              <tr>
+                <th>Attempts</th>
+                <th>Standard Total</th>
+                <th>No Activation Total</th>
+                <th>Cheaper Choice</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>$198</td><td class="winner">$95</td><td>No Activation</td></tr>
+              <tr><td>2</td><td>$247</td><td class="winner">$190</td><td>No Activation</td></tr>
+              <tr><td>3</td><td>$296</td><td class="winner">$285</td><td>No Activation</td></tr>
+              <tr><td>4</td><td class="winner">$345</td><td>$380</td><td>Standard</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section class="section firm-section lucid-accent" id="lucid">
+      <div class="firm-header">
+        <div class="logo-box">
+          <div class="firm-logo" aria-label="Lucid Trading logo style graphic">
+            <svg viewBox="0 0 76 76" width="76" height="76" role="img" aria-label="Lucid Trading">
+              <defs>
+                <linearGradient id="lucidGradient" x1="10" y1="10" x2="66" y2="66">
+                  <stop stop-color="#A77BFF"/>
+                  <stop offset="1" stop-color="#6EA8FF"/>
+                </linearGradient>
+              </defs>
+              <rect width="76" height="76" rx="20" fill="#10131C"/>
+              <path d="M22 18H33V48H54V58H22Z" fill="url(#lucidGradient)"/>
+              <circle cx="51" cy="25" r="7" fill="#A77BFF" opacity=".85"/>
+            </svg>
+          </div>
+          <div class="firm-name">
+            <div class="label" style="color:#a98cff;">🥈 Strong all-around option</div>
+            <h2>LUCID TRADING</h2>
+            <p>Good pricing, quick payouts, and familiar rules.</p>
+          </div>
+        </div>
+        <a class="firm-link" href="https://lucidtrading.com/" target="_blank" rel="noopener noreferrer">Visit Lucid ↗</a>
+      </div>
+
+      <div class="content-grid">
+        <article class="info-card">
+          <h3>LucidFlex 50K</h3>
+          <p>The LucidFlex 50K account has similar rules to Topstep and is a good fit for traders who want a straightforward evaluation with competitive pricing.</p>
+        </article>
+        <article class="info-card">
+          <h3>Key benefits</h3>
+          <ul>
+            <li>Can be passed in two trading days</li>
+            <li>No activation fee</li>
+            <li>Quick payouts</li>
+            <li>Good pricing</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section firm-section tradeify-accent" id="tradeify">
+      <div class="firm-header">
+        <div class="logo-box">
+          <div class="firm-logo" aria-label="Tradeify logo style graphic">
+            <svg viewBox="0 0 76 76" width="76" height="76" role="img" aria-label="Tradeify">
+              <rect width="76" height="76" rx="20" fill="#0C1511"/>
+              <path d="M18 20H58V30H43V58H33V30H18Z" fill="#3CFF9D"/>
+              <path d="M48 39L57 30V48" fill="none" stroke="#3CFF9D" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="firm-name">
+            <div class="label" style="color:#3cff9d;">🥉 For growing consistency</div>
+            <h2>TRADEIFY</h2>
+            <p>A good option once your execution is becoming more consistent.</p>
+          </div>
+        </div>
+        <a class="firm-link" href="https://tradeify.co/" target="_blank" rel="noopener noreferrer">Visit Tradeify ↗</a>
+      </div>
+
+      <div class="content-grid">
+        <article class="info-card">
+          <h3>Who it fits</h3>
+          <p>Tradeify is a good option for traders who are starting to become more consistent and want access to daily payouts after building a buffer.</p>
+        </article>
+        <article class="info-card">
+          <h3>Key rules</h3>
+          <ul>
+            <li>Takes at least three days to pass instead of two</li>
+            <li>Daily payouts after building above the <strong>$2,100 buffer</strong></li>
+            <li>Maximum payout of <strong>$1,000 per request</strong></li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section warning" id="rules">
+      <div class="section-title">
+        <div>
+          <div class="label">Before purchasing</div>
+          <h2>Protect your capital first.</h2>
+          <p>Passing the evaluation is not the finish line. The real goal is keeping the funded account.</p>
+        </div>
+        <div class="rank-badge">⚠️</div>
+      </div>
+
+      <div class="warning-grid">
+        <div class="warning-item">
+          <strong>Read current rules</strong>
+          <span>Pricing, account rules, and payout policies can change.</span>
+        </div>
+        <div class="warning-item">
+          <strong>Look for deals</strong>
+          <span>Always check for current promo codes or discounted evaluations.</span>
+        </div>
+        <div class="warning-item">
+          <strong>Start with one account</strong>
+          <span>Trade small and focus on consistency instead of stacking accounts too early.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section coming-soon-section" id="scaling">
+      <div class="coming-content">
+        <div class="coming-icon" aria-hidden="true">↗</div>
+        <div class="coming-copy">
+          <div class="label">Next guide</div>
+          <h2>How to Scale Prop Firm Accounts</h2>
+          <p>A step-by-step framework for increasing account size without increasing risk too quickly.</p>
+        </div>
+        <div class="coming-pill">Coming Soon</div>
+      </div>
+    </section>
+
+    <section class="section coming-soon-section" id="copy-trading">
+      <div class="coming-content">
+        <div class="coming-icon" aria-hidden="true">⇄</div>
+        <div class="coming-copy">
+          <div class="label">Next guide</div>
+          <h2>How to Copy Trade Multiple Firms</h2>
+          <p>A practical breakdown of connecting accounts, matching risk, and managing rules across different firms.</p>
+        </div>
+        <div class="coming-pill">Coming Soon</div>
+      </div>
+    </section>
+
+    <footer>
+      Profit Hub • Prop Firm Recommendations • Educational information only
+    </footer>
+  </main>
+
+  <div class="access-modal" role="dialog" aria-modal="true" aria-labelledby="access-title" aria-describedby="access-copy">
+    <div class="access-card">
+      <div class="tag">ProfitHub private educational material</div>
+      <h2 id="access-title">Keep this inside the community.</h2>
+      <p id="access-copy">Do not share, repost, copy, record, or distribute this website, its videos, charts, or educational material outside ProfitHub. By continuing, you acknowledge that this content is for your personal use only.</p>
+      <button type="button" id="accept-access">I understand and accept</button>
+    </div>
+  </div>
+
+  <script>
+    const accessModal = document.querySelector('.access-modal');
+    const acceptAccess = document.querySelector('#accept-access');
+
+    document.body.style.overflow = 'hidden';
+    acceptAccess.focus();
+
+    acceptAccess.addEventListener('click', () => {
+      accessModal.remove();
+      document.body.style.overflow = '';
+    });
+  </script>
+</body>
+</html>
